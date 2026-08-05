@@ -46,6 +46,7 @@ export const Sidebar: React.FC = () => {
     startAddAdmission,
     setBulkUpdateModalOpen,
     draftStudent,
+    showWarningModal,
   } = useAdmission();
 
   const [exportOpen, setExportOpen] = useState<boolean>(true);
@@ -451,8 +452,15 @@ export const Sidebar: React.FC = () => {
               <List disablePadding>
                 <ListItemButton
                   onClick={() => {
+                    if (selectedStudentIds.length === 0) {
+                      showWarningModal(
+                        'No Student Selected',
+                        'Please select at least one student before exporting.'
+                      );
+                      return;
+                    }
                     const selected = students.filter((s) => selectedStudentIds.includes(s.id));
-                    exportStudentsToExcel(selected.length ? selected : students, 'Exported_Selected_Students.xlsx');
+                    exportStudentsToExcel(selected, 'Exported_Selected_Students.xlsx');
                   }}
                   sx={{
                     borderRadius: '6px',
@@ -474,28 +482,17 @@ export const Sidebar: React.FC = () => {
                 </ListItemButton>
 
                 <ListItemButton
-                  onClick={() => exportStudentsToExcel(students, 'Searched_Students.xlsx')}
-                  sx={{
-                    borderRadius: '6px',
-                    marginBottom: '6px',
-                    padding: '6px 12px',
-                    color: '#E0F2FE',
-                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.12)' },
+                  onClick={() => {
+                    if (selectedStudentIds.length === 0) {
+                      showWarningModal(
+                        'No Student Selected',
+                        'Please select a student before exporting the PDF.'
+                      );
+                      return;
+                    }
+                    const selected = students.filter((s) => selectedStudentIds.includes(s.id));
+                    selected.forEach((s) => generateStudentPdf(s));
                   }}
-                >
-                  <ListItemIcon sx={{ minWidth: '30px', color: '#FFFFFF' }}>
-                    <FileSpreadsheet size={15} />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="EXPORT SEARCHED"
-                    secondary="STUDENTS (EXCEL)"
-                    primaryTypographyProps={{ fontSize: '10.5px', fontWeight: 600, color: '#FFFFFF', letterSpacing: '0.02em' }}
-                    secondaryTypographyProps={{ fontSize: '9.5px', color: 'rgba(255,255,255,0.7)' }}
-                  />
-                </ListItemButton>
-
-                <ListItemButton
-                  onClick={() => students.length > 0 && generateStudentPdf(students[0])}
                   sx={{
                     borderRadius: '6px',
                     marginBottom: '6px',

@@ -1,11 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Grid, TextField, MenuItem, Typography, Box } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { academicDetailsSchema, AcademicDetailsFormData } from '../../schemas/academic.schema';
 import { useAdmission } from '../../context/AdmissionContext';
-import { DEPARTMENTS_BY_PROGRAM } from '../../utils/constants';
-import { ProgramType } from '../../types';
 import { AppCard } from '../../components/ui/AppCard';
 
 const fieldSx = {
@@ -40,7 +38,11 @@ const fieldSx = {
 };
 
 export const AcademicDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
-  const { draftStudent, updateDraftSection, isViewReadOnly } = useAdmission();
+  const { draftStudent, updateDraftSection, isViewReadOnly, masterData } = useAdmission();
+
+  const programs = masterData.programs.map((p) => p.name);
+  const departmentsForProgram = (program?: string) =>
+    program ? (masterData.departmentsByProgram[program] || []).map((d) => d.name) : [];
 
   const {
     control,
@@ -60,28 +62,38 @@ export const AcademicDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }
   });
 
   const watchProgram = watch('program');
+  const prevProgramRef = useRef(watchProgram);
 
-  // Handle program change to auto-update available departments & batch
+  // Handle program change to auto-update available departments & batch.
+  // Only auto-fill when the program is actually changed by the user, never on
+  // mount/re-mount, so manually edited values are preserved between sections.
   useEffect(() => {
-    if (watchProgram) {
-      const depts = DEPARTMENTS_BY_PROGRAM[watchProgram] || [];
-      if (depts.length > 0 && !depts.includes(watch('department'))) {
-        setValue('department', depts[0]);
-      }
+    const prevProgram = prevProgramRef.current;
+    prevProgramRef.current = watchProgram;
+    if (!watchProgram || prevProgram === watchProgram) return;
 
-      if (watchProgram === 'First Year B.Tech') {
-        setValue('batch', '2026 - 2030');
-      } else if (watchProgram === 'Second Year B.Tech (Lateral Entry)') {
-        setValue('batch', '2026 - 2029');
-      } else if (watchProgram === 'PG') {
-        setValue('batch', '2026 - 2028');
-      }
+    const depts = departmentsForProgram(watchProgram);
+    if (depts.length > 0 && !depts.includes(watch('department'))) {
+      setValue('department', depts[0]);
+    }
+
+    if (watchProgram === 'First Year B.Tech') {
+      setValue('batch', '2026 - 2030');
+    } else if (watchProgram === 'Second Year B.Tech (Lateral Entry)') {
+      setValue('batch', '2026 - 2029');
+    } else if (watchProgram === 'PG') {
+      setValue('batch', '2026 - 2028');
     }
   }, [watchProgram, setValue, watch]);
 
-  const availableDepartments = watchProgram ? (DEPARTMENTS_BY_PROGRAM[watchProgram as ProgramType] || []) : [];
+  const watchedValues = watch();
+  useEffect(() => {
+    updateDraftSection('academic', watchedValues as any);
+  }, [JSON.stringify(watchedValues)]);
 
-  const onSubmit = (data: AcademicDetailsFormData) => {
+  const availableDepartments = departmentsForProgram(watchProgram);
+
+  const onSubmit = async (data: AcademicDetailsFormData) => {
     updateDraftSection('academic', data);
     onNext();
   };
@@ -136,9 +148,11 @@ export const AcademicDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }
                   error={!!errors.program}
                   helperText={errors.program?.message}
                 >
-                  <MenuItem value="First Year B.Tech">First Year B.Tech</MenuItem>
-                  <MenuItem value="Second Year B.Tech (Lateral Entry)">Second Year B.Tech (Lateral Entry)</MenuItem>
-                  <MenuItem value="PG">PG (M.Tech / MBA / MCA)</MenuItem>
+                  {programs.map((p) => (
+                    <MenuItem key={p} value={p}>
+                      {p}
+                    </MenuItem>
+                  ))}
                 </TextField>
               )}
             />

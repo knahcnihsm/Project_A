@@ -86,7 +86,12 @@ export const StudentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext })
     },
   });
 
+  const watchedValues = watch();
   const watchDOB = watch('dateOfBirth');
+
+  React.useEffect(() => {
+    updateDraftSection('personal', watchedValues as any);
+  }, [JSON.stringify(watchedValues)]);
 
   React.useEffect(() => {
     if (watchDOB) {
@@ -95,7 +100,7 @@ export const StudentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext })
     }
   }, [watchDOB, setValue]);
 
-  const onSubmit = (data: StudentDetailsFormData) => {
+  const onSubmit = async (data: StudentDetailsFormData) => {
     updateDraftSection('personal', data);
     onNext();
   };

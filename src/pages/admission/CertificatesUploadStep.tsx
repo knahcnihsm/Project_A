@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Table,
   TableHead,
@@ -28,6 +28,13 @@ export const CertificatesUploadStep: React.FC<{ onSave: () => void }> = ({ onSav
 
   const [previewCert, setPreviewCert] = useState<CertificateItem | null>(null);
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
+
+  // Keep uploaded/checked certificates synchronized with the shared draft so
+  // unsaved changes survive navigating between sidebar sections.
+  useEffect(() => {
+    updateDraftSection('certificates', certificates);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [certificates]);
 
   const truncateFileName = (name: string, maxLen: number = 18): string => {
     if (!name) return '';
@@ -110,10 +117,10 @@ export const CertificatesUploadStep: React.FC<{ onSave: () => void }> = ({ onSav
   const pendingCount = certificates.length - uploadedCount;
   const progressPct = certificates.length > 0 ? (uploadedCount / certificates.length) * 100 : 0;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     updateDraftSection('certificates', certificates);
-    onSave();
+    await onSave();
   };
 
   return (

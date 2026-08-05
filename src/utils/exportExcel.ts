@@ -31,31 +31,34 @@ export const exportStudentsToExcel = (students: StudentRecord[], filename: strin
 };
 
 export const downloadSampleBulkUpdateTemplate = () => {
-  const sampleData = [
-    {
-      'Application Number': 'RGCET/2026/001',
-      'Register Number': '2026BTECH001',
-      'Student Name': 'Aravind Kumar',
-      'Father Name': 'R. Kumar',
-      'Father Mobile': '9876543210',
-      'District': 'Puducherry',
-      'Mobile Number': '9123456789',
-      'Email': 'aravind@example.com',
-    },
-    {
-      'Application Number': 'RGCET/2026/002',
-      'Register Number': '2026BTECH002',
-      'Student Name': 'Priya Dharshini',
-      'Father Name': 'S. Murugan',
-      'Father Mobile': '9845123760',
-      'District': 'Cuddalore',
-      'Mobile Number': '9876541230',
-      'Email': 'priya@example.com',
-    },
-  ];
+  const link = document.createElement('a');
+  link.href = '/sample_template.xlsx';
+  link.download = 'sample_template.xlsx';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
-  const worksheet = XLSX.utils.json_to_sheet(sampleData);
+export interface BulkUpdateErrorRow {
+  rowNumber: number;
+  registerNumber: string;
+  applicationNumber: string;
+  reason: string;
+}
+
+export const exportBulkUpdateErrorReport = (
+  errors: BulkUpdateErrorRow[],
+  filename: string = 'Bulk_Update_Error_Report.xlsx'
+) => {
+  const exportData = errors.map((e) => ({
+    'Row Number': e.rowNumber,
+    'Register Number': e.registerNumber || 'N/A',
+    'Application Number': e.applicationNumber || 'N/A',
+    'Error Reason': e.reason,
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Bulk_Update_Template');
-  XLSX.writeFile(workbook, 'Bulk_Student_Update_Template.xlsx');
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Error Report');
+  XLSX.writeFile(workbook, filename);
 };

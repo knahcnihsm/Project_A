@@ -41,6 +41,7 @@ import { generateStudentPdf } from '../../utils/exportPdf';
 import { formatDateDisplay } from '../../utils/dateUtils';
 import { StudentRecord } from '../../types';
 import { useThemeContext } from '../../context/ThemeContext';
+import { ArchiveStudentModal } from '../../components/student/ArchiveStudentModal';
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -76,9 +77,10 @@ export const Dashboard: React.FC = () => {
     toDate: '',
   });
 
-  const [tempFilters, setTempFilters] = useState({ ...appliedFilters });
   const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
   const isFilterOpen = Boolean(filterAnchorEl);
+
+  const [archiveModalStudent, setArchiveModalStudent] = useState<StudentRecord | null>(null);
 
   // More Menu Anchor per row
   const [moreMenuAnchor, setMoreMenuAnchor] = useState<{
@@ -88,20 +90,18 @@ export const Dashboard: React.FC = () => {
 
   const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
     setFilterAnchorEl(event.currentTarget);
-    setTempFilters({ ...appliedFilters }); // initialize form with current filters
   };
 
   const handleFilterClose = () => {
     setFilterAnchorEl(null);
   };
 
-  const handleApplyFilters = () => {
-    setAppliedFilters({ ...tempFilters });
+  const updateFilter = (field: string, value: any) => {
+    setAppliedFilters((prev) => ({ ...prev, [field]: value }));
     setActivePage(1);
-    handleFilterClose();
   };
 
-  const handleResetFilters = () => {
+  const handleClearFilters = () => {
     const defaultFilters = {
       department: 'All',
       admissionType: 'All',
@@ -113,10 +113,8 @@ export const Dashboard: React.FC = () => {
       fromDate: '',
       toDate: '',
     };
-    setTempFilters(defaultFilters);
     setAppliedFilters(defaultFilters);
     setActivePage(1);
-    handleFilterClose();
   };
 
   const handleMoreClick = (event: React.MouseEvent<HTMLElement>, student: StudentRecord) => {
@@ -275,8 +273,11 @@ export const Dashboard: React.FC = () => {
         {/* Search Box */}
         <TextField
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search Student (Name or Reg No)..."
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setActivePage(1);
+          }}
+          placeholder="Search Student (Name, Reg No, App No)..."
           sx={{
             flexGrow: 1,
             '& .MuiOutlinedInput-root': {
@@ -397,8 +398,8 @@ export const Dashboard: React.FC = () => {
                 Department
               </Typography>
               <Select
-                value={tempFilters.department}
-                onChange={(e) => setTempFilters({ ...tempFilters, department: e.target.value as string })}
+                value={appliedFilters.department}
+                onChange={(e) => updateFilter('department', e.target.value as string)}
                 displayEmpty
                 size="small"
                 sx={{
@@ -425,8 +426,8 @@ export const Dashboard: React.FC = () => {
                 Admission Type
               </Typography>
               <Select
-                value={tempFilters.admissionType}
-                onChange={(e) => setTempFilters({ ...tempFilters, admissionType: e.target.value as string })}
+                value={appliedFilters.admissionType}
+                onChange={(e) => updateFilter('admissionType', e.target.value as string)}
                 displayEmpty
                 size="small"
                 sx={{
@@ -452,8 +453,8 @@ export const Dashboard: React.FC = () => {
                 <TextField
                   placeholder="20__"
                   size="small"
-                  value={tempFilters.fromYear}
-                  onChange={(e) => setTempFilters({ ...tempFilters, fromYear: e.target.value })}
+                  value={appliedFilters.fromYear}
+                  onChange={(e) => updateFilter('fromYear', e.target.value)}
                   sx={{
                     width: '100%',
                     '& .MuiOutlinedInput-root': {
@@ -470,8 +471,8 @@ export const Dashboard: React.FC = () => {
                 <TextField
                   placeholder="20__"
                   size="small"
-                  value={tempFilters.toYear}
-                  onChange={(e) => setTempFilters({ ...tempFilters, toYear: e.target.value })}
+                  value={appliedFilters.toYear}
+                  onChange={(e) => updateFilter('toYear', e.target.value)}
                   sx={{
                     width: '100%',
                     '& .MuiOutlinedInput-root': {
@@ -490,8 +491,8 @@ export const Dashboard: React.FC = () => {
               </Typography>
               <RadioGroup
                 row
-                value={tempFilters.gender}
-                onChange={(e) => setTempFilters({ ...tempFilters, gender: e.target.value })}
+                value={appliedFilters.gender}
+                onChange={(e) => updateFilter('gender', e.target.value)}
               >
                 <FormControlLabel value="All" control={<Radio size="small" />} label="All" />
                 <FormControlLabel value="Male" control={<Radio size="small" />} label="Male" />
@@ -509,8 +510,8 @@ export const Dashboard: React.FC = () => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={tempFilters.activeStatus}
-                      onChange={(e) => setTempFilters({ ...tempFilters, activeStatus: e.target.checked })}
+                      checked={appliedFilters.activeStatus}
+                      onChange={(e) => updateFilter('activeStatus', e.target.checked)}
                       size="small"
                     />
                   }
@@ -519,8 +520,8 @@ export const Dashboard: React.FC = () => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={tempFilters.archivedStatus}
-                      onChange={(e) => setTempFilters({ ...tempFilters, archivedStatus: e.target.checked })}
+                      checked={appliedFilters.archivedStatus}
+                      onChange={(e) => updateFilter('archivedStatus', e.target.checked)}
                       size="small"
                     />
                   }
@@ -538,8 +539,8 @@ export const Dashboard: React.FC = () => {
                 <TextField
                   type="date"
                   size="small"
-                  value={tempFilters.fromDate}
-                  onChange={(e) => setTempFilters({ ...tempFilters, fromDate: e.target.value })}
+                  value={appliedFilters.fromDate}
+                  onChange={(e) => updateFilter('fromDate', e.target.value)}
                   InputLabelProps={{ shrink: true }}
                   sx={{
                     width: '100%',
@@ -557,8 +558,8 @@ export const Dashboard: React.FC = () => {
                 <TextField
                   type="date"
                   size="small"
-                  value={tempFilters.toDate}
-                  onChange={(e) => setTempFilters({ ...tempFilters, toDate: e.target.value })}
+                  value={appliedFilters.toDate}
+                  onChange={(e) => updateFilter('toDate', e.target.value)}
                   InputLabelProps={{ shrink: true }}
                   sx={{
                     width: '100%',
@@ -572,12 +573,12 @@ export const Dashboard: React.FC = () => {
             </Box>
 
             {/* Buttons */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: '12px', gap: '16px' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: '8px' }}>
               <Button
                 variant="outlined"
-                onClick={handleResetFilters}
+                fullWidth
+                onClick={handleClearFilters}
                 sx={{
-                  flex: 1,
                   height: '42px',
                   borderRadius: '14px',
                   fontWeight: 600,
@@ -590,26 +591,7 @@ export const Dashboard: React.FC = () => {
                   }
                 }}
               >
-                Reset Filters
-              </Button>
-              <Button
-                variant="contained"
-                onClick={handleApplyFilters}
-                sx={{
-                  flex: 1,
-                  height: '42px',
-                  borderRadius: '14px',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  backgroundColor: '#0B4DBA',
-                  color: '#FFFFFF',
-                  boxShadow: '0 4px 12px rgba(11, 77, 186, 0.2)',
-                  '&:hover': {
-                    backgroundColor: '#093A8C',
-                  }
-                }}
-              >
-                Apply Filters
+                Clear Filters
               </Button>
             </Box>
           </Box>
@@ -708,8 +690,8 @@ export const Dashboard: React.FC = () => {
               {paginatedStudents.length === 0 ? (
                 <TableRow sx={{ height: '120px' }}>
                   <TableCell colSpan={8} align="center" sx={{ verticalAlign: 'middle' }}>
-                    <Typography variant="body1" sx={{ fontSize: '15px', color: isDark ? '#CBD5E1' : '#64748B' }}>
-                      No matching student admission records found.
+                    <Typography variant="body1" sx={{ fontSize: '15px', fontWeight: 500, color: isDark ? '#CBD5E1' : '#64748B' }}>
+                      No students found
                     </Typography>
                   </TableCell>
                 </TableRow>
@@ -980,12 +962,7 @@ export const Dashboard: React.FC = () => {
         <MenuItem
           onClick={() => {
             if (moreMenuAnchor.student) {
-              const s = moreMenuAnchor.student;
-              showConfirm(
-                'Archive Student Record',
-                `Are you sure you want to archive student ${s.personal.studentName}?`,
-                () => archiveSingleStudent(s.id, 'Management Decision')
-              );
+              setArchiveModalStudent(moreMenuAnchor.student);
             }
             handleMoreClose();
           }}
@@ -994,6 +971,18 @@ export const Dashboard: React.FC = () => {
           <Archive size={16} /> Archive Student
         </MenuItem>
       </Menu>
+
+      {/* Archive Student Confirmation Modal */}
+      <ArchiveStudentModal
+        open={Boolean(archiveModalStudent)}
+        student={archiveModalStudent}
+        onClose={() => setArchiveModalStudent(null)}
+        onConfirmArchive={async (reason, description) => {
+          if (archiveModalStudent) {
+            await archiveSingleStudent(archiveModalStudent.id, reason, description);
+          }
+        }}
+      />
     </Box>
   );
 };

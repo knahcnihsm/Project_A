@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Typography, Button, CircularProgress } from '@mui/material';
 import { ArrowLeft, ArrowRight, Save, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmission } from '../../context/AdmissionContext';
@@ -19,6 +19,7 @@ export const AddAdmission: React.FC = () => {
     setActiveStep,
     isEditMode,
     isViewReadOnly,
+    savingStep,
     saveCurrentAdmission,
   } = useAdmission();
 
@@ -37,9 +38,9 @@ export const AddAdmission: React.FC = () => {
     }
   };
 
-  const handleFinalSave = () => {
-    saveCurrentAdmission();
-    navigate('/');
+  const handleFinalSave = async () => {
+    const ok = await saveCurrentAdmission();
+    if (ok) navigate('/');
   };
 
   const getPageTitle = () => {
@@ -111,7 +112,7 @@ export const AddAdmission: React.FC = () => {
         }}
       >
         <Button
-          disabled={activeStep === 0}
+          disabled={activeStep === 0 || savingStep}
           onClick={handlePrevious}
           variant="outlined"
           startIcon={<ArrowLeft size={16} />}
@@ -141,7 +142,10 @@ export const AddAdmission: React.FC = () => {
               type="submit"
               form="wizard-step-form"
               variant="contained"
-              endIcon={<ArrowRight size={16} />}
+              disabled={savingStep}
+              startIcon={
+                savingStep ? <CircularProgress size={16} color="inherit" /> : <ArrowRight size={16} />
+              }
               sx={{
                 backgroundColor: isDark ? '#1D6FA4' : '#0D47A1',
                 color: '#FFFFFF',
@@ -155,15 +159,17 @@ export const AddAdmission: React.FC = () => {
                 },
               }}
             >
-              Save & Next
+              Next
             </Button>
-          ) : (
-            !isViewReadOnly && (
+          ) : (            !isViewReadOnly && (
               <Button
                 type="submit"
                 form="wizard-step-form"
                 variant="contained"
-                startIcon={<CheckCircle size={16} />}
+                disabled={savingStep}
+                startIcon={
+                  savingStep ? <CircularProgress size={16} color="inherit" /> : <CheckCircle size={16} />
+                }
                 sx={{
                   backgroundColor: '#16A34A',
                   color: '#FFFFFF',

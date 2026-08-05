@@ -14,20 +14,58 @@ import {
 import { UploadCloud, FileSpreadsheet, Download, CheckCircle2, AlertCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useAdmission } from '../../context/AdmissionContext';
-import { downloadSampleBulkUpdateTemplate } from '../../utils/exportExcel';
-import { StudentRecord } from '../../types';
+import {
+  downloadSampleBulkUpdateTemplate,
+  exportBulkUpdateErrorReport,
+} from '../../utils/exportExcel';
+import { BulkUpdateRowInput, BulkUpdateResult } from '../../types';
+
+const toDateString = (v: unknown): string | undefined => {
+  if (v instanceof Date) {
+    if (Number.isNaN(v.getTime())) return undefined;
+    const y = v.getFullYear();
+    const m = String(v.getMonth() + 1).padStart(2, '0');
+    const d = String(v.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  if (typeof v === 'number' && Number.isFinite(v)) {
+    if (v > 0 && v < 60000) {
+      const code = XLSX.SSF.parse_date_code(v);
+      if (code) {
+        return `${code.y}-${String(code.m).padStart(2, '0')}-${String(code.d).padStart(2, '0')}`;
+      }
+    }
+    return String(v);
+  }
+  if (typeof v === 'string') {
+    const s = v.trim();
+    return s || undefined;
+  }
+  return undefined;
+};
+
+const cellValue = (row: Record<string, unknown>, keys: string[]): string | undefined => {
+  for (const key of keys) {
+    const v = row[key];
+    if (v === undefined || v === null) continue;
+    if (typeof v === 'number' && Number.isFinite(v)) return String(v);
+    const s = String(v).trim();
+    if (s) return s;
+  }
+  return undefined;
+};
 
 export const BulkUpdateModal: React.FC = () => {
   const { bulkUpdateModalOpen, setBulkUpdateModalOpen, bulkUpdateFromRows } = useAdmission();
   const [file, setFile] = useState<File | null>(null);
-  const [parsedRows, setParsedRows] = useState<Partial<StudentRecord>[]>([]);
+  const [parsedRows, setParsedRows] = useState<BulkUpdateRowInput[]>([]);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [summary, setSummary] = useState<{ total: number; valid: number; invalid: number; duplicate: number } | null>(null);
+  const [result, setResult] = useState<BulkUpdateResult | null>(null);
 
   const handleClose = () => {
     setFile(null);
     setParsedRows([]);
-    setSummary(null);
+    setResult(null);
     setIsProcessing(false);
     setBulkUpdateModalOpen(false);
   };
@@ -52,63 +90,43 @@ export const BulkUpdateModal: React.FC = () => {
       const wb = XLSX.read(bstr, { type: 'binary' });
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
-      const data: any[] = XLSX.utils.sheet_to_json(ws);
+      const data: Record<string, unknown>[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
 
-      const rows: Partial<StudentRecord>[] = data.map((row) => ({
-        personal: {
-          applicationNumber: row['Application Number'] || row['ApplicationNo'] || '',
-          registerNumber: row['Register Number'] || row['RegisterNo'] || '',
-          studentName: row['Student Name'] || row['StudentName'] || '',
-          district: row['District'] || 'Puducherry',
-          dateOfBirth: row['DOB'] || '2005-01-01',
-          age: 21,
-          aadhaarNumber: row['Aadhaar'] || '123456789012',
-          gender: 'Male',
-          nationality: 'Indian',
-          caste: 'OC',
-        },
-        parent: {
-          fatherName: row['Father Name'] || '',
-          fatherMobile: String(row['Father Mobile'] || ''),
-          fatherOccupation: '',
-          annualIncome: 0,
-        },
-        communication: {
-          permanentAddress: {
-            addressLine: row['Address'] || '',
-            pinCode: '605001',
-            mobileNumber: String(row['Mobile Number'] || ''),
-            email: row['Email'] || '',
-          },
-          communicationAddress: {
-            addressLine: row['Address'] || '',
-            pinCode: '605001',
-            mobileNumber: String(row['Mobile Number'] || ''),
-            email: row['Email'] || '',
-          },
-          sameAsPermanent: true,
-        },
+      const rows: BulkUpdateRowInput[] = data.map((row, index) => ({
+        rowNumber: index + 2,
+        applicationNumber: cellValue(row, ['Application No', 'Application Number', 'ApplicationNo']),
+        registerNumber: cellValue(row, ['Register No', 'Register Number', 'RegisterNo']),
+        studentName: cellValue(row, ['Student Name', 'StudentName']),
+        dateOfBirth: toDateString(row['DOB'] ?? row['Date of Birth'] ?? ''),
+        gender: cellValue(row, ['Gender']),
+        aadhaarNumber: cellValue(row, ['Aadhaar No', 'Aadhaar Number', 'Aadhaar']),
+        district: cellValue(row, ['District']),
+        caste: cellValue(row, ['Category']),
+        admissionCategory: cellValue(row, ['Admission Category']),
+        program: cellValue(row, ['Program']),
+        department: cellValue(row, ['Department']),
+        batch: cellValue(row, ['Batch']),
+        fatherName: cellValue(row, ['Father Name']),
+        fatherMobile: cellValue(row, ['Father Mobile', 'Father Mobile Number']),
+        mobileNumber: cellValue(row, ['Mobile Number', 'Mobile']),
+        email: cellValue(row, ['Email', 'Email ID']),
+        grandTotalFee: cellValue(row, ['Grand Total Fee (₹)', 'Grand Total Fee', 'Total Fee']),
+        status: cellValue(row, ['Status']),
+        archiveReason: cellValue(row, ['Archive Reason']),
       }));
 
-      const total = rows.length;
-      const valid = rows.filter((r) => r.personal?.registerNumber || r.personal?.applicationNumber).length;
-      const invalid = total - valid;
-      const duplicate = 0;
-
       setParsedRows(rows);
-      setSummary({ total, valid, invalid, duplicate });
+      setResult(null);
     };
     reader.readAsBinaryString(fileToParse);
   };
 
-  const handleProcessExcel = () => {
-    if (parsedRows.length === 0) return;
+  const handleProcessExcel = async () => {
+    if (parsedRows.length === 0 || isProcessing) return;
     setIsProcessing(true);
-    setTimeout(() => {
-      bulkUpdateFromRows(parsedRows);
-      setIsProcessing(false);
-      handleClose();
-    }, 600);
+    const res = await bulkUpdateFromRows(parsedRows);
+    setResult(res);
+    setIsProcessing(false);
   };
 
   return (
@@ -181,18 +199,34 @@ export const BulkUpdateModal: React.FC = () => {
           </Typography>
         </Paper>
 
-        {/* Validation Summary */}
-        {summary && (
+        {/* Processing Summary */}
+        {result && (
           <Box sx={{ marginTop: '20px', backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E6ECF5' }}>
             <Typography variant="h6" sx={{ fontSize: '0.95rem', fontWeight: 700, color: '#1A2B49', marginBottom: '12px' }}>
-              Validation Summary
+              Processing Summary
             </Typography>
             <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <Chip label={`Total Records: ${summary.total}`} color="primary" variant="outlined" sx={{ fontWeight: 600 }} />
-              <Chip label={`Valid: ${summary.valid}`} color="success" icon={<CheckCircle2 size={14} />} sx={{ fontWeight: 600 }} />
-              <Chip label={`Invalid: ${summary.invalid}`} color="error" icon={<AlertCircle size={14} />} sx={{ fontWeight: 600 }} />
-              <Chip label={`Duplicate: ${summary.duplicate}`} variant="outlined" sx={{ fontWeight: 600 }} />
+              <Chip label={`Total Records: ${result.totalRows}`} color="primary" variant="outlined" sx={{ fontWeight: 600 }} />
+              <Chip label={`Successfully Updated: ${result.updatedCount}`} color="success" icon={<CheckCircle2 size={14} />} sx={{ fontWeight: 600 }} />
+              <Chip label={`Skipped: ${result.skippedCount}`} color="warning" icon={<AlertCircle size={14} />} sx={{ fontWeight: 600 }} />
+              <Chip label={`Failed: ${result.failedCount}`} color="error" icon={<AlertCircle size={14} />} sx={{ fontWeight: 600 }} />
             </Box>
+            {result.errors.length > 0 && (
+              <Button
+                variant="outlined"
+                startIcon={<Download size={16} />}
+                onClick={() => exportBulkUpdateErrorReport(result.errors)}
+                sx={{
+                  borderColor: '#0D47A1',
+                  color: '#0D47A1',
+                  borderRadius: '8px',
+                  marginTop: '16px',
+                  fontWeight: 600,
+                }}
+              >
+                Download Error Report
+              </Button>
+            )}
           </Box>
         )}
       </DialogContent>
@@ -204,7 +238,7 @@ export const BulkUpdateModal: React.FC = () => {
         <Button
           onClick={handleProcessExcel}
           variant="contained"
-          disabled={!file || parsedRows.length === 0 || isProcessing}
+          disabled={!file || parsedRows.length === 0 || isProcessing || !!result}
           startIcon={isProcessing ? <CircularProgress size={16} color="inherit" /> : <FileSpreadsheet size={16} />}
           sx={{
             backgroundColor: '#0D47A1',

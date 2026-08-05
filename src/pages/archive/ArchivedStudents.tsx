@@ -691,7 +691,7 @@ export const ArchivedStudents: React.FC = () => {
                           sx={{ fontWeight: 600 }}
                         />
                       </TableCell>
-                      <TableCell sx={tdStyle}>{student.archivedBy || 'Admin User'}</TableCell>
+                      <TableCell sx={tdStyle}>Admin User</TableCell>
                       <TableCell sx={tdStyle}>{formatDateDisplay(student.archivedAt)}</TableCell>
                       <TableCell align="center" sx={tdStyle}>
                         <Box sx={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Grid,
   TextField,
@@ -72,7 +72,7 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
     monthYearPassing: draftStudent.qualifyingExam?.monthYearPassing || '',
     sslcPercentage: draftStudent.qualifyingExam?.sslcPercentage ?? undefined,
     sslcRegisterNumber: draftStudent.qualifyingExam?.sslcRegisterNumber || '',
-    hscPercentage: draftStudent.qualifyingExam?.hscPercentage ?? undefined,
+    hscPercentage: draftStudent.qualifyingExam?.hscPercentage || draftStudent.hscMarks?.overallPercentage || undefined,
     hscRegisterNumber: draftStudent.qualifyingExam?.hscRegisterNumber || '',
   });
 
@@ -131,16 +131,12 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
     diplomaCourse: string;
     institutionName: string;
     board: string;
-    monthYearPassing: string;
-    registerNumber: string;
     secondYearPercentage: number | undefined;
     thirdYearPercentage: number | undefined;
   }>({
     diplomaCourse: draftStudent.diplomaDetails?.diplomaCourse || '',
     institutionName: draftStudent.diplomaDetails?.institutionName || '',
     board: draftStudent.diplomaDetails?.board || '',
-    monthYearPassing: draftStudent.diplomaDetails?.monthYearPassing || '',
-    registerNumber: draftStudent.diplomaDetails?.registerNumber || '',
     secondYearPercentage: draftStudent.diplomaDetails?.secondYearPercentage ?? undefined,
     thirdYearPercentage: draftStudent.diplomaDetails?.thirdYearPercentage ?? undefined,
   });
@@ -180,6 +176,47 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
   const thirdYearPct = diploma.thirdYearPercentage || 0;
   const diplomaAggregate = Number(((secondYearPct + thirdYearPct) / 2).toFixed(2));
 
+  // Live synchronize edits to draftStudent in AdmissionContext
+  useEffect(() => {
+    if (program === 'First Year B.Tech') {
+      updateDraftSection('qualifyingExam', qualifyingData as any);
+      updateDraftSection('hscMarks', {
+        stream,
+        academicMarks,
+        vocationalMarks,
+        totalMaxMarks: totalMax,
+        totalMarksObtained: totalObtained,
+        overallPercentage: qualifyingData.hscPercentage !== undefined && qualifyingData.hscPercentage > 0 ? qualifyingData.hscPercentage : overallPct,
+        engineeringCutOff: cutOff,
+      });
+      if (draftStudent.fee) {
+        updateDraftSection('fee', {
+          ...draftStudent.fee,
+          cutOffMark: cutOff,
+        });
+      }
+    } else if (program === 'Second Year B.Tech (Lateral Entry)') {
+      updateDraftSection('diplomaDetails', {
+        ...diploma,
+        aggregatePercentage: diplomaAggregate,
+      } as any);
+      if (draftStudent.fee) {
+        updateDraftSection('fee', {
+          ...draftStudent.fee,
+          cutOffMark: diplomaAggregate,
+        });
+      }
+    } else {
+      updateDraftSection('pgQualification', pg as any);
+      if (draftStudent.fee) {
+        updateDraftSection('fee', {
+          ...draftStudent.fee,
+          cutOffMark: pg.mainSubjectPercentage || 0,
+        });
+      }
+    }
+  }, [qualifyingData, stream, academicMarks, vocationalMarks, diploma, pg, program, totalMax, totalObtained, overallPct, cutOff, diplomaAggregate]);
+
   const handleMarkChange = (index: number, field: keyof HSCSubjectMark, value: any) => {
     const setter = stream === 'Academic' ? setAcademicMarks : setVocationalMarks;
     setter((prev) => {
@@ -195,7 +232,7 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
     });
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (program === 'First Year B.Tech') {
@@ -206,7 +243,7 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
         vocationalMarks,
         totalMaxMarks: totalMax,
         totalMarksObtained: totalObtained,
-        overallPercentage: overallPct,
+        overallPercentage: qualifyingData.hscPercentage !== undefined && qualifyingData.hscPercentage > 0 ? qualifyingData.hscPercentage : overallPct,
         engineeringCutOff: cutOff,
       });
       updateDraftSection('fee', {
@@ -508,28 +545,6 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-                label="Register Number *"
-                fullWidth
-                sx={fieldSx}
-                disabled={isViewReadOnly}
-                value={diploma.registerNumber}
-                onChange={(e) => setDiploma({ ...diploma, registerNumber: e.target.value })}
-              />
-            </Grid>
-
-            {/* ROW 3 */}
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Month & Year of Passing *"
-                fullWidth
-                sx={fieldSx}
-                disabled={isViewReadOnly}
-                value={diploma.monthYearPassing}
-                onChange={(e) => setDiploma({ ...diploma, monthYearPassing: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
                 type="number"
                 label="Second Year Percentage (%) *"
                 fullWidth
@@ -551,7 +566,7 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
               />
             </Grid>
 
-            {/* ROW 4 */}
+            {/* ROW 3 */}
             <Grid item xs={12} sm={6}>
               <TextField
                 type="number"

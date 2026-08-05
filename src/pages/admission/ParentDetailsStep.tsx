@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Grid, TextField, Typography, Box, InputAdornment } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,6 +38,7 @@ export const ParentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
   const {
     control,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<ParentDetailsFormData>({
     resolver: zodResolver(parentDetailsSchema),
@@ -49,7 +50,15 @@ export const ParentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
     },
   });
 
-  const onSubmit = (data: ParentDetailsFormData) => {
+  const watchedValues = watch();
+  React.useEffect(() => {
+    updateDraftSection('parent', {
+      ...watchedValues,
+      fatherOccupation: watchedValues.fatherOccupation || '',
+    } as any);
+  }, [JSON.stringify(watchedValues)]);
+
+  const onSubmit = async (data: ParentDetailsFormData) => {
     updateDraftSection('parent', {
       ...data,
       fatherOccupation: data.fatherOccupation || '',

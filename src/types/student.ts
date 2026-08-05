@@ -13,12 +13,6 @@ export interface StudentPersonalDetails {
   district: string;
   nationality: string;
   caste: string;
-  community?: string;
-  religion?: string;
-  bloodGroup?: string;
-  mobileNumber?: string;
-  email?: string;
-  studentPhoto?: string;
 }
 
 export interface ParentDetails {
@@ -26,19 +20,7 @@ export interface ParentDetails {
   fatherMobile: string; // 10 digits
   fatherOccupation: string;
   annualIncome: number;
-  fatherEmail?: string;
-  motherName?: string;
-  motherMobile?: string;
-  motherOccupation?: string;
-  motherAnnualIncome?: number;
-  motherEmail?: string;
-  guardianName?: string;
-  guardianMobile?: string;
-  guardianOccupation?: string;
-  guardianRelation?: string;
-  guardianEmail?: string;
   parentMobile?: string;
-  parentEmail?: string;
 }
 
 export interface Address {
@@ -47,8 +29,6 @@ export interface Address {
   phoneNumber?: string;
   mobileNumber: string; // 10 digits
   email: string;
-  district?: string;
-  state?: string;
 }
 
 export interface CommunicationDetails {
@@ -113,8 +93,6 @@ export interface DiplomaDetails {
   diplomaCourse: string;
   institutionName: string;
   board: 'DOTE' | 'AICTE' | 'Autonomous' | 'Other' | string;
-  monthYearPassing: string;
-  registerNumber: string;
   secondYearPercentage: number;
   thirdYearPercentage: number;
   aggregatePercentage: number;
@@ -185,6 +163,40 @@ export interface StudentRecord {
 
   // Archive audit fields
   archivedAt?: string;
-  archivedBy?: string;
   archiveReason?: string;
+}
+
+/**
+ * A single data row parsed from the official Bulk Student Update Excel template.
+ * Empty strings mean "No Change" and are never applied to the database.
+ */
+export interface BulkUpdateRowInput {
+  rowNumber: number;
+  applicationNumber?: string;
+  registerNumber?: string;
+  studentName?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  aadhaarNumber?: string;
+  district?: string;
+  caste?: string;
+  admissionCategory?: string;
+  program?: string;
+  department?: string;
+  batch?: string;
+  fatherName?: string;
+  fatherMobile?: string;
+  mobileNumber?: string;
+  email?: string;
+  grandTotalFee?: string;
+  status?: string;
+  archiveReason?: string;
+}
+
+export interface BulkUpdateResult {
+  totalRows: number;
+  updatedCount: number;
+  skippedCount: number;
+  failedCount: number;
+  errors: { rowNumber: number; registerNumber: string; applicationNumber: string; reason: string }[];
 }

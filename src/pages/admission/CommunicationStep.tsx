@@ -68,12 +68,17 @@ export const CommunicationStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
         mobileNumber: draftStudent.communication?.communicationAddress?.mobileNumber || '',
         email: draftStudent.communication?.communicationAddress?.email || '',
       },
-      sameAsPermanent: false,
+      sameAsPermanent: draftStudent.communication?.sameAsPermanent ?? false,
     },
   });
 
+  const watchedValues = watch();
   const sameAsPermanent = watch('sameAsPermanent');
   const permAddress = watch('permanentAddress');
+
+  useEffect(() => {
+    updateDraftSection('communication', watchedValues as any);
+  }, [JSON.stringify(watchedValues)]);
 
   useEffect(() => {
     if (sameAsPermanent) {
@@ -81,7 +86,7 @@ export const CommunicationStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
     }
   }, [sameAsPermanent, permAddress, setValue]);
 
-  const onSubmit = (data: CommunicationFormData) => {
+  const onSubmit = async (data: CommunicationFormData) => {
     updateDraftSection('communication', data);
     onNext();
   };

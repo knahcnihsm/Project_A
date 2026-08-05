@@ -6,9 +6,42 @@ import { exportStudentsToExcel, downloadSampleBulkUpdateTemplate } from '../../u
 import { generateStudentPdf } from '../../utils/exportPdf';
 
 export const ExportPage: React.FC = () => {
-  const { students, selectedStudentIds } = useAdmission();
+  const { students, selectedStudentIds, showWarningModal } = useAdmission();
 
   const selectedStudents = students.filter((s) => selectedStudentIds.includes(s.id));
+
+  const handleExportAllExcel = () => {
+    if (students.length === 0) {
+      showWarningModal(
+        'No Student Found',
+        'There are no students available to export.'
+      );
+      return;
+    }
+    exportStudentsToExcel(students, 'Complete_Active_Students.xlsx');
+  };
+
+  const handleExportSelectedExcel = () => {
+    if (selectedStudentIds.length === 0) {
+      showWarningModal(
+        'No Student Selected',
+        'Please select at least one student before exporting.'
+      );
+      return;
+    }
+    exportStudentsToExcel(selectedStudents, 'Selected_Students.xlsx');
+  };
+
+  const handleExportPdf = () => {
+    if (selectedStudentIds.length === 0) {
+      showWarningModal(
+        'No Student Selected',
+        'Please select a student before exporting the PDF.'
+      );
+      return;
+    }
+    selectedStudents.forEach((s) => generateStudentPdf(s));
+  };
 
   return (
     <Box>
@@ -43,7 +76,7 @@ export const ExportPage: React.FC = () => {
               <Button
                 variant="contained"
                 startIcon={<Download size={18} />}
-                onClick={() => exportStudentsToExcel(students, 'Complete_Active_Students.xlsx')}
+                onClick={handleExportAllExcel}
                 sx={{ backgroundColor: '#16A34A', borderRadius: '8px', fontWeight: 600 }}
               >
                 Download All Active Students (.xlsx)
@@ -72,9 +105,8 @@ export const ExportPage: React.FC = () => {
 
               <Button
                 variant="contained"
-                disabled={selectedStudentIds.length === 0}
                 startIcon={<Download size={18} />}
-                onClick={() => exportStudentsToExcel(selectedStudents, 'Selected_Students.xlsx')}
+                onClick={handleExportSelectedExcel}
                 sx={{ backgroundColor: '#0284C7', borderRadius: '8px', fontWeight: 600 }}
               >
                 Download Selected Students ({selectedStudentIds.length})
@@ -126,19 +158,18 @@ export const ExportPage: React.FC = () => {
                     Generate Student PDF Summary
                   </Typography>
                   <Typography variant="body2" sx={{ color: '#667085' }}>
-                    Generate official signed PDF document for the first active student record.
+                    Generate official signed PDF document for selected student.
                   </Typography>
                 </Box>
               </Box>
 
               <Button
                 variant="contained"
-                disabled={students.length === 0}
                 startIcon={<FileText size={18} />}
-                onClick={() => students.length > 0 && generateStudentPdf(students[0])}
+                onClick={handleExportPdf}
                 sx={{ backgroundColor: '#D97706', borderRadius: '8px', fontWeight: 600 }}
               >
-                Generate PDF ({students[0]?.personal.studentName})
+                Generate Selected Student PDF ({selectedStudentIds.length})
               </Button>
             </CardContent>
           </Card>

@@ -79,7 +79,11 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
 
   const availableStops = busRoute ? (BUS_ROUTES_WITH_STOPS[busRoute] || []) : [];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    updateDraftSection('fee', feeDetails);
+  }, [busTransport, busRoute, busStop, hostel]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     updateDraftSection('fee', feeDetails);
     onNext();
