@@ -1,0 +1,149 @@
+import React from 'react';
+import { Box, Typography, Grid, Card, CardContent, Button } from '@mui/material';
+import { FileSpreadsheet, Download, FileText, CheckCircle2 } from 'lucide-react';
+import { useAdmission } from '../../context/AdmissionContext';
+import { exportStudentsToExcel, downloadSampleBulkUpdateTemplate } from '../../utils/exportExcel';
+import { generateStudentPdf } from '../../utils/exportPdf';
+
+export const ExportPage: React.FC = () => {
+  const { students, selectedStudentIds } = useAdmission();
+
+  const selectedStudents = students.filter((s) => selectedStudentIds.includes(s.id));
+
+  return (
+    <Box>
+      <Box sx={{ marginBottom: '24px' }}>
+        <Typography variant="h4" sx={{ fontWeight: 800, color: '#0D47A1', fontSize: '1.75rem' }}>
+          Enterprise Reports & Data Export Center
+        </Typography>
+        <Typography variant="body1" sx={{ color: '#667085', fontSize: '0.95rem' }}>
+          Generate official PDF admission forms, download Excel master sheets, and download bulk templates.
+        </Typography>
+      </Box>
+
+      <Grid container spacing={3}>
+        {/* Export All Students Excel */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={0} sx={{ border: '1px solid #E6ECF5', borderRadius: '16px', backgroundColor: '#FFFFFF', padding: '20px' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <Box sx={{ width: 48, height: 48, borderRadius: '12px', backgroundColor: '#DCFCE7', color: '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <FileSpreadsheet size={24} />
+                </Box>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1A2B49' }}>
+                    Export All Active Students (Excel)
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#667085' }}>
+                    Download complete spreadsheet of all {students.length} active admission records.
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Button
+                variant="contained"
+                startIcon={<Download size={18} />}
+                onClick={() => exportStudentsToExcel(students, 'Complete_Active_Students.xlsx')}
+                sx={{ backgroundColor: '#16A34A', borderRadius: '8px', fontWeight: 600 }}
+              >
+                Download All Active Students (.xlsx)
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Export Selected Students Excel */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={0} sx={{ border: '1px solid #E6ECF5', borderRadius: '16px', backgroundColor: '#FFFFFF', padding: '20px' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <Box sx={{ width: 48, height: 48, borderRadius: '12px', backgroundColor: '#E0F2FE', color: '#0284C7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CheckCircle2 size={24} />
+                </Box>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1A2B49' }}>
+                    Export Selected Students ({selectedStudentIds.length} Selected)
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#667085' }}>
+                    Download Excel sheet specifically for checked checkbox records.
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Button
+                variant="contained"
+                disabled={selectedStudentIds.length === 0}
+                startIcon={<Download size={18} />}
+                onClick={() => exportStudentsToExcel(selectedStudents, 'Selected_Students.xlsx')}
+                sx={{ backgroundColor: '#0284C7', borderRadius: '8px', fontWeight: 600 }}
+              >
+                Download Selected Students ({selectedStudentIds.length})
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Download Bulk Update Template */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={0} sx={{ border: '1px solid #E6ECF5', borderRadius: '16px', backgroundColor: '#FFFFFF', padding: '20px' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <Box sx={{ width: 48, height: 48, borderRadius: '12px', backgroundColor: '#EBF3FE', color: '#0D47A1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <FileSpreadsheet size={24} />
+                </Box>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1A2B49' }}>
+                    Sample Bulk Update Template
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#667085' }}>
+                    Download empty pre-formatted Excel template for bulk student updates.
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Button
+                variant="outlined"
+                startIcon={<Download size={18} />}
+                onClick={downloadSampleBulkUpdateTemplate}
+                sx={{ borderColor: '#0D47A1', color: '#0D47A1', borderRadius: '8px', fontWeight: 600 }}
+              >
+                Download Excel Template
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* PDF Single Student Generator */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={0} sx={{ border: '1px solid #E6ECF5', borderRadius: '16px', backgroundColor: '#FFFFFF', padding: '20px' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <Box sx={{ width: 48, height: 48, borderRadius: '12px', backgroundColor: '#FEF3C7', color: '#D97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <FileText size={24} />
+                </Box>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1A2B49' }}>
+                    Generate Student PDF Summary
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#667085' }}>
+                    Generate official signed PDF document for the first active student record.
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Button
+                variant="contained"
+                disabled={students.length === 0}
+                startIcon={<FileText size={18} />}
+                onClick={() => students.length > 0 && generateStudentPdf(students[0])}
+                sx={{ backgroundColor: '#D97706', borderRadius: '8px', fontWeight: 600 }}
+              >
+                Generate PDF ({students[0]?.personal.studentName})
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+};
