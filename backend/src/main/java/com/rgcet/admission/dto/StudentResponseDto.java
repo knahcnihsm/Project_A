@@ -233,6 +233,9 @@ public record StudentResponseDto(
 
     public record FeeDto(
             BigDecimal cutOffMark,
+            BigDecimal meritPercent,
+            BigDecimal originalTuitionFeePerYear,
+            BigDecimal scholarshipAmount,
             BigDecimal tuitionFeePerYear,
             Integer courseDurationYears,
             BigDecimal totalTuitionFee,
@@ -252,7 +255,8 @@ public record StudentResponseDto(
         private static FeeDto from(com.rgcet.admission.entity.StudentFee f) {
             if (f == null) return null;
             return new FeeDto(
-                    f.getCutOffMark(), f.getTuitionFeePerYear(), f.getCourseDurationYears(), f.getTotalTuitionFee(),
+                    f.getCutOffMark(), f.getMeritPercent(), f.getOriginalTuitionFee(), f.getScholarshipAmount(),
+                    f.getTuitionFeePerYear(), f.getCourseDurationYears(), f.getTotalTuitionFee(),
                     Boolean.TRUE.equals(f.getBusRequired()),
                     f.getRoute() == null ? null : f.getRoute().getRouteId(),
                     f.getRoute() == null ? null : f.getRoute().getRouteName(),

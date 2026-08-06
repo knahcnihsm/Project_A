@@ -126,46 +126,173 @@ export interface ArchiveRequest {
   description?: string;
 }
 
-export interface BulkUpdateRowRequest {
-  rowNumber?: number;
-  applicationNumber?: string;
-  registerNumber?: string;
+export interface BulkPersonalRowRequest {
+  rowNumber: number;
+  applicationNo?: string;
+  registerNo?: string;
   studentName?: string;
   dateOfBirth?: string;
   gender?: string;
   aadhaarNumber?: string;
+  nationality?: string;
   district?: string;
   caste?: string;
+}
+
+export interface BulkParentRowRequest {
+  rowNumber: number;
+  applicationNo?: string;
+  registerNo?: string;
+  fatherName?: string;
+  fatherMobile?: string;
+  fatherOccupation?: string;
+  annualIncome?: string;
+}
+
+export interface BulkAddressRowRequest {
+  rowNumber: number;
+  applicationNo?: string;
+  registerNo?: string;
+  addressLine?: string;
+  pincode?: string;
+  phone?: string;
+  mobile?: string;
+  email?: string;
+}
+
+export interface BulkAcademicRowRequest {
+  rowNumber: number;
+  applicationNo?: string;
+  registerNo?: string;
   admissionCategory?: string;
   program?: string;
   department?: string;
   batch?: string;
-  fatherName?: string;
-  fatherMobile?: string;
-  mobileNumber?: string;
-  email?: string;
-  grandTotalFee?: string;
-  status?: string;
-  archiveReason?: string;
+  dateOfAdmission?: string;
 }
 
-export interface BulkUpdateRequest {
-  rows: BulkUpdateRowRequest[];
-}
-
-export interface BulkUpdateError {
+export interface BulkQualifyingExamRowRequest {
   rowNumber: number;
-  registerNumber: string;
-  applicationNumber: string;
-  reason: string;
+  applicationNo?: string;
+  registerNo?: string;
+  institutionName?: string;
+  institutionPlace?: string;
+  examPassed?: string;
+  monthYearPassing?: string;
+  sslcPercentage?: string;
+  sslcRegisterNumber?: string;
+  hscPercentage?: string;
+  hscRegisterNumber?: string;
 }
 
-export interface BulkUpdateResponse {
+export interface BulkSubjectRowRequest {
+  subject?: string;
+  monthYear?: string;
+  maxMarks?: string;
+  marksObtained?: string;
+}
+
+export interface BulkHscMarksRowRequest {
+  rowNumber: number;
+  applicationNo?: string;
+  registerNo?: string;
+  stream?: string;
+  academicMarks: BulkSubjectRowRequest[];
+  vocationalMarks: BulkSubjectRowRequest[];
+}
+
+export interface BulkDiplomaRowRequest {
+  rowNumber: number;
+  applicationNo?: string;
+  registerNo?: string;
+  diplomaCourse?: string;
+  institutionName?: string;
+  board?: string;
+  secondYearPercentage?: string;
+  thirdYearPercentage?: string;
+  aggregatePercentage?: string;
+}
+
+export interface BulkPgRowRequest {
+  rowNumber: number;
+  applicationNo?: string;
+  registerNo?: string;
+  universityName?: string;
+  universityPlace?: string;
+  institutionName?: string;
+  institutionPlace?: string;
+  examPassed?: string;
+  monthYearPassing?: string;
+  totalPercentage?: string;
+  mainSubjectPercentage?: string;
+  degreeRegistrationNumber?: string;
+}
+
+export interface BulkWorkbookRequest {
+  fileName?: string;
+  uploadedBy?: string;
+  personal: BulkPersonalRowRequest[];
+  parent: BulkParentRowRequest[];
+  communication: BulkAddressRowRequest[];
+  permanent: BulkAddressRowRequest[];
+  academic: BulkAcademicRowRequest[];
+  qualifyingExam: BulkQualifyingExamRowRequest[];
+  hscMarks: BulkHscMarksRowRequest[];
+  diploma: BulkDiplomaRowRequest[];
+  pg: BulkPgRowRequest[];
+}
+
+export type BulkIssueSeverity = 'ERROR' | 'WARNING';
+
+export interface BulkIssueDto {
+  sheet: string;
+  rowNumber: number;
+  field: string;
+  message: string;
+  severity: BulkIssueSeverity;
+}
+
+export interface FieldChangeDto {
+  sheet: string;
+  field: string;
+  oldValue?: string;
+  newValue?: string;
+}
+
+export interface BulkPreviewRowDto {
+  studentId: number;
+  applicationNo?: string;
+  registerNo?: string;
+  studentName?: string;
+  changes: FieldChangeDto[];
+}
+
+export interface BulkValidationResponse {
+  fileName?: string;
   totalRows: number;
-  updatedCount: number;
-  skippedCount: number;
-  failedCount: number;
-  errors: BulkUpdateError[];
+  matchedStudents: number;
+  unmatchedRows: number;
+  errorCount: number;
+  warningCount: number;
+  valid: boolean;
+  issues: BulkIssueDto[];
+  preview: BulkPreviewRowDto[];
+}
+
+export interface BulkCommitResponse {
+  fileName?: string;
+  uploadedBy?: string;
+  uploadedAt?: string;
+  totalRows: number;
+  validRows: number;
+  updatedStudents: number;
+  noChangeRows: number;
+  skippedRows: number;
+  failedRows: number;
+  warningCount: number;
+  durationMs: number;
+  status: 'SUCCESS' | 'FAILED';
+  issues: BulkIssueDto[];
 }
 
 export interface SubjectMarkDto {
@@ -275,6 +402,9 @@ export interface StudentResponseDto {
   };
   fee?: {
     cutOffMark?: number;
+    meritPercent?: number;
+    originalTuitionFeePerYear?: number;
+    scholarshipAmount?: number;
     tuitionFeePerYear?: number;
     courseDurationYears?: number;
     totalTuitionFee?: number;
@@ -357,6 +487,16 @@ export interface FeeStructureDto {
   min?: number;
   max?: number;
   fee?: number;
+}
+
+export interface ScholarshipStructureDto {
+  id: number;
+  program?: string;
+  department?: string;
+  category?: string;
+  min?: number;
+  max?: number;
+  scholarshipAmount?: number;
 }
 
 export interface PageDto<T> {

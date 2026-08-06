@@ -2,7 +2,8 @@ import React from 'react';
 import { Box, Typography, Grid, Card, CardContent, Button } from '@mui/material';
 import { FileSpreadsheet, Download, FileText, CheckCircle2 } from 'lucide-react';
 import { useAdmission } from '../../context/AdmissionContext';
-import { exportStudentsToExcel, downloadSampleBulkUpdateTemplate } from '../../utils/exportExcel';
+import { exportStudentsToExcel } from '../../utils/exportExcel';
+import { downloadBulkTemplate } from '../../utils/bulkWorkbook';
 import { generateStudentPdf } from '../../utils/exportPdf';
 
 export const ExportPage: React.FC = () => {
@@ -136,7 +137,7 @@ export const ExportPage: React.FC = () => {
               <Button
                 variant="outlined"
                 startIcon={<Download size={18} />}
-                onClick={downloadSampleBulkUpdateTemplate}
+                onClick={() => downloadBulkTemplate(false)}
                 sx={{ borderColor: '#0D47A1', color: '#0D47A1', borderRadius: '8px', fontWeight: 600 }}
               >
                 Download Excel Template

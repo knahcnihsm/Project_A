@@ -83,7 +83,16 @@ export const generateStudentPdf = (student: StudentRecord) => {
     startY: (doc as any).lastAutoTable.finalY + 6,
     head: [['Fee Component', 'Amount (₹)']],
     body: [
-      ['Tuition Fee (Per Year)', `₹ ${student.fee.tuitionFeePerYear.toLocaleString('en-IN')}`],
+      ...(student.fee.meritPercent !== undefined
+        ? [['Merit Score', `${student.fee.meritPercent}%`]]
+        : []),
+      ...(student.fee.originalTuitionFee !== undefined
+        ? [['Original Tuition Fee (Per Year)', `₹ ${student.fee.originalTuitionFee.toLocaleString('en-IN')}`]]
+        : []),
+      ...(student.fee.scholarshipAmount !== undefined
+        ? [['Scholarship Amount (Per Year)', `− ₹ ${student.fee.scholarshipAmount.toLocaleString('en-IN')}`]]
+        : []),
+      ['Final Tuition Fee (Per Year)', `₹ ${student.fee.tuitionFeePerYear.toLocaleString('en-IN')}`],
       [`Total Tuition Fee (${student.fee.courseDurationYears} Years)`, `₹ ${student.fee.totalTuitionFee.toLocaleString('en-IN')}`],
       ['Bus Fee', `₹ ${student.fee.busFee.toLocaleString('en-IN')}`],
       ['Hostel Fee', `₹ ${student.fee.hostelFee.toLocaleString('en-IN')}`],

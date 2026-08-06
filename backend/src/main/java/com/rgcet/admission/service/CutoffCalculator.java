@@ -20,19 +20,20 @@ public final class CutoffCalculator {
 
     /**
      * Engineering Cut-Off = Maths + Physics + best of (Chemistry / Computer Science / Biology / Bio Technology).
-     * Maximum possible score is 300.
+     * Each subject is normalised to its percentage (marksObtained / maximumMarks * 100) before summing,
+     * so subjects marked out of any maximum contribute a score out of 100. The maximum possible cutoff is 300.
      */
     public static BigDecimal engineeringCutOff(List<HSCAcademicMark> academicMarks) {
         if (academicMarks == null || academicMarks.isEmpty()) {
             return null;
         }
-        BigDecimal maths = subjectMarks(academicMarks, "Maths", "Mathematics");
-        BigDecimal physics = subjectMarks(academicMarks, "Physics");
+        BigDecimal maths = subjectPercentage(academicMarks, "Maths", "Mathematics");
+        BigDecimal physics = subjectPercentage(academicMarks, "Physics");
         if (maths == null || physics == null) {
             return null;
         }
         BigDecimal bestScience = SCIENCE_SUBJECTS.stream()
-                .map(s -> subjectMarks(academicMarks, s))
+                .map(s -> subjectPercentage(academicMarks, s))
                 .filter(Objects::nonNull)
                 .max(BigDecimal::compareTo)
                 .orElse(null);
@@ -112,14 +113,14 @@ public final class CutoffCalculator {
         return any ? total : null;
     }
 
-    private static BigDecimal subjectMarks(List<HSCAcademicMark> academicMarks, String... names) {
+    private static BigDecimal subjectPercentage(List<HSCAcademicMark> academicMarks, String... names) {
         for (HSCAcademicMark mark : academicMarks) {
             if (mark.getSubjectName() == null) {
                 continue;
             }
             for (String name : names) {
                 if (mark.getSubjectName().equalsIgnoreCase(name)) {
-                    return mark.getMarksObtained();
+                    return subjectPercentage(mark.getMarksObtained(), mark.getMaximumMarks());
                 }
             }
         }

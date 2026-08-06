@@ -41,6 +41,15 @@ public class StudentFee {
     @Column(name = "cut_off_mark")
     private BigDecimal cutOffMark;
 
+    @Column(name = "merit_percent")
+    private BigDecimal meritPercent;
+
+    @Column(name = "original_tuition_fee")
+    private BigDecimal originalTuitionFee;
+
+    @Column(name = "scholarship_amount")
+    private BigDecimal scholarshipAmount;
+
     @Column(name = "tuition_fee_per_year")
     private BigDecimal tuitionFeePerYear;
 

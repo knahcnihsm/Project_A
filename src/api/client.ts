@@ -1,8 +1,9 @@
 import {
   AcademicStepRequest,
   ArchiveRequest,
-  BulkUpdateRequest,
-  BulkUpdateResponse,
+  BulkCommitResponse,
+  BulkValidationResponse,
+  BulkWorkbookRequest,
   BusRouteDto,
   CategoryDto,
   CertificateMasterDto,
@@ -20,6 +21,7 @@ import {
   PersonalStepRequest,
   ProgramDto,
   QualifyingExamStepRequest,
+  ScholarshipStructureDto,
   StudentResponseDto,
   StudentStatsDto,
   StudentSummaryDto,
@@ -161,10 +163,17 @@ export const studentApi = {
 
   restore: (id: number | string) => post<StudentResponseDto>(`/api/students/${id}/restore`),
 
-  bulkUpdate: (body: BulkUpdateRequest) =>
-    post<BulkUpdateResponse>('/api/students/bulk', body),
-
   stats: () => get<StudentStatsDto>('/api/students/stats'),
+};
+
+// ---------------- Bulk Student Update API ----------------
+
+export const bulkApi = {
+  validate: (body: BulkWorkbookRequest) =>
+    post<BulkValidationResponse>('/api/bulk/validate', body),
+
+  commit: (body: BulkWorkbookRequest) =>
+    post<BulkCommitResponse>('/api/bulk/commit', body),
 };
 
 // ---------------- Master data API ----------------
@@ -178,6 +187,7 @@ export const masterDataApi = {
   hostels: () => get<HostelDto[]>('/api/hostels'),
   busRoutes: () => get<BusRouteDto[]>('/api/bus-routes'),
   feeStructures: () => get<FeeStructureDto[]>('/api/fee-structures'),
+  scholarshipStructures: () => get<ScholarshipStructureDto[]>('/api/scholarship-structures'),
 };
 
 export const api = {

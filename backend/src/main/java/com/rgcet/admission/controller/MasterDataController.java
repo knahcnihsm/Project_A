@@ -7,6 +7,7 @@ import com.rgcet.admission.dto.MasterDataDtos.DepartmentDto;
 import com.rgcet.admission.dto.MasterDataDtos.FeeStructureDto;
 import com.rgcet.admission.dto.MasterDataDtos.HostelDto;
 import com.rgcet.admission.dto.MasterDataDtos.ProgramDto;
+import com.rgcet.admission.dto.MasterDataDtos.ScholarshipStructureDto;
 import com.rgcet.admission.service.MasterDataService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -61,5 +62,10 @@ public class MasterDataController {
     @GetMapping("/fee-structures")
     public List<FeeStructureDto> feeStructures() {
         return masterDataService.getFeeStructures();
+    }
+
+    @GetMapping("/scholarship-structures")
+    public List<ScholarshipStructureDto> scholarshipStructures() {
+        return masterDataService.getScholarshipStructures();
     }
 }

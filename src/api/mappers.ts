@@ -214,6 +214,9 @@ export function toStudentRecord(dto: StudentResponseDto): StudentRecord {
     ? {
         ...defaultFee(),
         cutOffMark: num(fee.cutOffMark),
+        meritPercent: num(fee.meritPercent),
+        originalTuitionFee: num(fee.originalTuitionFeePerYear),
+        scholarshipAmount: num(fee.scholarshipAmount),
         tuitionFeePerYear: num(fee.tuitionFeePerYear),
         courseDurationYears: num(fee.courseDurationYears),
         totalTuitionFee: num(fee.totalTuitionFee),

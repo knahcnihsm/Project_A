@@ -3,9 +3,6 @@ package com.rgcet.admission.service;
 import com.rgcet.admission.common.ResourceNotFoundException;
 import com.rgcet.admission.dto.AcademicStepRequest;
 import com.rgcet.admission.dto.ArchiveRequest;
-import com.rgcet.admission.dto.BulkUpdateRequest;
-import com.rgcet.admission.dto.BulkUpdateRequest.BulkUpdateResponse;
-import com.rgcet.admission.dto.BulkUpdateRequest.UpdateRow;
 import com.rgcet.admission.dto.CertificatesStepRequest;
 import com.rgcet.admission.dto.CommunicationStepRequest;
 import com.rgcet.admission.dto.DiplomaStepRequest;
@@ -55,24 +52,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -87,25 +78,6 @@ public class StudentService {
     private final HostelRepository hostelRepository;
     private final ArchiveRepository archiveRepository;
     private final FeeService feeService;
-    private final PlatformTransactionManager transactionManager;
-
-    private static final Pattern REGISTER_PATTERN = Pattern.compile("^[A-Za-z0-9_./\\\\\\-\\s]{1,50}$");
-    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
-    private static final DateTimeFormatter[] DATE_FORMATS = {
-            DateTimeFormatter.ISO_LOCAL_DATE,
-            DateTimeFormatter.BASIC_ISO_DATE,
-            DateTimeFormatter.ofPattern("dd-MM-yyyy"),
-            DateTimeFormatter.ofPattern("dd/MM/yyyy"),
-            DateTimeFormatter.ofPattern("d/M/yyyy"),
-            DateTimeFormatter.ofPattern("MM/dd/yyyy"),
-            DateTimeFormatter.ofPattern("M/d/yyyy"),
-            DateTimeFormatter.ofPattern("yyyy/MM/dd"),
-            DateTimeFormatter.ofPattern("yyyy/M/d"),
-            DateTimeFormatter.ofPattern("dd.MM.yyyy"),
-            DateTimeFormatter.ofPattern("d-M-yyyy"),
-            DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH),
-            DateTimeFormatter.ISO_LOCAL_DATE_TIME
-    };
 
     // ---------- Create & steps ----------
 
@@ -210,6 +182,7 @@ public class StudentService {
         }
         admission.setBatch(request.batch());
         admission.setDateOfAdmission(request.dateOfAdmission());
+        recomputeFeeIfPresent(student);
         touch(student);
         return StudentResponseDto.from(student);
     }
@@ -229,6 +202,7 @@ public class StudentService {
             exam.setHscPercentage(request.hscPercentage());
         }
         exam.setHscRegistrationNo(request.hscRegisterNumber());
+        recomputeFeeIfPresent(student);
         touch(student);
         return StudentResponseDto.from(student);
     }
@@ -276,6 +250,7 @@ public class StudentService {
                 && calcOverall.compareTo(BigDecimal.ZERO) > 0) {
             exam.setHscPercentage(calcOverall);
         }
+        recomputeFeeIfPresent(student);
         touch(student);
         return StudentResponseDto.from(student);
     }
@@ -296,6 +271,7 @@ public class StudentService {
         diploma.setSecondYearPercentage(request.secondYearPercentage());
         diploma.setThirdYearPercentage(request.thirdYearPercentage());
         diploma.setAggregatePercentage(resolveAggregate(request));
+        recomputeFeeIfPresent(student);
         touch(student);
         return StudentResponseDto.from(student);
     }
@@ -319,6 +295,7 @@ public class StudentService {
         pg.setTotalPercentage(request.totalPercentage());
         pg.setMainSubjectPercentage(request.mainSubjectPercentage());
         pg.setDegreeRegistrationNo(request.degreeRegistrationNumber());
+        recomputeFeeIfPresent(student);
         touch(student);
         return StudentResponseDto.from(student);
     }
@@ -328,7 +305,12 @@ public class StudentService {
         Student student = getStudentOrThrow(id);
         assertNotArchived(student);
         FeeResult result = feeService.compute(student, request);
+        applyFee(student, result, request);
+        touch(student);
+        return StudentResponseDto.from(student);
+    }
 
+    private void applyFee(Student student, FeeResult result, FeeStepRequest request) {
         StudentFee fee = student.getFee();
         if (fee == null) {
             fee = new StudentFee();
@@ -336,7 +318,10 @@ public class StudentService {
             student.setFee(fee);
         }
         fee.setCutOffMark(result.cutOffMark());
+        fee.setMeritPercent(result.meritPercent());
         fee.setFeeStructure(result.structure());
+        fee.setOriginalTuitionFee(result.originalTuitionFee());
+        fee.setScholarshipAmount(result.scholarshipAmount());
         fee.setTuitionFeePerYear(result.tuitionFeePerYear());
         fee.setCourseDurationYears(result.courseDurationYears());
         fee.setTotalTuitionFee(result.totalTuitionFee());
@@ -353,8 +338,48 @@ public class StudentService {
         if (fee.getPaymentStatus() == null) {
             fee.setPaymentStatus(PaymentStatus.PENDING);
         }
-        touch(student);
-        return StudentResponseDto.from(student);
+    }
+
+    /**
+     * Recomputes the fee from the currently persisted fee/qualification data whenever a
+     * program, admission category, department or cut-off related field changes, so the
+     * stored fee always reflects the latest configuration.
+     */
+    void recomputeFeeIfPresent(Student student) {
+        StudentFee existing = student.getFee();
+        if (existing == null || student.getAdmission() == null || student.getAdmission().getProgram() == null) {
+            return;
+        }
+        FeeStepRequest request = new FeeStepRequest(
+                existing.getCutOffMark(),
+                Boolean.TRUE.equals(existing.getBusRequired()),
+                existing.getRoute() != null ? existing.getRoute().getRouteId() : null,
+                existing.getBusStop() != null ? existing.getBusStop().getBusStopId() : null,
+                Boolean.TRUE.equals(existing.getHostelRequired()));
+        try {
+            applyFee(student, feeService.compute(student, request), request);
+        } catch (IllegalStateException ignored) {
+            // fee recompute is best-effort; leave existing values untouched when not possible
+        }
+    }
+
+    /**
+     * Recomputes the stored fee for every student that already has a fee record, using the
+     * latest fee/scholarship master data. Called on startup so legacy rows created before the
+     * fee columns existed (or with stale totals) are repaired. Best-effort per student.
+     */
+    @Transactional
+    public int recomputeAllStudentFees() {
+        int recomputed = 0;
+        for (Student student : studentRepository.findAll()) {
+            if (student.getFee() == null) {
+                continue;
+            }
+            recomputeFeeIfPresent(student);
+            studentRepository.save(student);
+            recomputed++;
+        }
+        return recomputed;
     }
 
     @Transactional
@@ -534,291 +559,7 @@ public class StudentService {
         return studentRepository.countByStatus(StudentStatus.DRAFT);
     }
 
-    // ---------- Bulk update ----------
-
-    /**
-     * Processes the uploaded Bulk Student Update Excel rows.
-     * <p>
-     * Every row is committed in its own database transaction so that one failed row
-     * never rolls back the successful updates of the other rows. Only existing
-     * students are updated (never inserted or deleted). Blank cells mean "No Change".
-     * <p>
-     * Summary semantics:
-     * <ul>
-     *     <li><b>Successfully Updated</b> - student found, validation passed, changes persisted.</li>
-     *     <li><b>Skipped</b> - the row could not be matched to a student (missing identifier,
-     *     student not found, archived student).</li>
-     *     <li><b>Failed</b> - the row had an invalid field value or the database update failed.</li>
-     * </ul>
-     */
-    public BulkUpdateResponse bulkUpdate(BulkUpdateRequest request) {
-        List<UpdateRow> rows = request.rows() == null ? List.of() : request.rows();
-        int updated = 0;
-        int skipped = 0;
-        int failed = 0;
-        List<BulkUpdateRequest.RowError> errors = new ArrayList<>();
-        TransactionTemplate rowTransaction = new TransactionTemplate(transactionManager);
-
-        for (int i = 0; i < rows.size(); i++) {
-            UpdateRow row = rows.get(i);
-            int rowNumber = row.rowNumber() != null ? row.rowNumber() : i + 2;
-            String registerNo = trimToNull(row.registerNumber());
-            String applicationNo = trimToNull(row.applicationNumber());
-
-            if (registerNo == null && applicationNo == null) {
-                skipped++;
-                errors.add(new BulkUpdateRequest.RowError(rowNumber, "", "", "Missing Identifier"));
-                continue;
-            }
-
-            try {
-                rowTransaction.execute(status -> {
-                    processBulkRow(row);
-                    return null;
-                });
-                updated++;
-            } catch (BulkRowException e) {
-                if (e.isFailure()) {
-                    failed++;
-                } else {
-                    skipped++;
-                }
-                errors.add(new BulkUpdateRequest.RowError(rowNumber,
-                        orEmpty(registerNo), orEmpty(applicationNo), e.getReason()));
-            } catch (RuntimeException e) {
-                failed++;
-                errors.add(new BulkUpdateRequest.RowError(rowNumber,
-                        orEmpty(registerNo), orEmpty(applicationNo), "Database Update Failed"));
-            }
-        }
-        return new BulkUpdateResponse(rows.size(), updated, skipped, failed, errors);
-    }
-
-    /**
-     * Processes a single row inside its own transaction.
-     */
-    private void processBulkRow(UpdateRow row) {
-        RowData data = validateBulkRow(row);
-        Student student = findByIdentifier(row.applicationNumber(), row.registerNumber());
-        if (student == null) {
-            throw new BulkRowException("Student Not Found", false);
-        }
-        if (student.getStatus() == StudentStatus.ARCHIVED) {
-            throw new BulkRowException("Student is Archived", false);
-        }
-        applyBulkRow(student, row, data);
-        touch(student);
-        studentRepository.save(student);
-    }
-
-    /**
-     * Validates every column that contains a value and resolves master data
-     * references (Program, Department, Admission Category). Throws on the first
-     * invalid field so the row is reported as failed.
-     */
-    private RowData validateBulkRow(UpdateRow row) {
-        LocalDate dob = null;
-        if (isNotBlank(row.dateOfBirth())) {
-            dob = parseDate(row.dateOfBirth());
-            if (dob == null) {
-                throw new BulkRowException("Invalid Date of Birth", true);
-            }
-        }
-
-        Gender gender = null;
-        if (isNotBlank(row.gender())) {
-            gender = parseGender(row.gender());
-            if (gender == null) {
-                throw new BulkRowException("Invalid Gender", true);
-            }
-        }
-
-        Caste caste = null;
-        if (isNotBlank(row.caste())) {
-            caste = parseCaste(row.caste());
-            if (caste == null) {
-                throw new BulkRowException("Invalid Category", true);
-            }
-        }
-
-        String registerNo = trimToNull(row.registerNumber());
-        if (registerNo != null && !REGISTER_PATTERN.matcher(registerNo).matches()) {
-            throw new BulkRowException("Invalid Register Number", true);
-        }
-
-        String applicationNo = trimToNull(row.applicationNumber());
-        if (applicationNo != null && !REGISTER_PATTERN.matcher(applicationNo).matches()) {
-            throw new BulkRowException("Invalid Application Number", true);
-        }
-
-        String aadhaar = trimToNull(row.aadhaarNumber());
-        if (aadhaar != null && !aadhaar.matches("\\d{12}")) {
-            throw new BulkRowException("Invalid Aadhaar Number", true);
-        }
-
-        String fatherMobile = trimToNull(row.fatherMobile());
-        if (fatherMobile != null && !fatherMobile.matches("\\d{10}")) {
-            throw new BulkRowException("Invalid Mobile Number", true);
-        }
-
-        String mobileNumber = trimToNull(row.mobileNumber());
-        if (mobileNumber != null && !mobileNumber.matches("\\d{10}")) {
-            throw new BulkRowException("Invalid Mobile Number", true);
-        }
-
-        String email = trimToNull(row.email());
-        if (email != null && !EMAIL_PATTERN.matcher(email).matches()) {
-            throw new BulkRowException("Invalid Email", true);
-        }
-
-        AdmissionCategory admissionCategory = null;
-        if (isNotBlank(row.admissionCategory())) {
-            admissionCategory = categoryRepository.findByCategoryNameIgnoreCase(trimToNull(row.admissionCategory()))
-                    .orElseThrow(() -> new BulkRowException("Invalid Admission Category", true));
-        }
-
-        Program program = null;
-        if (isNotBlank(row.program())) {
-            program = programRepository.findByProgramNameIgnoreCase(trimToNull(row.program()))
-                    .orElseThrow(() -> new BulkRowException("Invalid Program", true));
-        }
-
-        Department department = null;
-        if (isNotBlank(row.department())) {
-            department = departmentRepository.findByDepartmentNameIgnoreCase(trimToNull(row.department()))
-                    .orElseThrow(() -> new BulkRowException("Invalid Department", true));
-        }
-
-        BigDecimal grandTotalFee = null;
-        if (isNotBlank(row.grandTotalFee())) {
-            grandTotalFee = parseAmount(row.grandTotalFee());
-            if (grandTotalFee == null) {
-                throw new BulkRowException("Invalid Grand Total Fee", true);
-            }
-        }
-
-        StudentStatus status = null;
-        if (isNotBlank(row.status())) {
-            try {
-                status = StudentStatus.valueOf(trimToNull(row.status()).toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new BulkRowException("Invalid Status", true);
-            }
-        }
-
-        return new RowData(dob, gender, caste, admissionCategory, program, department, grandTotalFee, status);
-    }
-
-    /**
-     * Applies only the columns that contain a value, across all related tables.
-     * Blank cells never overwrite existing database values.
-     */
-    private void applyBulkRow(Student student, UpdateRow row, RowData data) {
-        if (isNotBlank(row.registerNumber())) {
-            student.setRegisterNo(trimToNull(row.registerNumber()));
-        }
-        if (isNotBlank(row.applicationNumber())) {
-            student.setApplicationNo(trimToNull(row.applicationNumber()));
-        }
-        if (isNotBlank(row.studentName())) {
-            student.setStudentName(trimToNull(row.studentName()));
-        }
-        if (data.dateOfBirth() != null) {
-            student.setDateOfBirth(data.dateOfBirth());
-            student.setAge(computeAge(data.dateOfBirth()));
-        }
-        if (data.gender() != null) {
-            student.setGender(data.gender());
-        }
-        if (isNotBlank(row.aadhaarNumber())) {
-            student.setAadhaarNo(trimToNull(row.aadhaarNumber()));
-        }
-        if (isNotBlank(row.district())) {
-            student.setDistrict(trimToNull(row.district()));
-        }
-        if (data.caste() != null) {
-            student.setCaste(data.caste());
-        }
-
-        if (isNotBlank(row.fatherName()) || isNotBlank(row.fatherMobile())) {
-            ParentDetails parent = student.getParent();
-            if (parent == null) {
-                parent = new ParentDetails();
-                parent.setStudent(student);
-                student.setParent(parent);
-            }
-            if (isNotBlank(row.fatherName())) {
-                parent.setFatherName(trimToNull(row.fatherName()));
-            }
-            if (isNotBlank(row.fatherMobile())) {
-                parent.setFatherMobileNo(trimToNull(row.fatherMobile()));
-            }
-        }
-
-        if (isNotBlank(row.mobileNumber()) || isNotBlank(row.email())) {
-            Address permanent = getAddress(student, AddressType.PERMANENT);
-            Address communication = getAddress(student, AddressType.COMMUNICATION);
-            if (isNotBlank(row.mobileNumber())) {
-                permanent.setMobile(trimToNull(row.mobileNumber()));
-                communication.setMobile(trimToNull(row.mobileNumber()));
-            }
-            if (isNotBlank(row.email())) {
-                permanent.setEmail(trimToNull(row.email()));
-                communication.setEmail(trimToNull(row.email()));
-            }
-        }
-
-        if (data.admissionCategory() != null || data.program() != null
-                || data.department() != null || isNotBlank(row.batch())) {
-            Admission admission = student.getAdmission();
-            if (admission == null) {
-                admission = new Admission();
-                admission.setStudent(student);
-                student.setAdmission(admission);
-            }
-            if (data.admissionCategory() != null) {
-                admission.setCategory(data.admissionCategory());
-            }
-            if (data.program() != null) {
-                admission.setProgram(data.program());
-            }
-            if (data.department() != null) {
-                admission.setDepartment(data.department());
-            }
-            if (isNotBlank(row.batch())) {
-                admission.setBatch(trimToNull(row.batch()));
-            }
-        }
-
-        if (data.grandTotalFee() != null) {
-            StudentFee fee = student.getFee();
-            if (fee == null) {
-                fee = new StudentFee();
-                fee.setStudent(student);
-                student.setFee(fee);
-            }
-            fee.setTotalFee(data.grandTotalFee());
-            if (fee.getPaymentStatus() == null) {
-                fee.setPaymentStatus(PaymentStatus.PENDING);
-            }
-        }
-
-        if (data.status() != null) {
-            LocalDateTime now = LocalDateTime.now();
-            student.setStatus(data.status());
-            if (data.status() == StudentStatus.ARCHIVED) {
-                student.setArchivedAt(now);
-                if (isNotBlank(row.archiveReason())) {
-                    student.setArchiveReason(trimToNull(row.archiveReason()));
-                }
-            } else {
-                student.setArchivedAt(null);
-                student.setArchiveReason(null);
-            }
-        } else if (isNotBlank(row.archiveReason())) {
-            student.setArchiveReason(trimToNull(row.archiveReason()));
-        }
-    }
+    // ---------- Bulk update (handled by BulkStudentUpdateService) ----------
 
     // ---------- Private helpers ----------
 
@@ -835,123 +576,14 @@ public class StudentService {
         student.setCaste(req.caste());
     }
 
-    private Student findByIdentifier(String applicationNumber, String registerNumber) {
-        if (isNotBlank(registerNumber)) {
-            Student byReg = studentRepository.findByRegisterNoIgnoreCase(registerNumber).orElse(null);
-            if (byReg != null) {
-                return byReg;
-            }
-        }
-        if (isNotBlank(applicationNumber)) {
-            return studentRepository.findByApplicationNoIgnoreCase(applicationNumber).orElse(null);
-        }
-        return null;
-    }
-
-    private LocalDate parseDate(String raw) {
-        String value = trimToNull(raw);
-        if (value == null) {
-            return null;
-        }
-        for (DateTimeFormatter formatter : DATE_FORMATS) {
-            try {
-                return LocalDate.parse(value, formatter);
-            } catch (DateTimeParseException ignored) {
-                // try next format
-            }
-        }
-        return null;
-    }
-
-    private Gender parseGender(String raw) {
-        String value = trimToNull(raw);
-        if (value == null) {
-            return null;
-        }
-        return switch (value.toUpperCase()) {
-            case "MALE", "M" -> Gender.MALE;
-            case "FEMALE", "F" -> Gender.FEMALE;
-            case "TRANSGENDER", "T" -> Gender.TRANSGENDER;
-            default -> null;
-        };
-    }
-
-    private Caste parseCaste(String raw) {
-        String value = trimToNull(raw);
-        if (value == null) {
-            return null;
-        }
-        String upper = value.toUpperCase();
-        if ("OBC".equals(upper)) {
-            return Caste.BC;
-        }
-        try {
-            return Caste.valueOf(upper);
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-
-    private BigDecimal parseAmount(String raw) {
-        if (raw == null) {
-            return null;
-        }
-        String cleaned = raw.replace(",", "");
-        cleaned = cleaned.replaceAll("(?i)^\\s*(rs\\.?|inr|rupees|₹|\\$|€|£)\\s*", "");
-        cleaned = cleaned.replaceAll("\\s+", "");
-        if (cleaned.isBlank()) {
-            return null;
-        }
-        try {
-            return new BigDecimal(cleaned);
-        } catch (NumberFormatException e) {
-            return null;
-        }
-    }
-
-    private String trimToNull(String value) {
-        if (value == null) {
-            return null;
-        }
-        String trimmed = value.trim();
-        return trimmed.isEmpty() ? null : trimmed;
-    }
-
-    private String orEmpty(String value) {
-        return value == null ? "" : value;
-    }
-
-    private record RowData(LocalDate dateOfBirth, Gender gender, Caste caste,
-                           AdmissionCategory admissionCategory, Program program, Department department,
-                           BigDecimal grandTotalFee, StudentStatus status) {
-    }
-
-    private static class BulkRowException extends RuntimeException {
-        private final String reason;
-        private final boolean failure;
-
-        BulkRowException(String reason, boolean failure) {
-            this.reason = reason;
-            this.failure = failure;
-        }
-
-        String getReason() {
-            return reason;
-        }
-
-        boolean isFailure() {
-            return failure;
-        }
-    }
-
-    private Integer computeAge(java.time.LocalDate dateOfBirth) {
+    Integer computeAge(java.time.LocalDate dateOfBirth) {
         if (dateOfBirth == null) {
             return null;
         }
         return Period.between(dateOfBirth, java.time.LocalDate.now()).getYears();
     }
 
-    private Address getAddress(Student student, AddressType type) {
+    Address getAddress(Student student, AddressType type) {
         for (Address address : student.getAddresses()) {
             if (address.getAddressType() == type) {
                 return address;
@@ -964,7 +596,7 @@ public class StudentService {
         return address;
     }
 
-    private QualifyingExam getOrCreateQualifyingExam(Student student) {
+    QualifyingExam getOrCreateQualifyingExam(Student student) {
         QualifyingExam exam = student.getQualifyingExam();
         if (exam == null) {
             exam = new QualifyingExam();

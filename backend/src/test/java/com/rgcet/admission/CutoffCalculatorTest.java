@@ -56,6 +56,18 @@ class CutoffCalculatorTest {
     }
 
     @Test
+    void cutoffNormalisesEachSubjectToPercentage() {
+        List<HSCAcademicMark> marks = List.of(
+                mark("Maths", 190, 200),
+                mark("Physics", 180, 200),
+                mark("Computer Science", 170, 200));
+
+        BigDecimal cutoff = CutoffCalculator.engineeringCutOff(marks);
+        // 190/200=95 + 180/200=90 + 170/200=85 = 270 (not the raw sum 540)
+        assertEquals(0, cutoff.compareTo(BigDecimal.valueOf(270)));
+    }
+
+    @Test
     void meritPercentIsCutoffOverThreeHundred() {
         assertEquals(0, CutoffCalculator.meritPercent(BigDecimal.valueOf(300)).compareTo(BigDecimal.valueOf(100)));
         assertEquals(0, CutoffCalculator.meritPercent(BigDecimal.valueOf(150)).compareTo(BigDecimal.valueOf(50)));

@@ -17,13 +17,20 @@ export const calculateHSCCutOff = (marks: HSCSubjectMark[], stream: 'Academic' |
     // Formula: Maths (100) + Physics (100) + 3rd Subject (100) = 300
     const maths = marks.find((m) => m.subject.toLowerCase().includes('maths'));
     const physics = marks.find((m) => m.subject.toLowerCase().includes('physics'));
-    // 3rd subject: Biology, Computer Science, Bio Technology, or Chemistry
-    const thirdSubject = marks.find((m) =>
-      m.subject.toLowerCase().includes('biology') ||
-      m.subject.toLowerCase().includes('computer') ||
-      m.subject.toLowerCase().includes('bio technology') ||
-      m.subject.toLowerCase().includes('biotechnology') ||
-      m.subject.toLowerCase().includes('chemistry')
+    // 3rd subject: best of Biology, Computer Science, Bio Technology, or Chemistry (matches backend CutoffCalculator)
+    const scienceSubjects = marks.filter((m) => {
+      const subj = m.subject.toLowerCase();
+      return (
+        subj.includes('biology') ||
+        subj.includes('computer') ||
+        subj.includes('bio technology') ||
+        subj.includes('biotechnology') ||
+        subj.includes('chemistry')
+      );
+    });
+    const thirdSubject = scienceSubjects.reduce((best, current) =>
+      !best || getPercentage(current) > getPercentage(best) ? current : best,
+      undefined as HSCSubjectMark | undefined
     );
 
     const mathsPct = maths ? getPercentage(maths) : 0;

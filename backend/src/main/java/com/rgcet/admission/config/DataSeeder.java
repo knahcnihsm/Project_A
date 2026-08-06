@@ -13,6 +13,7 @@ import com.rgcet.admission.entity.Gender;
 import com.rgcet.admission.entity.Hostel;
 import com.rgcet.admission.entity.ParentDetails;
 import com.rgcet.admission.entity.Program;
+import com.rgcet.admission.entity.ScholarshipStructure;
 import com.rgcet.admission.entity.Student;
 import com.rgcet.admission.entity.StudentFee;
 import com.rgcet.admission.entity.StudentStatus;
@@ -23,8 +24,10 @@ import com.rgcet.admission.repository.CertificateRepository;
 import com.rgcet.admission.repository.DepartmentRepository;
 import com.rgcet.admission.repository.HostelRepository;
 import com.rgcet.admission.repository.ProgramRepository;
+import com.rgcet.admission.repository.ScholarshipStructureRepository;
 import com.rgcet.admission.repository.StudentRepository;
 import com.rgcet.admission.repository.TuitionFeeStructureRepository;
+import com.rgcet.admission.service.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -48,7 +51,9 @@ public class DataSeeder implements CommandLineRunner {
     private final HostelRepository hostelRepository;
     private final BusRouteRepository busRouteRepository;
     private final TuitionFeeStructureRepository feeStructureRepository;
+    private final ScholarshipStructureRepository scholarshipStructureRepository;
     private final StudentRepository studentRepository;
+    private final StudentService studentService;
 
     private record StopData(String name, int fee) {
     }
@@ -58,9 +63,11 @@ public class DataSeeder implements CommandLineRunner {
     public void run(String... args) {
         if (categoryRepository.count() > 0) {
             seedStudentsIfEmpty();
-            return;
+        } else {
+            seed();
         }
-        seed();
+        ensureFeeConfiguration();
+        studentService.recomputeAllStudentFees();
     }
 
     private void seed() {
@@ -90,6 +97,7 @@ public class DataSeeder implements CommandLineRunner {
         seedHostel();
         seedBusRoutes();
         seedFeeStructures(centac, management, programs, btech, pg);
+        seedScholarshipStructures(management, programs, btech, pg);
         seedStudents(centac, management, programs.get("B.Tech"), btech);
     }
 
@@ -267,6 +275,143 @@ public class DataSeeder implements CommandLineRunner {
         structure.setMaximumPercentage(BigDecimal.valueOf(max));
         structure.setTuitionFee(BigDecimal.valueOf(fee));
         feeStructureRepository.save(structure);
+    }
+
+    /**
+     * Adds the base (original) fee rows and merit scholarship slabs that are missing from
+     * the database. Runs on every startup so existing databases are upgraded additively:
+     * rows are never overwritten or deleted, and admin edits to the fee configuration are
+     * preserved.
+     */
+    private void ensureFeeConfiguration() {
+        AdmissionCategory centac = categoryRepository.findByCategoryNameIgnoreCase("CENTAC").orElse(null);
+        AdmissionCategory management = categoryRepository.findByCategoryNameIgnoreCase("Management").orElse(null);
+        if (centac == null || management == null) {
+            return;
+        }
+
+        Map<String, Program> programs = new LinkedHashMap<>();
+        programRepository.findByProgramNameIgnoreCase("First Year B.Tech").ifPresent(p -> programs.put("B.Tech", p));
+        programRepository.findByProgramNameIgnoreCase("Second Year B.Tech (Lateral Entry)").ifPresent(p -> programs.put("Lateral", p));
+        programRepository.findByProgramNameIgnoreCase("PG").ifPresent(p -> programs.put("PG", p));
+
+        Map<String, Department> btech = new LinkedHashMap<>();
+        Map<String, Department> pg = new LinkedHashMap<>();
+        departmentRepository.findAll().forEach(d -> {
+            String name = d.getDepartmentName();
+            if (name != null && (name.startsWith("M.Tech") || name.startsWith("Master of"))) {
+                pg.put(name, d);
+            } else {
+                btech.put(name, d);
+            }
+        });
+
+        Program firstYear = programs.get("B.Tech");
+        Program lateral = programs.get("Lateral");
+        Program pgProgram = programs.get("PG");
+
+        // Original (base) fee per year - CENTAC quota
+        if (firstYear != null) {
+            btech.values().forEach(dept -> addBaseFeeIfMissing(firstYear, dept, centac, 75000));
+        }
+        if (lateral != null) {
+            btech.values().forEach(dept -> addBaseFeeIfMissing(lateral, dept, centac, 50000));
+        }
+        if (pgProgram != null) {
+            addBaseFeeIfMissing(pgProgram, pg.get("M.Tech Computer Science & Engineering"), centac, 50000);
+            addBaseFeeIfMissing(pgProgram, pg.get("M.Tech Wireless Communication"), centac, 50000);
+            addBaseFeeIfMissing(pgProgram, pg.get("Master of Computer Applications"), centac, 50000);
+            addBaseFeeIfMissing(pgProgram, pg.get("Master of Business Administration"), centac, 70000);
+        }
+
+        // Original (base) fee per year - Management quota
+        if (firstYear != null) {
+            addBaseFeeIfMissing(firstYear, btech.get("Computer Science & Engineering (CSE)"), management, 100000);
+            addBaseFeeIfMissing(firstYear, btech.get("Artificial Intelligence and Data Science (AI&DS)"), management, 100000);
+            addBaseFeeIfMissing(firstYear, btech.get("Information Technology (IT)"), management, 80000);
+            addBaseFeeIfMissing(firstYear, btech.get("Artificial Intelligence and Machine Learning (AI&ML)"), management, 80000);
+            addBaseFeeIfMissing(firstYear, btech.get("Electronics & Communication Engineering (ECE)"), management, 80000);
+            addBaseFeeIfMissing(firstYear, btech.get("Biomedical Engineering (BME)"), management, 70000);
+        }
+        if (lateral != null) {
+            btech.values().forEach(dept -> addBaseFeeIfMissing(lateral, dept, management, 50000));
+        }
+        if (pgProgram != null) {
+            addBaseFeeIfMissing(pgProgram, pg.get("M.Tech Computer Science & Engineering"), management, 50000);
+            addBaseFeeIfMissing(pgProgram, pg.get("M.Tech Wireless Communication"), management, 50000);
+            addBaseFeeIfMissing(pgProgram, pg.get("Master of Computer Applications"), management, 50000);
+            addBaseFeeIfMissing(pgProgram, pg.get("Master of Business Administration"), management, 100000);
+        }
+
+        // Merit scholarship slabs - Management quota (eligible: B.Tech CSE, B.Tech AI&DS, MBA)
+        if (firstYear != null) {
+            addScholarshipIfMissing(firstYear, btech.get("Computer Science & Engineering (CSE)"), management);
+            addScholarshipIfMissing(firstYear, btech.get("Artificial Intelligence and Data Science (AI&DS)"), management);
+        }
+        if (pgProgram != null) {
+            addScholarshipIfMissing(pgProgram, pg.get("Master of Business Administration"), management);
+        }
+    }
+
+    private void seedScholarshipStructures(AdmissionCategory management,
+                                           Map<String, Program> programs, Map<String, Department> btech,
+                                           Map<String, Department> pg) {
+        addScholarshipIfMissing(programs.get("B.Tech"),
+                btech.get("Computer Science & Engineering (CSE)"), management);
+        addScholarshipIfMissing(programs.get("B.Tech"),
+                btech.get("Artificial Intelligence and Data Science (AI&DS)"), management);
+        addScholarshipIfMissing(programs.get("PG"),
+                pg.get("Master of Business Administration"), management);
+    }
+
+    private void addBaseFeeIfMissing(Program program, Department department,
+                                     AdmissionCategory category, int fee) {
+        if (program == null || department == null || category == null) {
+            return;
+        }
+        List<TuitionFeeStructure> rows =
+                feeStructureRepository.findByProgramAndDepartmentAndCategory(program, department, category);
+        boolean flatExists = rows.stream().anyMatch(r ->
+                r.getMinimumPercentage() == null && r.getMaximumPercentage() == null);
+        if (flatExists) {
+            return;
+        }
+        TuitionFeeStructure structure = new TuitionFeeStructure();
+        structure.setProgram(program);
+        structure.setDepartment(department);
+        structure.setCategory(category);
+        structure.setTuitionFee(BigDecimal.valueOf(fee));
+        feeStructureRepository.save(structure);
+    }
+
+    private void addScholarshipIfMissing(Program program, Department department, AdmissionCategory category) {
+        if (program == null || department == null || category == null) {
+            return;
+        }
+        int[][] slabs = {{0, 40, 0}, {40, 60, 0}, {60, 80, 10000}, {80, 100, 20000}};
+        for (int[] slab : slabs) {
+            int min = slab[0];
+            int max = slab[1];
+            int amount = slab[2];
+            List<ScholarshipStructure> rows =
+                    scholarshipStructureRepository.findByProgramAndDepartmentAndCategory(program, department, category);
+            boolean exists = rows.stream().anyMatch(r ->
+                    r.getMinimumPercentage() != null
+                            && r.getMinimumPercentage().intValue() == min
+                            && r.getMaximumPercentage() != null
+                            && r.getMaximumPercentage().intValue() == max);
+            if (exists) {
+                continue;
+            }
+            ScholarshipStructure structure = new ScholarshipStructure();
+            structure.setProgram(program);
+            structure.setDepartment(department);
+            structure.setCategory(category);
+            structure.setMinimumPercentage(BigDecimal.valueOf(min));
+            structure.setMaximumPercentage(BigDecimal.valueOf(max));
+            structure.setScholarshipAmount(BigDecimal.valueOf(amount));
+            scholarshipStructureRepository.save(structure);
+        }
     }
 
     private void seedBusRoutes() {

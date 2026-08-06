@@ -9,10 +9,12 @@ import com.rgcet.admission.dto.MasterDataDtos.DepartmentDto;
 import com.rgcet.admission.dto.MasterDataDtos.FeeStructureDto;
 import com.rgcet.admission.dto.MasterDataDtos.HostelDto;
 import com.rgcet.admission.dto.MasterDataDtos.ProgramDto;
+import com.rgcet.admission.dto.MasterDataDtos.ScholarshipStructureDto;
 import com.rgcet.admission.entity.BusRoute;
 import com.rgcet.admission.entity.BusStop;
 import com.rgcet.admission.entity.Department;
 import com.rgcet.admission.entity.Program;
+import com.rgcet.admission.entity.ScholarshipStructure;
 import com.rgcet.admission.entity.TuitionFeeStructure;
 import com.rgcet.admission.repository.AdmissionCategoryRepository;
 import com.rgcet.admission.repository.BusRouteRepository;
@@ -20,6 +22,7 @@ import com.rgcet.admission.repository.CertificateRepository;
 import com.rgcet.admission.repository.DepartmentRepository;
 import com.rgcet.admission.repository.HostelRepository;
 import com.rgcet.admission.repository.ProgramRepository;
+import com.rgcet.admission.repository.ScholarshipStructureRepository;
 import com.rgcet.admission.repository.TuitionFeeStructureRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -42,6 +45,7 @@ public class MasterDataService {
     private final HostelRepository hostelRepository;
     private final BusRouteRepository busRouteRepository;
     private final TuitionFeeStructureRepository feeStructureRepository;
+    private final ScholarshipStructureRepository scholarshipStructureRepository;
 
     public List<ProgramDto> getPrograms() {
         return programRepository.findAll().stream()
@@ -103,6 +107,17 @@ public class MasterDataService {
                         f.getDepartment() == null ? null : f.getDepartment().getDepartmentName(),
                         f.getCategory() == null ? null : f.getCategory().getCategoryName(),
                         f.getMinimumPercentage(), f.getMaximumPercentage(), f.getTuitionFee()))
+                .toList();
+    }
+
+    public List<ScholarshipStructureDto> getScholarshipStructures() {
+        return scholarshipStructureRepository.findAll().stream()
+                .map(f -> new ScholarshipStructureDto(
+                        f.getScholarshipStructureId(),
+                        f.getProgram() == null ? null : f.getProgram().getProgramName(),
+                        f.getDepartment() == null ? null : f.getDepartment().getDepartmentName(),
+                        f.getCategory() == null ? null : f.getCategory().getCategoryName(),
+                        f.getMinimumPercentage(), f.getMaximumPercentage(), f.getScholarshipAmount()))
                 .toList();
     }
 

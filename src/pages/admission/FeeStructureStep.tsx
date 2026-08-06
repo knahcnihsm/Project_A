@@ -14,7 +14,6 @@ import { AppCard } from '../../components/ui/AppCard';
 import { SummaryCard } from '../../components/ui/SummaryCard';
 import { BUS_ROUTES_WITH_STOPS } from '../../utils/constants';
 import { calculateFeeDetails } from '../../utils/feeCalculator';
-import { AdmissionCategory, ProgramType } from '../../types';
 
 const fieldSx = {
   '& .MuiInputLabel-root': {
@@ -48,11 +47,19 @@ const fieldSx = {
 };
 
 export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
-  const { draftStudent, updateDraftSection, isViewReadOnly } = useAdmission();
+  const { draftStudent, updateDraftSection, isViewReadOnly, masterData } = useAdmission();
 
   const category = draftStudent.academic?.admissionCategory;
   const program = draftStudent.academic?.program;
+  const department = draftStudent.academic?.department;
   const initialCutoff = draftStudent.fee?.cutOffMark;
+  const hscCutoff = draftStudent.hscMarks?.engineeringCutOff;
+  // Mirrors the backend: first-year candidates derive the cut-off from HSC marks when
+  // available, falling back to the manually entered / stored cut-off mark.
+  const effectiveCutoff =
+    program === 'First Year B.Tech' && hscCutoff !== undefined && hscCutoff > 0
+      ? hscCutoff
+      : initialCutoff;
 
   const [busTransport, setBusTransport] = useState<boolean>(
     draftStudent.fee?.busTransportRequired || false
@@ -68,26 +75,52 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
   );
 
   const feeDetails = calculateFeeDetails(
-    category,
-    program,
-    initialCutoff,
-    busTransport,
-    busTransport ? busRoute : '',
-    busTransport ? busStop : '',
-    hostel
+    {
+      category,
+      program,
+      department,
+      cutOffMark: effectiveCutoff,
+      busTransportRequired: busTransport,
+      busRouteSelected: busTransport ? busRoute : '',
+      busStopSelected: busTransport ? busStop : '',
+      hostelRequired: hostel,
+    },
+    {
+      feeStructures: masterData.feeStructures,
+      scholarshipStructures: masterData.scholarshipStructures,
+      busRoutes: masterData.busRoutes,
+      hostels: masterData.hostels,
+    }
   );
 
-  const availableStops = busRoute ? (BUS_ROUTES_WITH_STOPS[busRoute] || []) : [];
+  const masterRoutes = masterData.busRoutes;
+  const routeNames =
+    masterRoutes && masterRoutes.length > 0
+      ? masterRoutes.map((r) => r.name)
+      : Object.keys(BUS_ROUTES_WITH_STOPS);
+
+  const availableStops = busRoute
+    ? masterRoutes?.find((r) => r.name === busRoute)?.stops ??
+      (BUS_ROUTES_WITH_STOPS[busRoute] || []).map((s) => ({
+        id: 0,
+        name: s.stopName,
+        fee: s.fee,
+      })) ??
+      []
+    : [];
 
   useEffect(() => {
     updateDraftSection('fee', feeDetails);
-  }, [busTransport, busRoute, busStop, hostel]);
+  }, [busTransport, busRoute, busStop, hostel, category, program, department, effectiveCutoff]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     updateDraftSection('fee', feeDetails);
     onNext();
   };
+
+  const formatINR = (value: number | undefined): string =>
+    (value ?? 0).toLocaleString('en-IN');
 
   return (
     <Box component="form" id="wizard-step-form" onSubmit={handleSubmit}>
@@ -102,7 +135,7 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
         <Grid container columnSpacing={3} rowSpacing={2.5}>
           <Grid item xs={12} sm={6}>
             <TextField
-              label="Cut-Off Mark / Percentage"
+              label={program === 'First Year B.Tech' ? 'Cut-Off Mark (out of 300)' : 'Cut-Off Percentage (%)'}
               fullWidth
               sx={fieldSx}
               disabled
@@ -112,11 +145,41 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
 
           <Grid item xs={12} sm={6}>
             <TextField
-              label="Tuition Fee Per Year (Auto Populated)"
+              label="Merit Score (%)"
               fullWidth
               sx={fieldSx}
               disabled
-              value={feeDetails.tuitionFeePerYear !== undefined ? feeDetails.tuitionFeePerYear.toLocaleString('en-IN') : '0'}
+              value={feeDetails.meritPercent !== undefined ? `${feeDetails.meritPercent}%` : '—'}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Original Tuition Fee Per Year"
+              fullWidth
+              sx={fieldSx}
+              disabled
+              value={`₹ ${formatINR(feeDetails.originalTuitionFee)}`}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Scholarship Amount Per Year"
+              fullWidth
+              sx={fieldSx}
+              disabled
+              value={`₹ ${formatINR(feeDetails.scholarshipAmount)}`}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Final Tuition Fee Per Year"
+              fullWidth
+              sx={fieldSx}
+              disabled
+              value={`₹ ${formatINR(feeDetails.tuitionFeePerYear)}`}
               InputProps={{
                 startAdornment: <InputAdornment position="start" sx={{ '& .MuiTypography-root': { fontSize: '15px' } }}>₹</InputAdornment>,
               }}
@@ -139,7 +202,7 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
               fullWidth
               sx={fieldSx}
               disabled
-              value={feeDetails.totalTuitionFee !== undefined ? feeDetails.totalTuitionFee.toLocaleString('en-IN') : '0'}
+              value={`₹ ${formatINR(feeDetails.totalTuitionFee)}`}
               InputProps={{
                 startAdornment: <InputAdornment position="start" sx={{ '& .MuiTypography-root': { fontSize: '15px' } }}>₹</InputAdornment>,
               }}
@@ -211,7 +274,7 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
                     size="small"
                   />
                 }
-                label={hostel ? 'Required (₹72,000/yr)' : 'Not Required'}
+                label={hostel ? `Required (₹${formatINR(masterData.hostels?.[0]?.fee ?? 72000)}/yr)` : 'Not Required'}
                 sx={{ margin: 0, '& .MuiFormControlLabel-label': { fontSize: '13px', fontWeight: 600 } }}
               />
             </Box>
@@ -233,7 +296,7 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
                     setBusStop(''); // Reset bus stop on route change
                   }}
                 >
-                  {Object.keys(BUS_ROUTES_WITH_STOPS).map((route) => (
+                  {routeNames.map((route) => (
                     <MenuItem key={route} value={route}>
                       {route}
                     </MenuItem>
@@ -253,8 +316,8 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
                   onChange={(e) => setBusStop(e.target.value)}
                 >
                   {availableStops.map((stop) => (
-                    <MenuItem key={stop.stopName} value={stop.stopName}>
-                      {stop.stopName} (₹{stop.fee.toLocaleString('en-IN')})
+                    <MenuItem key={stop.id} value={stop.name}>
+                      {stop.name} (₹{stop.fee?.toLocaleString('en-IN') ?? 0})
                     </MenuItem>
                   ))}
                 </TextField>
@@ -266,11 +329,13 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
         <SummaryCard
           title="Grand Total Fee Summary"
           items={[
-            { label: 'Calculated Cut-Off', value: `${feeDetails.cutOffMark || 0}%` },
-            { label: `Tuition Fee (${feeDetails.courseDurationYears || 0} Years Total)`, value: `₹ ${(feeDetails.totalTuitionFee || 0).toLocaleString('en-IN')}` },
-            { label: 'Bus Route Fee', value: `₹ ${(feeDetails.busFee || 0).toLocaleString('en-IN')}` },
-            { label: 'Hostel Accommodation Fee', value: `₹ ${(feeDetails.hostelFee || 0).toLocaleString('en-IN')}` },
-            { label: 'GRAND TOTAL FEE', value: `₹ ${(feeDetails.grandTotalFee || 0).toLocaleString('en-IN')}`, isHighlight: true },
+            { label: 'Merit Score', value: feeDetails.meritPercent !== undefined ? `${feeDetails.meritPercent}%` : '—' },
+            { label: 'Original Tuition Fee (Per Year)', value: `₹ ${formatINR(feeDetails.originalTuitionFee)}` },
+            { label: 'Scholarship (Per Year)', value: `− ₹ ${formatINR(feeDetails.scholarshipAmount)}` },
+            { label: 'Final Tuition Fee', value: `₹ ${formatINR(feeDetails.totalTuitionFee)}` },
+            { label: 'Bus Route Fee', value: `₹ ${formatINR(feeDetails.busFee)}` },
+            { label: 'Hostel Accommodation Fee', value: `₹ ${formatINR(feeDetails.hostelFee)}` },
+            { label: 'GRAND TOTAL FEE', value: `₹ ${formatINR(feeDetails.grandTotalFee)}`, isHighlight: true },
           ]}
         />
       </AppCard>

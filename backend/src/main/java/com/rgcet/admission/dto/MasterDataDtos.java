@@ -29,4 +29,8 @@ public record MasterDataDtos() {
     public record FeeStructureDto(Long id, String program, String department, String category,
                                   BigDecimal min, BigDecimal max, BigDecimal fee) {
     }
+
+    public record ScholarshipStructureDto(Long id, String program, String department, String category,
+                                          BigDecimal min, BigDecimal max, BigDecimal scholarshipAmount) {
+    }
 }

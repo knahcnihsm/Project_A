@@ -10,6 +10,8 @@ public record FeeResult(
         BigDecimal cutOffMark,
         BigDecimal meritPercent,
         TuitionFeeStructure structure,
+        BigDecimal originalTuitionFee,
+        BigDecimal scholarshipAmount,
         BigDecimal tuitionFeePerYear,
         Integer courseDurationYears,
         BigDecimal totalTuitionFee,

@@ -6,7 +6,6 @@ import { Footer } from './Footer';
 import { AppBreadcrumb } from './Breadcrumb';
 import { AppSnackbar } from '../common/Snackbar';
 import { ConfirmDialog } from '../common/ConfirmDialog';
-import { BulkUpdateModal } from '../../pages/student/BulkUpdateModal';
 import { StudentViewModal } from '../student/StudentViewModal';
 import { useThemeContext } from '../../context/ThemeContext';
 
@@ -39,7 +38,6 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
       {/* Global Modals & Notifications */}
       <AppSnackbar />
       <ConfirmDialog />
-      <BulkUpdateModal />
       <StudentViewModal />
     </Box>
   );

@@ -2,8 +2,6 @@ package com.rgcet.admission.controller;
 
 import com.rgcet.admission.dto.AcademicStepRequest;
 import com.rgcet.admission.dto.ArchiveRequest;
-import com.rgcet.admission.dto.BulkUpdateRequest;
-import com.rgcet.admission.dto.BulkUpdateRequest.BulkUpdateResponse;
 import com.rgcet.admission.dto.CertificatesStepRequest;
 import com.rgcet.admission.dto.CommunicationStepRequest;
 import com.rgcet.admission.dto.DiplomaStepRequest;
@@ -152,11 +150,6 @@ public class StudentController {
     @PostMapping("/{id}/restore")
     public StudentResponseDto restore(@PathVariable Long id) {
         return studentService.restore(id);
-    }
-
-    @PostMapping("/bulk")
-    public BulkUpdateResponse bulkUpdate(@RequestBody BulkUpdateRequest request) {
-        return studentService.bulkUpdate(request);
     }
 
     @GetMapping("/stats")

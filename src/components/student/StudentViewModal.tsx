@@ -814,6 +814,51 @@ export const StudentViewModal: React.FC = () => {
               </Paper>
             </Grid>
 
+            {/* ==================== SECTION 8: FEE DETAILS ==================== */}
+            <Grid item xs={12}>
+              <Paper
+                elevation={0}
+                sx={{
+                  padding: '24px',
+                  borderRadius: '16px',
+                  backgroundColor: isDark ? '#182232' : '#FFFFFF',
+                  border: `1px solid ${isDark ? '#334155' : '#E2EBF6'}`,
+                }}
+              >
+                <SectionHeader title="SECTION 8: FEE DETAILS" icon={<CreditCard size={20} />} />
+
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <DetailField label="Merit Score" value={s.fee.meritPercent !== undefined && s.fee.meritPercent !== null ? `${s.fee.meritPercent}%` : undefined} icon={<Award size={14} />} />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <DetailField label="Original Tuition Fee (Per Year)" value={s.fee.originalTuitionFee ? `₹ ${s.fee.originalTuitionFee.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <DetailField label="Scholarship Amount (Per Year)" value={s.fee.scholarshipAmount ? `₹ ${s.fee.scholarshipAmount.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <DetailField label="Final Tuition Fee (Per Year)" value={s.fee.tuitionFeePerYear ? `₹ ${s.fee.tuitionFeePerYear.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <DetailField label="Course Duration" value={s.fee.courseDurationYears ? `${s.fee.courseDurationYears} Years` : undefined} icon={<Calendar size={14} />} />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <DetailField label="Total Tuition Fee" value={s.fee.totalTuitionFee ? `₹ ${s.fee.totalTuitionFee.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <DetailField label="Bus Fee" value={busFee ? `₹ ${busFee.toLocaleString('en-IN')}` : undefined} icon={<Bus size={14} />} />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <DetailField label="Hostel Fee" value={hostelFee ? `₹ ${hostelFee.toLocaleString('en-IN')}` : undefined} icon={<Home size={14} />} />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <DetailField label="GRAND TOTAL FEE" value={s.fee.grandTotalFee ? `₹ ${s.fee.grandTotalFee.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
+                  </Grid>
+                </Grid>
+              </Paper>
+            </Grid>
+
             {/* ==================== SECTION 9: UPLOADED CERTIFICATES ==================== */}
             <Grid item xs={12}>
               <Paper

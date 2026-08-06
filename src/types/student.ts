@@ -120,6 +120,9 @@ export interface ReceiptRecord {
 
 export interface FeeDetails {
   cutOffMark: number;
+  meritPercent?: number;
+  originalTuitionFee?: number;
+  scholarshipAmount?: number;
   tuitionFeePerYear: number;
   courseDurationYears: number;
   totalTuitionFee: number;
@@ -164,39 +167,4 @@ export interface StudentRecord {
   // Archive audit fields
   archivedAt?: string;
   archiveReason?: string;
-}
-
-/**
- * A single data row parsed from the official Bulk Student Update Excel template.
- * Empty strings mean "No Change" and are never applied to the database.
- */
-export interface BulkUpdateRowInput {
-  rowNumber: number;
-  applicationNumber?: string;
-  registerNumber?: string;
-  studentName?: string;
-  dateOfBirth?: string;
-  gender?: string;
-  aadhaarNumber?: string;
-  district?: string;
-  caste?: string;
-  admissionCategory?: string;
-  program?: string;
-  department?: string;
-  batch?: string;
-  fatherName?: string;
-  fatherMobile?: string;
-  mobileNumber?: string;
-  email?: string;
-  grandTotalFee?: string;
-  status?: string;
-  archiveReason?: string;
-}
-
-export interface BulkUpdateResult {
-  totalRows: number;
-  updatedCount: number;
-  skippedCount: number;
-  failedCount: number;
-  errors: { rowNumber: number; registerNumber: string; applicationNumber: string; reason: string }[];
 }

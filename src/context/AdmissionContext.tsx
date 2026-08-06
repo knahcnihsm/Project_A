@@ -4,8 +4,6 @@ import {
   SnackbarState,
   ConfirmDialogState,
   StudentFilterParams,
-  BulkUpdateRowInput,
-  BulkUpdateResult,
 } from '../types';
 import { WarningModal } from '../components/common/WarningModal';
 import { STANDARD_CERTIFICATES } from '../utils/constants';
@@ -32,6 +30,7 @@ import {
   FeeStructureDto,
   HostelDto,
   ProgramDto,
+  ScholarshipStructureDto,
   SubmitAdmissionRequest,
 } from '../api/types';
 import { studentDetailsSchema } from '../schemas/student.schema';
@@ -48,6 +47,7 @@ export interface MasterData {
   hostels: HostelDto[];
   busRoutes: BusRouteDto[];
   feeStructures: FeeStructureDto[];
+  scholarshipStructures: ScholarshipStructureDto[];
 }
 
 const emptyMasterData: MasterData = {
@@ -59,6 +59,7 @@ const emptyMasterData: MasterData = {
   hostels: [],
   busRoutes: [],
   feeStructures: [],
+  scholarshipStructures: [],
 };
 
 export interface WarningModalState {
@@ -100,9 +101,7 @@ interface AdmissionContextType {
   archiveSelectedStudents: (reason: string) => Promise<void>;
   archiveSingleStudent: (studentId: string, reason: string, description?: string) => Promise<void>;
   restoreStudents: (studentIds: string[]) => Promise<void>;
-  bulkUpdateFromRows: (
-    rows: BulkUpdateRowInput[]
-  ) => Promise<BulkUpdateResult | null>;
+  refreshStudents: () => Promise<void>;
 
   // Common UI State
   snackbar: SnackbarState;
@@ -117,10 +116,6 @@ interface AdmissionContextType {
   warningModal: WarningModalState;
   showWarningModal: (title: string, message: string) => void;
   closeWarningModal: () => void;
-
-  // Bulk update modal state
-  bulkUpdateModalOpen: boolean;
-  setBulkUpdateModalOpen: (open: boolean) => void;
 }
 
 const AdmissionContext = createContext<AdmissionContextType | null>(null);
@@ -215,7 +210,6 @@ export const AdmissionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [isViewReadOnly, setIsViewReadOnly] = useState<boolean>(false);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [savingStep, setSavingStep] = useState<boolean>(false);
-  const [bulkUpdateModalOpen, setBulkUpdateModalOpen] = useState<boolean>(false);
 
   const [snackbar, setSnackbar] = useState<SnackbarState>({
     open: false,
@@ -303,7 +297,7 @@ export const AdmissionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const loadMasterData = async () => {
     try {
-      const [programs, departments, categories, certificates, hostels, busRoutes, feeStructures] =
+      const [programs, departments, categories, certificates, hostels, busRoutes, feeStructures, scholarshipStructures] =
         await Promise.all([
           masterDataApi.programs(),
           masterDataApi.departments(),
@@ -312,6 +306,7 @@ export const AdmissionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           masterDataApi.hostels(),
           masterDataApi.busRoutes(),
           masterDataApi.feeStructures(),
+          masterDataApi.scholarshipStructures(),
         ]);
 
       const deptByProgramName: Record<string, DepartmentDto[]> = {};
@@ -332,6 +327,7 @@ export const AdmissionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         hostels,
         busRoutes,
         feeStructures,
+        scholarshipStructures,
       };
       masterDataRef.current = next;
       setMasterData(next);
@@ -570,45 +566,6 @@ export const AdmissionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const bulkUpdateFromRows = async (
-    rows: BulkUpdateRowInput[]
-  ): Promise<BulkUpdateResult | null> => {
-    try {
-      const response = await studentApi.bulkUpdate({
-        rows: rows.map((row) => ({
-          rowNumber: row.rowNumber,
-          applicationNumber: row.applicationNumber || undefined,
-          registerNumber: row.registerNumber || undefined,
-          studentName: row.studentName || undefined,
-          dateOfBirth: row.dateOfBirth || undefined,
-          gender: row.gender || undefined,
-          aadhaarNumber: row.aadhaarNumber || undefined,
-          district: row.district || undefined,
-          caste: row.caste || undefined,
-          admissionCategory: row.admissionCategory || undefined,
-          program: row.program || undefined,
-          department: row.department || undefined,
-          batch: row.batch || undefined,
-          fatherName: row.fatherName || undefined,
-          fatherMobile: row.fatherMobile || undefined,
-          mobileNumber: row.mobileNumber || undefined,
-          email: row.email || undefined,
-          grandTotalFee: row.grandTotalFee || undefined,
-          status: row.status || undefined,
-          archiveReason: row.archiveReason || undefined,
-        })),
-      });
-      await loadStudents();
-      showSnackbar(
-        `Bulk update completed: ${response.updatedCount} updated, ${response.skippedCount} skipped, ${response.failedCount} failed.`
-      );
-      return response;
-    } catch (e) {
-      showSnackbar(messageFromError(e), 'error');
-      return null;
-    }
-  };
-
   return (
     <AdmissionContext.Provider
       value={{
@@ -636,7 +593,7 @@ export const AdmissionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         archiveSelectedStudents,
         archiveSingleStudent,
         restoreStudents,
-        bulkUpdateFromRows,
+        refreshStudents: loadStudents,
         snackbar,
         showSnackbar,
         hideSnackbar,
@@ -646,8 +603,6 @@ export const AdmissionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         warningModal,
         showWarningModal,
         closeWarningModal,
-        bulkUpdateModalOpen,
-        setBulkUpdateModalOpen,
       }}
     >
       {children}
