@@ -1,9 +1,6 @@
 import {
   AcademicStepRequest,
   ArchiveRequest,
-  BulkCommitResponse,
-  BulkValidationResponse,
-  BulkWorkbookRequest,
   BusRouteDto,
   CategoryDto,
   CertificateMasterDto,
@@ -164,16 +161,6 @@ export const studentApi = {
   restore: (id: number | string) => post<StudentResponseDto>(`/api/students/${id}/restore`),
 
   stats: () => get<StudentStatsDto>('/api/students/stats'),
-};
-
-// ---------------- Bulk Student Update API ----------------
-
-export const bulkApi = {
-  validate: (body: BulkWorkbookRequest) =>
-    post<BulkValidationResponse>('/api/bulk/validate', body),
-
-  commit: (body: BulkWorkbookRequest) =>
-    post<BulkCommitResponse>('/api/bulk/commit', body),
 };
 
 // ---------------- Master data API ----------------

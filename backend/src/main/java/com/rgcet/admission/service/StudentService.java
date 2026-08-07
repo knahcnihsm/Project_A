@@ -559,8 +559,6 @@ public class StudentService {
         return studentRepository.countByStatus(StudentStatus.DRAFT);
     }
 
-    // ---------- Bulk update (handled by BulkStudentUpdateService) ----------
-
     // ---------- Private helpers ----------
 
     private void applyPersonal(Student student, PersonalStepRequest req) {

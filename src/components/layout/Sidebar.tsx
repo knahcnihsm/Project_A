@@ -24,7 +24,6 @@ import {
   MapPin,
   GraduationCap,
   CreditCard,
-  ClipboardList,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAdmission } from '../../context/AdmissionContext';
@@ -66,12 +65,12 @@ export const Sidebar: React.FC = () => {
     } else if (selectedStudentIds.length === 0) {
       showWarningModal(
         'No Student Selected',
-        'Please select exactly one student to edit. To update many students at once, use Bulk Update.'
+        'Please select exactly one student to edit.'
       );
     } else {
       showWarningModal(
         'Multiple Students Selected',
-        'You can edit only one student at a time. For multiple students, use Bulk Update.'
+        'You can edit only one student at a time.'
       );
     }
   };
@@ -139,7 +138,7 @@ export const Sidebar: React.FC = () => {
     } else if (program === 'PG') {
       return [
         { label: 'Admission Details', stepId: 3 },
-        { label: 'PG Qualification', stepId: 4 },
+        { label: 'UG / Qualifying Degree', stepId: 4 },
       ];
     }
     return [];
@@ -406,30 +405,6 @@ export const Sidebar: React.FC = () => {
               <ListItemText
                 primary="EDIT STUDENT DETAILS"
                 primaryTypographyProps={{ fontSize: '11.5px', fontWeight: 600, letterSpacing: '0.04em', color: 'inherit' }}
-              />
-            </ListItemButton>
-
-            {/* Bulk Update */}
-            <ListItemButton
-              onClick={() => navigate('/bulk-update')}
-              sx={navItemStyle(location.pathname === '/bulk-update')}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: '30px',
-                  color: location.pathname === '/bulk-update' ? '#0B3D91' : '#FFFFFF',
-                }}
-              >
-                <ClipboardList size={17} />
-              </ListItemIcon>
-              <ListItemText
-                primary="BULK UPDATE"
-                primaryTypographyProps={{
-                  fontSize: '11.5px',
-                  fontWeight: 600,
-                  letterSpacing: '0.04em',
-                  color: 'inherit',
-                }}
               />
             </ListItemButton>
 

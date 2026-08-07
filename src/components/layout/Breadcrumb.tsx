@@ -37,12 +37,6 @@ export const AppBreadcrumb: React.FC = () => {
         { label: 'Export Reports', path: '/export' },
       ];
     }
-    if (path.startsWith('/bulk-update')) {
-      return [
-        { label: 'Dashboard', path: '/' },
-        { label: 'Bulk Update', path: '/bulk-update' },
-      ];
-    }
     return [{ label: 'Dashboard', path: '/' }];
   };
 

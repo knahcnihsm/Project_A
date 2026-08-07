@@ -3,7 +3,6 @@ import { Box, Typography, Grid, Card, CardContent, Button } from '@mui/material'
 import { FileSpreadsheet, Download, FileText, CheckCircle2 } from 'lucide-react';
 import { useAdmission } from '../../context/AdmissionContext';
 import { exportStudentsToExcel } from '../../utils/exportExcel';
-import { downloadBulkTemplate } from '../../utils/bulkWorkbook';
 import { generateStudentPdf } from '../../utils/exportPdf';
 
 export const ExportPage: React.FC = () => {
@@ -51,7 +50,7 @@ export const ExportPage: React.FC = () => {
           Enterprise Reports & Data Export Center
         </Typography>
         <Typography variant="body1" sx={{ color: '#667085', fontSize: '0.95rem' }}>
-          Generate official PDF admission forms, download Excel master sheets, and download bulk templates.
+          Generate official PDF admission forms and download Excel master sheets.
         </Typography>
       </Box>
 
@@ -111,36 +110,6 @@ export const ExportPage: React.FC = () => {
                 sx={{ backgroundColor: '#0284C7', borderRadius: '8px', fontWeight: 600 }}
               >
                 Download Selected Students ({selectedStudentIds.length})
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Download Bulk Update Template */}
-        <Grid item xs={12} md={6}>
-          <Card elevation={0} sx={{ border: '1px solid #E6ECF5', borderRadius: '16px', backgroundColor: '#FFFFFF', padding: '20px' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-                <Box sx={{ width: 48, height: 48, borderRadius: '12px', backgroundColor: '#EBF3FE', color: '#0D47A1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <FileSpreadsheet size={24} />
-                </Box>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1A2B49' }}>
-                    Sample Bulk Update Template
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#667085' }}>
-                    Download empty pre-formatted Excel template for bulk student updates.
-                  </Typography>
-                </Box>
-              </Box>
-
-              <Button
-                variant="outlined"
-                startIcon={<Download size={18} />}
-                onClick={() => downloadBulkTemplate(false)}
-                sx={{ borderColor: '#0D47A1', color: '#0D47A1', borderRadius: '8px', fontWeight: 600 }}
-              >
-                Download Excel Template
               </Button>
             </CardContent>
           </Card>

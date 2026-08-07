@@ -274,14 +274,13 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
   return (
     <Box component="form" id="wizard-step-form" onSubmit={handleFormSubmit}>
       {program === 'First Year B.Tech' && (
-        <Box>
-          <AppCard sx={{ marginBottom: '24px' }}>
-            <Typography sx={{ fontWeight: 700, color: '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
-              Qualifying Examination (HSC / CBSE)
-            </Typography>
-            <Typography sx={{ color: '#667085', marginBottom: '24px', fontSize: '14px' }}>
-              Enter the student's 10th and 12th qualifying examination details.
-            </Typography>
+        <AppCard sx={{ marginBottom: '24px' }}>
+          <Typography sx={{ fontWeight: 700, color: '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
+            Qualifying Examination (HSC / CBSE)
+          </Typography>
+          <Typography sx={{ color: '#667085', marginBottom: '24px', fontSize: '14px' }}>
+            Enter the student's 10th and 12th qualifying examination details.
+          </Typography>
 
             <Grid container columnSpacing={3} rowSpacing={2.5}>
               <Grid item xs={12} sm={6}>
@@ -381,9 +380,11 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
               </Grid>
             </Grid>
           </AppCard>
+      )}
 
+      {program === 'First Year B.Tech' && (
+        <AppCard sx={{ marginBottom: '24px' }}>
           {/* HSC Marks Section */}
-          <AppCard>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <Typography sx={{ fontWeight: 700, color: '#0D47A1', fontSize: '22px' }}>
                 HSC Marks & Cut-Off Calculation
@@ -490,7 +491,6 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
               ]}
             />
           </AppCard>
-        </Box>
       )}
 
       {program === 'Second Year B.Tech (Lateral Entry)' && (
