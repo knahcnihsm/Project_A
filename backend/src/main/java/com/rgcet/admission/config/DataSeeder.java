@@ -134,8 +134,8 @@ public class DataSeeder implements CommandLineRunner {
                 Gender.FEMALE, Gender.MALE, Gender.FEMALE, Gender.MALE, Gender.FEMALE
         };
         Caste[] castes = {
-                Caste.BC, Caste.OC, Caste.MBC, Caste.SC, Caste.OC,
-                Caste.BC, Caste.OC, Caste.MBC, Caste.BC, Caste.OC
+                Caste.OBC, Caste.OTHERS, Caste.OBC, Caste.SC, Caste.OTHERS,
+                Caste.OBC, Caste.OTHERS, Caste.OBC, Caste.OBC, Caste.OTHERS
         };
         String[] deptNames = {
                 "Computer Science & Engineering (CSE)",

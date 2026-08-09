@@ -51,7 +51,7 @@ export const StudentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext })
 
   // Determine initial states for custom entries
   const initCaste = draftStudent.personal?.caste || '';
-  const isCustomCaste = initCaste !== '' && !['SC', 'ST', 'OBC'].includes(initCaste);
+  const isCustomCaste = initCaste !== '' && !['SC', 'ST', 'OBC', 'OTHERS'].includes(initCaste);
 
   const initNationality = draftStudent.personal?.nationality || '';
   const isCustomNationality = initNationality !== '' && initNationality !== 'Indian';
@@ -83,6 +83,8 @@ export const StudentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext })
       district: draftStudent.personal?.district || '',
       nationality: draftStudent.personal?.nationality || 'Indian',
       caste: draftStudent.personal?.caste || undefined,
+      mobileNumber: draftStudent.personal?.mobileNumber || '',
+      emailId: draftStudent.personal?.emailId || '',
     },
   });
 
@@ -247,8 +249,47 @@ export const StudentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext })
                 >
                   <MenuItem value="Male">Male</MenuItem>
                   <MenuItem value="Female">Female</MenuItem>
-                  <MenuItem value="Transgender">Transgender</MenuItem>
+                  <MenuItem value="Others">Others</MenuItem>
                 </TextField>
+              )}
+            />
+          </Grid>
+
+          {/* Mobile Number */}
+          <Grid item xs={12} sm={6}>
+            <Controller
+              name="mobileNumber"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="Mobile Number (10 Digits)"
+                  fullWidth
+                  sx={fieldSx}
+                  disabled={isViewReadOnly}
+                  inputProps={{ maxLength: 10 }}
+                  error={!!errors.mobileNumber}
+                  helperText={errors.mobileNumber?.message}
+                />
+              )}
+            />
+          </Grid>
+
+          {/* Email ID */}
+          <Grid item xs={12} sm={6}>
+            <Controller
+              name="emailId"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="Email ID"
+                  fullWidth
+                  sx={fieldSx}
+                  disabled={isViewReadOnly}
+                  error={!!errors.emailId}
+                  helperText={errors.emailId?.message}
+                />
               )}
             />
           </Grid>
@@ -363,6 +404,7 @@ export const StudentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext })
                     <MenuItem value="SC">SC</MenuItem>
                     <MenuItem value="ST">ST</MenuItem>
                     <MenuItem value="OBC">OBC</MenuItem>
+                    <MenuItem value="OTHERS">OTHERS</MenuItem>
                     <MenuItem value="Other">Other</MenuItem>
                   </TextField>
                 )

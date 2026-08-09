@@ -37,15 +37,16 @@ import { STANDARD_CERTIFICATES } from '../utils/constants';
 
 const num = (v?: number | null): number => (v === null || v === undefined ? 0 : Number(v));
 
-const toFrontendGender = (g?: Gender): 'Male' | 'Female' | 'Transgender' | undefined => {
+const toFrontendGender = (g?: Gender): 'Male' | 'Female' | 'Others' | undefined => {
   if (!g) return undefined;
-  return (g.charAt(0) + g.slice(1).toLowerCase()) as 'Male' | 'Female' | 'Transgender';
+  if (g === 'OTHERS') return 'Others';
+  return (g.charAt(0) + g.slice(1).toLowerCase()) as 'Male' | 'Female' | 'Others';
 };
 
 export const toBackendGender = (g?: string): Gender | null => {
   if (!g) return null;
   const upper = g.toUpperCase();
-  return upper === 'MALE' || upper === 'FEMALE' || upper === 'TRANSGENDER'
+  return upper === 'MALE' || upper === 'FEMALE' || upper === 'OTHERS'
     ? (upper as Gender)
     : null;
 };
@@ -56,15 +57,17 @@ export const toBackendCaste = (caste?: string): Caste | null => {
   if (!caste) return null;
   const upper = caste.trim().toUpperCase();
   switch (upper) {
-    case 'OBC':
-      return 'BC';
-    case 'OC':
     case 'BC':
     case 'BCM':
     case 'MBC':
-    case 'SC':
+      return 'OBC';
+    case 'OC':
     case 'SCA':
+      return 'OTHERS';
+    case 'OBC':
+    case 'SC':
     case 'ST':
+    case 'OTHERS':
       return upper as Caste;
     default:
       return null;
@@ -123,6 +126,8 @@ export function toStudentRecord(dto: StudentResponseDto): StudentRecord {
     district: p.district || '',
     nationality: p.nationality || '',
     caste: toFrontendCaste(p.caste),
+    mobileNumber: p.mobileNumber || '',
+    emailId: p.emailId || '',
   };
 
   const parent: ParentDetails = {
@@ -283,6 +288,8 @@ export function toPersonalStepRequest(p: StudentPersonalDetails): PersonalStepRe
     district: p.district || undefined,
     nationality: p.nationality || undefined,
     caste: toBackendCaste(p.caste),
+    mobileNumber: p.mobileNumber || undefined,
+    emailId: p.emailId || undefined,
   };
 }
 

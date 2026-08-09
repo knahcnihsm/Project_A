@@ -568,6 +568,8 @@ public class StudentService {
         student.setDateOfBirth(req.dateOfBirth());
         student.setAge(computeAge(req.dateOfBirth()));
         student.setAadhaarNo(req.aadhaarNumber());
+        student.setMobileNumber(req.mobileNumber());
+        student.setEmailId(req.emailId());
         student.setGender(req.gender());
         student.setDistrict(req.district());
         student.setNationality(req.nationality());
@@ -659,16 +661,16 @@ public class StudentService {
         LocalDateTime now = LocalDateTime.now();
 
         String[][] fakeData = {
-            {"RGCET/2026/2001", "26BTECH001", "Aarav Sharma", "2008-05-14", "987654321001", "MALE", "Puducherry", "Indian", "BC", "Rajesh Sharma", "9840123451", "Computer Science & Engineering (CSE)", "CENTAC", "75000", "123 MG Road, Puducherry", "605001", "aarav.sharma@example.com"},
-            {"RGCET/2026/2002", "26BTECH002", "Ananya Ramakrishnan", "2008-08-20", "987654321002", "FEMALE", "Chennai", "Indian", "OC", "Ramakrishnan V", "9840123452", "Artificial Intelligence and Data Science (AI&DS)", "Management", "90000", "45 Anna Nagar, Chennai", "600040", "ananya.r@example.com"},
-            {"RGCET/2026/2003", "26BTECH003", "Rahul Varma", "2008-02-11", "987654321003", "MALE", "Cuddalore", "Indian", "MBC", "Suresh Varma", "9840123453", "Information Technology (IT)", "CENTAC", "75000", "88 Beach Road, Cuddalore", "607001", "rahul.varma@example.com"},
+            {"RGCET/2026/2001", "26BTECH001", "Aarav Sharma", "2008-05-14", "987654321001", "MALE", "Puducherry", "Indian", "OBC", "Rajesh Sharma", "9840123451", "Computer Science & Engineering (CSE)", "CENTAC", "75000", "123 MG Road, Puducherry", "605001", "aarav.sharma@example.com"},
+            {"RGCET/2026/2002", "26BTECH002", "Ananya Ramakrishnan", "2008-08-20", "987654321002", "FEMALE", "Chennai", "Indian", "OTHERS", "Ramakrishnan V", "9840123452", "Artificial Intelligence and Data Science (AI&DS)", "Management", "90000", "45 Anna Nagar, Chennai", "600040", "ananya.r@example.com"},
+            {"RGCET/2026/2003", "26BTECH003", "Rahul Varma", "2008-02-11", "987654321003", "MALE", "Cuddalore", "Indian", "OBC", "Suresh Varma", "9840123453", "Information Technology (IT)", "CENTAC", "75000", "88 Beach Road, Cuddalore", "607001", "rahul.varma@example.com"},
             {"RGCET/2026/2004", "26BTECH004", "Kavya Subramanian", "2008-11-05", "987654321004", "FEMALE", "Karaikal", "Indian", "SC", "Subramanian K", "9840123454", "Electronics & Communication Engineering (ECE)", "CENTAC", "75000", "12 Church Street, Karaikal", "609602", "kavya.subu@example.com"},
-            {"RGCET/2026/2005", "26BTECH005", "Dhruv Patel", "2008-04-18", "987654321005", "MALE", "Puducherry", "Indian", "OC", "Vikram Patel", "9840123455", "Artificial Intelligence and Machine Learning (AI&ML)", "Management", "90000", "67 Heritage Town, Puducherry", "605001", "dhruv.patel@example.com"},
-            {"RGCET/2026/2006", "26BTECH006", "Priya Sundaram", "2008-09-30", "987654321006", "FEMALE", "Villupuram", "Indian", "BC", "Sundaram M", "9840123456", "Biomedical Engineering (BME)", "CENTAC", "75000", "34 Main Road, Villupuram", "605602", "priya.sundaram@example.com"},
-            {"RGCET/2026/2007", "26BTECH007", "Vikramaditya Reddy", "2008-01-25", "987654321007", "MALE", "Chidambaram", "Indian", "OC", "Raghunath Reddy", "9840123457", "Computer Science & Engineering (CSE)", "Management", "100000", "90 Temple Street, Chidambaram", "608001", "vikram.reddy@example.com"},
-            {"RGCET/2026/2008", "26BTECH008", "Sneha Venkatesh", "2008-07-12", "987654321008", "FEMALE", "Neyveli", "Indian", "MBC", "Venkatesh N", "9840123458", "Information Technology (IT)", "Management", "80000", "15 Township Block 4, Neyveli", "607801", "sneha.v@example.com"},
-            {"RGCET/2026/2009", "26BTECH009", "Karthik Nair", "2008-10-02", "987654321009", "MALE", "Puducherry", "Indian", "BC", "Narayanan Nair", "9840123459", "Electronics & Communication Engineering (ECE)", "CENTAC", "75000", "22 ECR Road, Lawspet, Puducherry", "605008", "karthik.nair@example.com"},
-            {"RGCET/2026/2010", "26BTECH010", "Divya Iyer", "2008-06-19", "987654321010", "FEMALE", "Puducherry", "Indian", "OC", "Sankar Iyer", "9840123460", "Artificial Intelligence and Data Science (AI&DS)", "CENTAC", "75000", "59 VIP Avenue, Puducherry", "605011", "divya.iyer@example.com"}
+            {"RGCET/2026/2005", "26BTECH005", "Dhruv Patel", "2008-04-18", "987654321005", "MALE", "Puducherry", "Indian", "OTHERS", "Vikram Patel", "9840123455", "Artificial Intelligence and Machine Learning (AI&ML)", "Management", "90000", "67 Heritage Town, Puducherry", "605001", "dhruv.patel@example.com"},
+            {"RGCET/2026/2006", "26BTECH006", "Priya Sundaram", "2008-09-30", "987654321006", "FEMALE", "Villupuram", "Indian", "OBC", "Sundaram M", "9840123456", "Biomedical Engineering (BME)", "CENTAC", "75000", "34 Main Road, Villupuram", "605602", "priya.sundaram@example.com"},
+            {"RGCET/2026/2007", "26BTECH007", "Vikramaditya Reddy", "2008-01-25", "987654321007", "MALE", "Chidambaram", "Indian", "OTHERS", "Raghunath Reddy", "9840123457", "Computer Science & Engineering (CSE)", "Management", "100000", "90 Temple Street, Chidambaram", "608001", "vikram.reddy@example.com"},
+            {"RGCET/2026/2008", "26BTECH008", "Sneha Venkatesh", "2008-07-12", "987654321008", "FEMALE", "Neyveli", "Indian", "OBC", "Venkatesh N", "9840123458", "Information Technology (IT)", "Management", "80000", "15 Township Block 4, Neyveli", "607801", "sneha.v@example.com"},
+            {"RGCET/2026/2009", "26BTECH009", "Karthik Nair", "2008-10-02", "987654321009", "MALE", "Puducherry", "Indian", "OBC", "Narayanan Nair", "9840123459", "Electronics & Communication Engineering (ECE)", "CENTAC", "75000", "22 ECR Road, Lawspet, Puducherry", "605008", "karthik.nair@example.com"},
+            {"RGCET/2026/2010", "26BTECH010", "Divya Iyer", "2008-06-19", "987654321010", "FEMALE", "Puducherry", "Indian", "OTHERS", "Sankar Iyer", "9840123460", "Artificial Intelligence and Data Science (AI&DS)", "CENTAC", "75000", "59 VIP Avenue, Puducherry", "605011", "divya.iyer@example.com"}
         };
 
         for (String[] data : fakeData) {

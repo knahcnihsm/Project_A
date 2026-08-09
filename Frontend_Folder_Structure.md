@@ -74,8 +74,7 @@ academic-erp-admission-portal/
 │ ├── student/
 │ │ ├── StudentList.tsx
 │ │ ├── EditStudent.tsx
-│ │ ├── ViewStudent.tsx
-│ │ └── BulkUpdate.tsx
+│ │ └── ViewStudent.tsx
 │ │
 │ ├── archive/
 │ │ ├── ArchivedStudents.tsx

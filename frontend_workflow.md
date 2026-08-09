@@ -581,10 +581,6 @@ Show Warning
 ↓
 
 Please select only one student.
-
-OR
-
-Use Bulk Update.
 ```
 
 ---

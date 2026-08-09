@@ -1,5 +1,5 @@
-export type Gender = 'MALE' | 'FEMALE' | 'TRANSGENDER';
-export type Caste = 'OC' | 'BC' | 'BCM' | 'MBC' | 'SC' | 'SCA' | 'ST';
+export type Gender = 'MALE' | 'FEMALE' | 'OTHERS';
+export type Caste = 'OBC' | 'SC' | 'ST' | 'OTHERS';
 export type StudentStatus = 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
 export type PaymentStatus = 'PAID' | 'PARTIAL' | 'PENDING';
 
@@ -13,6 +13,8 @@ export interface PersonalStepRequest {
   district?: string;
   nationality?: string;
   caste?: Caste | null;
+  mobileNumber?: string;
+  emailId?: string;
 }
 
 export interface ParentStepRequest {
@@ -150,6 +152,8 @@ export interface StudentResponseDto {
   dateOfBirth?: string;
   age?: number;
   aadhaarNumber?: string;
+  mobileNumber?: string;
+  emailId?: string;
   gender?: Gender;
   district?: string;
   nationality?: string;
@@ -342,4 +346,83 @@ export interface StudentStatsDto {
   active: number;
   archived: number;
   draft: number;
+}
+
+// ---------------- Bulk Update ----------------
+
+export interface BulkUpdateColumn {
+  name: string;
+  type: string;
+  required: boolean;
+  enumValues?: string[] | null;
+  fkReference?: string | null;
+  isKey: boolean;
+}
+
+export interface BulkUpdateTable {
+  tableName: string;
+  columns: BulkUpdateColumn[];
+}
+
+export interface BulkUpdateSchema {
+  lookupKey: string;
+  updatedBy: string;
+  tables: BulkUpdateTable[];
+  masterData: Record<string, string[]>;
+}
+
+export interface BulkUpdateSheet {
+  tableName: string;
+  rows: Record<string, string>[];
+}
+
+export interface BulkUpdateRequest {
+  sheets: BulkUpdateSheet[];
+}
+
+export interface BulkChange {
+  tableName: string;
+  fieldName: string;
+  oldValue: string;
+  newValue: string;
+}
+
+export interface BulkRecordPreview {
+  applicationNo: string;
+  studentName: string;
+  valid: boolean;
+  errors: string[];
+  changes: BulkChange[];
+}
+
+export interface BulkPreviewSummary {
+  totalRecords: number;
+  validRecords: number;
+  invalidRecords: number;
+  changedRecords: number;
+  unchangedRecords: number;
+}
+
+export interface BulkUpdatePreview {
+  summary: BulkPreviewSummary;
+  records: BulkRecordPreview[];
+}
+
+export interface BulkApplySummary {
+  totalRecords: number;
+  updatedRecords: number;
+  skippedRecords: number;
+  failedRecords: number;
+}
+
+export interface BulkRecordResult {
+  applicationNo: string;
+  studentName: string;
+  status: string;
+  errors: string[];
+}
+
+export interface BulkUpdateApply {
+  summary: BulkApplySummary;
+  results: BulkRecordResult[];
 }

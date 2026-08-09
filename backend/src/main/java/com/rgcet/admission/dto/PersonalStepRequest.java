@@ -2,6 +2,7 @@ package com.rgcet.admission.dto;
 
 import com.rgcet.admission.entity.Caste;
 import com.rgcet.admission.entity.Gender;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -17,6 +18,8 @@ public record PersonalStepRequest(
         @NotNull(message = "Gender is required") Gender gender,
         String district,
         String nationality,
-        Caste caste
+        Caste caste,
+        @Pattern(regexp = "\\d{10}", message = "Mobile number must be 10 digits") String mobileNumber,
+        @Email(message = "Email must be valid") String emailId
 ) {
 }

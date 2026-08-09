@@ -9,12 +9,22 @@ export const studentDetailsSchema = z.object({
   aadhaarNumber: z
     .string()
     .regex(/^\d{12}$/, 'Aadhaar Number must be exactly 12 digits'),
-  gender: z.enum(['Male', 'Female', 'Transgender'], {
+  gender: z.enum(['Male', 'Female', 'Others'], {
     errorMap: () => ({ message: 'Gender is required' }),
   }),
   district: z.string().min(1, 'District is required'),
   nationality: z.string().min(1, 'Nationality is required'),
   caste: z.string().min(1, 'Caste / Category is required'),
+  mobileNumber: z
+    .string()
+    .regex(/^\d{10}$/, 'Mobile Number must be exactly 10 digits')
+    .optional()
+    .or(z.literal('')),
+  emailId: z
+    .string()
+    .email('Email must be valid')
+    .optional()
+    .or(z.literal('')),
 });
 
 export type StudentDetailsFormData = z.infer<typeof studentDetailsSchema>;

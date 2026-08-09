@@ -1,5 +1,5 @@
-export type Gender = 'Male' | 'Female' | 'Transgender';
-export type Caste = 'OC' | 'BC' | 'BCM' | 'MBC' | 'SC' | 'SCA' | 'ST';
+export type Gender = 'Male' | 'Female' | 'Others';
+export type Caste = 'SC' | 'ST' | 'OBC' | 'OTHERS';
 export type Nationality = 'Indian' | 'Other';
 
 export interface StudentPersonalDetails {
@@ -13,6 +13,8 @@ export interface StudentPersonalDetails {
   district: string;
   nationality: string;
   caste: string;
+  mobileNumber?: string; // 10 digits
+  emailId?: string;
 }
 
 export interface ParentDetails {

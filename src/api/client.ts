@@ -1,6 +1,10 @@
 import {
   AcademicStepRequest,
   ArchiveRequest,
+  BulkUpdatePreview,
+  BulkUpdateApply,
+  BulkUpdateRequest,
+  BulkUpdateSchema,
   BusRouteDto,
   CategoryDto,
   CertificateMasterDto,
@@ -179,4 +183,14 @@ export const masterDataApi = {
 
 export const api = {
   baseUrl: API_BASE_URL,
+};
+
+// ---------------- Bulk Update API ----------------
+
+export const bulkUpdateApi = {
+  schema: () => get<BulkUpdateSchema>('/api/bulk-update/schema'),
+  validate: (body: BulkUpdateRequest) =>
+    post<BulkUpdatePreview>('/api/bulk-update/validate', body),
+  apply: (body: BulkUpdateRequest) =>
+    post<BulkUpdateApply>('/api/bulk-update/apply', body),
 };

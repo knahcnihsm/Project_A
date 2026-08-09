@@ -51,6 +51,12 @@ public class Student {
     @Column(name = "aadhaar_no")
     private String aadhaarNo;
 
+    @Column(name = "mobile_number")
+    private String mobileNumber;
+
+    @Column(name = "email_id")
+    private String emailId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "gender")
     private Gender gender;
