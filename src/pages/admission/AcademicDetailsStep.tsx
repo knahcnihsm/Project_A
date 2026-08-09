@@ -4,6 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { academicDetailsSchema, AcademicDetailsFormData } from '../../schemas/academic.schema';
 import { useAdmission } from '../../context/AdmissionContext';
+import { useThemeContext } from '../../context/ThemeContext';
 import { AppCard } from '../../components/ui/AppCard';
 
 const fieldSx = {
@@ -38,6 +39,8 @@ const fieldSx = {
 };
 
 export const AcademicDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
+  const { mode } = useThemeContext();
+  const isDark = mode === 'dark';
   const { draftStudent, updateDraftSection, isViewReadOnly, masterData } = useAdmission();
 
   const programs = masterData.programs.map((p) => p.name);
@@ -101,10 +104,10 @@ export const AcademicDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }
   return (
     <Box component="form" id="wizard-step-form" onSubmit={handleSubmit(onSubmit)}>
       <AppCard>
-        <Typography sx={{ fontWeight: 700, color: '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
+        <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
           Academic Admission Details
         </Typography>
-        <Typography sx={{ color: '#667085', marginBottom: '24px', fontSize: '14px' }}>
+        <Typography sx={{ color: isDark ? '#CBD5E1' : '#667085', marginBottom: '24px', fontSize: '14px' }}>
           Select the student's program, department, admission quota, and batch.
         </Typography>
 

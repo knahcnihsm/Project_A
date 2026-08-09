@@ -41,7 +41,7 @@ export const Header: React.FC = () => {
         position: 'sticky',
         top: 0,
         zIndex: 1100,
-        backgroundColor: isDark ? '#111827' : '#FFFFFF',
+        backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
         borderBottom: `1px solid ${isDark ? '#334155' : '#D6E4F0'}`,
         boxShadow: isDark
           ? '0 2px 10px rgba(0, 0, 0, 0.4)'

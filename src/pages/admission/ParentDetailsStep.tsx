@@ -4,6 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { parentDetailsSchema, ParentDetailsFormData } from '../../schemas/parent.schema';
 import { useAdmission } from '../../context/AdmissionContext';
+import { useThemeContext } from '../../context/ThemeContext';
 import { AppCard } from '../../components/ui/AppCard';
 
 const fieldSx = {
@@ -33,6 +34,8 @@ const fieldSx = {
 };
 
 export const ParentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
+  const { mode } = useThemeContext();
+  const isDark = mode === 'dark';
   const { draftStudent, updateDraftSection, isViewReadOnly } = useAdmission();
 
   const {
@@ -69,10 +72,10 @@ export const ParentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
   return (
     <Box component="form" id="wizard-step-form" onSubmit={handleSubmit(onSubmit)}>
       <AppCard>
-        <Typography sx={{ fontWeight: 700, color: '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
+        <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
           Parent / Guardian Details
         </Typography>
-        <Typography sx={{ color: '#667085', marginBottom: '24px', fontSize: '14px' }}>
+        <Typography sx={{ color: isDark ? '#CBD5E1' : '#667085', marginBottom: '24px', fontSize: '14px' }}>
           Enter the parent's information for official admission records.
         </Typography>
 

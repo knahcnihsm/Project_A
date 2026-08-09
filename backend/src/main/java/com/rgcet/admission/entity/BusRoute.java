@@ -9,6 +9,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+
+import com.rgcet.admission.common.TextUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -37,4 +41,10 @@ public class BusRoute {
 
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<BusStop> stops = new ArrayList<>();
+
+    @PrePersist
+    @PreUpdate
+    public void normalizeTextFields() {
+        this.routeName = TextUtil.upper(this.routeName);
+    }
 }

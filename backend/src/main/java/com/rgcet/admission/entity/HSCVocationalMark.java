@@ -9,6 +9,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+
+import com.rgcet.admission.common.TextUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -45,4 +49,11 @@ public class HSCVocationalMark {
 
     @Column(name = "percentage")
     private BigDecimal percentage;
+
+    @PrePersist
+    @PreUpdate
+    public void normalizeTextFields() {
+        this.subjectName = TextUtil.upper(this.subjectName);
+        this.monthYear = TextUtil.upper(this.monthYear);
+    }
 }

@@ -12,6 +12,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+
+import com.rgcet.admission.common.TextUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -110,4 +114,18 @@ public class Student {
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<StudentCertificate> certificates = new ArrayList<>();
+
+    @PrePersist
+    @PreUpdate
+    public void normalizeTextFields() {
+        this.applicationNo = TextUtil.upper(this.applicationNo);
+        this.registerNo = TextUtil.upper(this.registerNo);
+        this.studentName = TextUtil.upper(this.studentName);
+        this.aadhaarNo = TextUtil.upper(this.aadhaarNo);
+        this.mobileNumber = TextUtil.upper(this.mobileNumber);
+        this.emailId = TextUtil.upper(this.emailId);
+        this.district = TextUtil.upper(this.district);
+        this.nationality = TextUtil.upper(this.nationality);
+        this.archiveReason = TextUtil.upper(this.archiveReason);
+    }
 }

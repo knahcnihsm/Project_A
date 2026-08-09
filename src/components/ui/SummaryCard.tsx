@@ -20,8 +20,8 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ title, items }) => {
   return (
     <Box
       sx={{
-        backgroundColor: isDark ? '#0D1117' : '#F7FAFC',
-        border: `1px dashed ${isDark ? '#30363D' : '#D8E4F2'}`,
+        backgroundColor: isDark ? '#0F172A' : '#F7FAFC',
+        border: `1px dashed ${isDark ? '#334155' : '#D8E4F2'}`,
         borderRadius: '12px',
         padding: '20px',
         marginTop: '20px',
@@ -48,7 +48,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ title, items }) => {
                 sx={{
                   color: item.isHighlight
                     ? isDark ? '#38BDF8' : '#0D47A1'
-                    : isDark ? '#8B949E' : '#667085',
+                    : isDark ? '#CBD5E1' : '#667085',
                   fontWeight: item.isHighlight ? 700 : 500,
                   fontSize: item.isHighlight ? '0.95rem' : '0.875rem',
                 }}
@@ -60,7 +60,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ title, items }) => {
                 sx={{
                   color: item.isHighlight
                     ? isDark ? '#38BDF8' : '#0D47A1'
-                    : isDark ? '#E6EDF3' : '#1A2B49',
+                    : isDark ? '#FFFFFF' : '#1A2B49',
                   fontWeight: item.isHighlight ? 800 : 600,
                   fontSize: item.isHighlight ? '1.1rem' : '0.9375rem',
                 }}
@@ -69,7 +69,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ title, items }) => {
               </Typography>
             </Box>
             {idx < items.length - 1 && (
-              <Divider sx={{ borderColor: isDark ? '#21262D' : '#E6ECF5' }} />
+              <Divider sx={{ borderColor: isDark ? '#334155' : '#E6ECF5' }} />
             )}
           </React.Fragment>
         ))}

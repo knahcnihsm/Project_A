@@ -8,6 +8,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+
+import com.rgcet.admission.common.TextUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -56,4 +60,16 @@ public class PGQualification {
 
     @Column(name = "degree_registration_no")
     private String degreeRegistrationNo;
+
+    @PrePersist
+    @PreUpdate
+    public void normalizeTextFields() {
+        this.universityName = TextUtil.upper(this.universityName);
+        this.universityPlace = TextUtil.upper(this.universityPlace);
+        this.institutionName = TextUtil.upper(this.institutionName);
+        this.institutionPlace = TextUtil.upper(this.institutionPlace);
+        this.examPassed = TextUtil.upper(this.examPassed);
+        this.monthYearOfPassing = TextUtil.upper(this.monthYearOfPassing);
+        this.degreeRegistrationNo = TextUtil.upper(this.degreeRegistrationNo);
+    }
 }

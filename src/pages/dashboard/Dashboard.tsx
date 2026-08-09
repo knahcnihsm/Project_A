@@ -39,6 +39,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAdmission } from '../../context/AdmissionContext';
 import { generateStudentPdf } from '../../utils/exportPdf';
 import { formatDateDisplay } from '../../utils/dateUtils';
+import { toUpper } from '../../utils/caseUtils';
 import { StudentRecord } from '../../types';
 import { useThemeContext } from '../../context/ThemeContext';
 import { ArchiveStudentModal } from '../../components/student/ArchiveStudentModal';
@@ -134,7 +135,8 @@ export const Dashboard: React.FC = () => {
     if (appliedFilters.archivedStatus) {
       list = [...list, ...archivedStudents];
     }
-    return list;
+    const updatedAtMs = (s: StudentRecord): number => (s.updatedAt ? new Date(s.updatedAt).getTime() : 0);
+    return [...list].sort((a, b) => updatedAtMs(b) - updatedAtMs(a));
   }, [appliedFilters.activeStatus, appliedFilters.archivedStatus, students, archivedStudents]);
 
   // Filter students
@@ -151,12 +153,12 @@ export const Dashboard: React.FC = () => {
     // 2. Department
     const matchesDept =
       appliedFilters.department === 'All' ||
-      student.academic.department === appliedFilters.department;
+      student.academic.department.toUpperCase() === appliedFilters.department.toUpperCase();
 
     // 3. Admission Type
     const matchesAdmissionType =
       appliedFilters.admissionType === 'All' ||
-      student.academic.admissionCategory === appliedFilters.admissionType;
+      student.academic.admissionCategory.toUpperCase() === appliedFilters.admissionType.toUpperCase();
 
     // 4. Academic Year
     const admissionYear = student.academic.dateOfAdmission ? parseInt(student.academic.dateOfAdmission.split('-')[0]) : null;
@@ -174,11 +176,11 @@ export const Dashboard: React.FC = () => {
     // 5. Gender
     let matchesGender = true;
     if (appliedFilters.gender !== 'All') {
+      const gender = student.personal.gender.toUpperCase();
       if (appliedFilters.gender === 'Other') {
-        matchesGender =
-          student.personal.gender !== 'Male' && student.personal.gender !== 'Female';
+        matchesGender = gender !== 'MALE' && gender !== 'FEMALE';
       } else {
-        matchesGender = student.personal.gender === appliedFilters.gender;
+        matchesGender = gender === appliedFilters.gender.toUpperCase();
       }
     }
 
@@ -224,16 +226,17 @@ export const Dashboard: React.FC = () => {
 
   // Helper to get short department code
   const getDeptCode = (department: string): string => {
-    if (department.includes('Computer Science')) return 'CSE';
-    if (department.includes('Electronics') && department.includes('Comm')) return 'ECE';
-    if (department.includes('Electrical')) return 'EEE';
-    if (department.includes('Mechanical')) return 'MECH';
-    if (department.includes('Information Technology')) return 'IT';
-    if (department.includes('Civil')) return 'CIVIL';
-    if (department.includes('Artificial Intelligence') && department.includes('Data')) return 'AI&DS';
-    if (department.includes('Artificial Intelligence') && department.includes('ML')) return 'AI&ML';
-    if (department.includes('MBA') || department.includes('Business')) return 'MBA';
-    if (department.includes('Biomedical')) return 'BME';
+    const dept = department.toUpperCase();
+    if (dept.includes('COMPUTER SCIENCE')) return 'CSE';
+    if (dept.includes('ELECTRONICS') && dept.includes('COMM')) return 'ECE';
+    if (dept.includes('ELECTRICAL')) return 'EEE';
+    if (dept.includes('MECHANICAL')) return 'MECH';
+    if (dept.includes('INFORMATION TECHNOLOGY')) return 'IT';
+    if (dept.includes('CIVIL')) return 'CIVIL';
+    if (dept.includes('ARTIFICIAL INTELLIGENCE') && dept.includes('DATA')) return 'AI&DS';
+    if (dept.includes('ARTIFICIAL INTELLIGENCE') && dept.includes('ML')) return 'AI&ML';
+    if (dept.includes('MBA') || dept.includes('BUSINESS')) return 'MBA';
+    if (dept.includes('BIOMEDICAL') || dept.includes('BIO')) return 'BME';
     return department;
   };
 
@@ -440,7 +443,7 @@ export const Dashboard: React.FC = () => {
               >
                 <MenuItem value="All">All Types</MenuItem>
                 <MenuItem value="CENTAC">CENTAC</MenuItem>
-                <MenuItem value="Management">Management</MenuItem>
+                <MenuItem value="MANAGEMENT">MANAGEMENT</MenuItem>
               </Select>
             </FormControl>
 
@@ -728,19 +731,19 @@ export const Dashboard: React.FC = () => {
                         />
                       </TableCell>
                       <TableCell sx={{ ...tdStyle, fontWeight: 600, color: isDark ? '#FFFFFF' : '#1E293B' }}>
-                        {student.personal.applicationNumber}
+                        {toUpper(student.personal.applicationNumber)}
                       </TableCell>
                       <TableCell sx={{ ...tdStyle, fontWeight: 700, color: isDark ? '#FFFFFF' : '#1E293B' }}>
-                        {student.personal.studentName}
+                        {toUpper(student.personal.studentName)}
                       </TableCell>
                       <TableCell sx={{ ...tdStyle, fontWeight: 600, color: isDark ? '#38BDF8' : '#0B3D91' }}>
-                        {student.personal.registerNumber}
+                        {toUpper(student.personal.registerNumber)}
                       </TableCell>
                       <TableCell sx={{ ...tdStyle, fontWeight: 500, color: isDark ? '#CBD5E1' : '#1E293B' }}>
-                        {getDeptCode(student.academic.department)}
+                        {toUpper(getDeptCode(student.academic.department))}
                       </TableCell>
                       <TableCell sx={{ ...tdStyle, fontWeight: 500, color: isDark ? '#CBD5E1' : '#374151' }}>
-                        {student.academic.admissionCategory}
+                        {toUpper(student.academic.admissionCategory)}
                       </TableCell>
                       <TableCell sx={{ ...tdStyle, fontWeight: 400, color: isDark ? '#94A3B8' : '#64748B' }}>
                         {formatDateDisplay(student.academic.dateOfAdmission)}

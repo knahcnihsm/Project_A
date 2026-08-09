@@ -1,6 +1,8 @@
 import {
   AcademicStepRequest,
   ArchiveRequest,
+  BulkAdmissionApply,
+  BulkAdmissionPreview,
   BulkUpdatePreview,
   BulkUpdateApply,
   BulkUpdateRequest,
@@ -193,4 +195,14 @@ export const bulkUpdateApi = {
     post<BulkUpdatePreview>('/api/bulk-update/validate', body),
   apply: (body: BulkUpdateRequest) =>
     post<BulkUpdateApply>('/api/bulk-update/apply', body),
+};
+
+// ---------------- Bulk Add Admission API ----------------
+
+export const bulkAdmissionApi = {
+  schema: () => get<BulkUpdateSchema>('/api/bulk-admission/schema'),
+  validate: (body: BulkUpdateRequest) =>
+    post<BulkAdmissionPreview>('/api/bulk-admission/validate', body),
+  apply: (body: BulkUpdateRequest) =>
+    post<BulkAdmissionApply>('/api/bulk-admission/apply', body),
 };

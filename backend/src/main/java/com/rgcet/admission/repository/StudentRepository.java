@@ -19,6 +19,8 @@ public interface StudentRepository extends JpaRepository<Student, Long>, JpaSpec
 
     boolean existsByApplicationNoIgnoreCase(String applicationNo);
 
+    boolean existsByRegisterNoIgnoreCase(String registerNo);
+
     long countByStatus(StudentStatus status);
 
     @Query("select s from Student s where lower(s.applicationNo) in :applicationNos")

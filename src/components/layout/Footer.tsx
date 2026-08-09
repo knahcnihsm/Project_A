@@ -10,8 +10,8 @@ export const Footer: React.FC = () => {
     <Box
       component="footer"
       sx={{
-        backgroundColor: isDark ? '#000000' : '#FFFFFF',
-        borderTop: `1px solid ${isDark ? '#222222' : '#D6E4F0'}`,
+        backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+        borderTop: `1px solid ${isDark ? '#334155' : '#D6E4F0'}`,
         padding: '12px 0',
         display: 'flex',
         justifyContent: 'space-between',

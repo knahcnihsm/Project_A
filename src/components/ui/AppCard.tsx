@@ -14,9 +14,9 @@ export const AppCard: React.FC<AppCardProps> = ({ children, sx, ...props }) => {
     <Card
       elevation={0}
       sx={{
-        backgroundColor: isDark ? '#161B22' : '#FFFFFF',
+        backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
         borderRadius: '16px',
-        border: `1px solid ${isDark ? '#30363D' : '#E6ECF5'}`,
+        border: `1px solid ${isDark ? '#334155' : '#E6ECF5'}`,
         boxShadow: isDark
           ? '0 8px 30px rgba(0, 0, 0, 0.4)'
           : '0 8px 30px rgba(0, 0, 0, 0.06)',

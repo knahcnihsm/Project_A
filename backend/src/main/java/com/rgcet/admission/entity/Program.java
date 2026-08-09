@@ -6,6 +6,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+
+import com.rgcet.admission.common.TextUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,4 +31,10 @@ public class Program {
 
     @Column(name = "duration_years")
     private Integer durationYears;
+
+    @PrePersist
+    @PreUpdate
+    public void normalizeTextFields() {
+        this.programName = TextUtil.upper(this.programName);
+    }
 }

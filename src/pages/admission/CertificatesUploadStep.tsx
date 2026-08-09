@@ -16,10 +16,13 @@ import {
 } from '@mui/material';
 import { UploadCloud, Eye, Trash2, CheckCircle2, Download } from 'lucide-react';
 import { useAdmission } from '../../context/AdmissionContext';
+import { useThemeContext } from '../../context/ThemeContext';
 import { AppCard } from '../../components/ui/AppCard';
 import { CertificateItem } from '../../types';
 
 export const CertificatesUploadStep: React.FC<{ onSave: () => void }> = ({ onSave }) => {
+  const { mode } = useThemeContext();
+  const isDark = mode === 'dark';
   const { draftStudent, updateDraftSection, isViewReadOnly } = useAdmission();
 
   const [certificates, setCertificates] = useState<CertificateItem[]>(
@@ -126,20 +129,20 @@ export const CertificatesUploadStep: React.FC<{ onSave: () => void }> = ({ onSav
   return (
     <Box component="form" id="wizard-step-form" onSubmit={handleSubmit}>
       <AppCard>
-        <Typography sx={{ fontWeight: 700, color: '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
+        <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
           Certificates & Document Verification
         </Typography>
-        <Typography sx={{ color: '#667085', marginBottom: '24px', fontSize: '14px' }}>
+        <Typography sx={{ color: isDark ? '#CBD5E1' : '#667085', marginBottom: '24px', fontSize: '14px' }}>
           Verify received physical certificates and upload digitized PDF/Image documents.
         </Typography>
 
-        <Table sx={{ border: '1px solid #E6ECF5', borderRadius: '8px', overflow: 'hidden' }}>
-          <TableHead sx={{ backgroundColor: '#F5F8FC' }}>
+        <Table sx={{ border: `1px solid ${isDark ? '#334155' : '#E6ECF5'}`, borderRadius: '8px', overflow: 'hidden' }}>
+          <TableHead sx={{ backgroundColor: isDark ? '#0F172A' : '#F5F8FC' }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 700, color: '#0D47A1', width: '90px', fontSize: '14px', padding: '10px 14px' }}>Received</TableCell>
-              <TableCell sx={{ fontWeight: 700, color: '#0D47A1', fontSize: '14px', padding: '10px 14px' }}>Certificate Name</TableCell>
-              <TableCell sx={{ fontWeight: 700, color: '#0D47A1', width: '240px', fontSize: '14px', padding: '10px 14px' }}>Upload File</TableCell>
-              <TableCell sx={{ fontWeight: 700, color: '#0D47A1', width: '240px', fontSize: '14px', padding: '10px 14px' }}>Actions / Preview</TableCell>
+              <TableCell sx={{ fontWeight: 700, color: isDark ? '#38BDF8' : '#0D47A1', width: '90px', fontSize: '14px', padding: '10px 14px' }}>Received</TableCell>
+              <TableCell sx={{ fontWeight: 700, color: isDark ? '#38BDF8' : '#0D47A1', fontSize: '14px', padding: '10px 14px' }}>Certificate Name</TableCell>
+              <TableCell sx={{ fontWeight: 700, color: isDark ? '#38BDF8' : '#0D47A1', width: '240px', fontSize: '14px', padding: '10px 14px' }}>Upload File</TableCell>
+              <TableCell sx={{ fontWeight: 700, color: isDark ? '#38BDF8' : '#0D47A1', width: '240px', fontSize: '14px', padding: '10px 14px' }}>Actions / Preview</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -201,7 +204,7 @@ export const CertificatesUploadStep: React.FC<{ onSave: () => void }> = ({ onSav
                           variant="text"
                           onClick={() => setPreviewCert(cert)}
                           startIcon={<Eye size={12} />}
-                          sx={{ color: '#0D47A1', fontWeight: 600, fontSize: '12px' }}
+                          sx={{ color: isDark ? '#38BDF8' : '#0D47A1', fontWeight: 600, fontSize: '12px' }}
                         >
                           Preview
                         </Button>
@@ -212,7 +215,7 @@ export const CertificatesUploadStep: React.FC<{ onSave: () => void }> = ({ onSav
                           href={String(cert.file)}
                           download={cert.fileName || 'document'}
                           startIcon={<Download size={12} />}
-                          sx={{ color: '#0D47A1', fontWeight: 600, fontSize: '12px' }}
+                          sx={{ color: isDark ? '#38BDF8' : '#0D47A1', fontWeight: 600, fontSize: '12px' }}
                         >
                           Download
                         </Button>
@@ -236,8 +239,8 @@ export const CertificatesUploadStep: React.FC<{ onSave: () => void }> = ({ onSav
         </Table>
 
         {/* Upload Progress & Summary Card */}
-        <Box sx={{ marginTop: '16px', backgroundColor: '#F7FAFC', border: '1px solid #D8E4F2', padding: '14px 16px', borderRadius: '12px' }}>
-          <Typography sx={{ fontWeight: 700, color: '#0D47A1', marginBottom: '8px', fontSize: '14px' }}>
+        <Box sx={{ marginTop: '16px', backgroundColor: isDark ? '#0F172A' : '#F7FAFC', border: `1px solid ${isDark ? '#334155' : '#D8E4F2'}`, padding: '14px 16px', borderRadius: '12px' }}>
+          <Typography sx={{ fontWeight: 700, color: isDark ? '#38BDF8' : '#0D47A1', marginBottom: '8px', fontSize: '14px' }}>
             Document Upload Progress: {uploadedCount} / {certificates.length} Completed
           </Typography>
           <LinearProgress variant="determinate" value={progressPct} sx={{ height: 6, borderRadius: 3, marginBottom: '12px' }} />
@@ -245,7 +248,7 @@ export const CertificatesUploadStep: React.FC<{ onSave: () => void }> = ({ onSav
             <Typography sx={{ fontWeight: 600, color: '#16A34A', fontSize: '12px' }}>
               • Received: {receivedCount}
             </Typography>
-            <Typography sx={{ fontWeight: 600, color: '#0D47A1', fontSize: '12px' }}>
+            <Typography sx={{ fontWeight: 600, color: isDark ? '#38BDF8' : '#0D47A1', fontSize: '12px' }}>
               • Uploaded: {uploadedCount}
             </Typography>
             <Typography sx={{ fontWeight: 600, color: '#F59E0B', fontSize: '12px' }}>
@@ -261,9 +264,9 @@ export const CertificatesUploadStep: React.FC<{ onSave: () => void }> = ({ onSav
         onClose={() => setPreviewCert(null)}
         maxWidth="md"
         fullWidth
-        PaperProps={{ sx: { borderRadius: '12px' } }}
+        PaperProps={{ sx: { borderRadius: '12px', backgroundColor: isDark ? '#1E293B' : '#FFFFFF' } }}
       >
-        <DialogTitle sx={{ fontWeight: 700, color: '#0D47A1', fontSize: '15px', padding: '12px 18px' }}>
+        <DialogTitle sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', fontSize: '15px', padding: '12px 18px' }}>
           Document Preview: {previewCert?.name}
         </DialogTitle>
         <DialogContent sx={{ minHeight: '300px', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '12px 18px' }}>

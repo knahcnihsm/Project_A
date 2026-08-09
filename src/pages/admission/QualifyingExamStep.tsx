@@ -15,6 +15,7 @@ import {
   TableBody,
 } from '@mui/material';
 import { useAdmission } from '../../context/AdmissionContext';
+import { useThemeContext } from '../../context/ThemeContext';
 import { AppCard } from '../../components/ui/AppCard';
 import { SummaryCard } from '../../components/ui/SummaryCard';
 import { calculateHSCCutOff } from '../../utils/cutoffCalculator';
@@ -52,6 +53,8 @@ const fieldSx = {
 };
 
 export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
+  const { mode } = useThemeContext();
+  const isDark = mode === 'dark';
   const { draftStudent, updateDraftSection, isViewReadOnly } = useAdmission();
   const program = draftStudent.academic?.program || 'First Year B.Tech';
 
@@ -275,10 +278,10 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
     <Box component="form" id="wizard-step-form" onSubmit={handleFormSubmit}>
       {program === 'First Year B.Tech' && (
         <AppCard sx={{ marginBottom: '24px' }}>
-          <Typography sx={{ fontWeight: 700, color: '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
+          <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
             Qualifying Examination (HSC / CBSE)
           </Typography>
-          <Typography sx={{ color: '#667085', marginBottom: '24px', fontSize: '14px' }}>
+          <Typography sx={{ color: isDark ? '#CBD5E1' : '#667085', marginBottom: '24px', fontSize: '14px' }}>
             Enter the student's 10th and 12th qualifying examination details.
           </Typography>
 
@@ -386,7 +389,7 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
         <AppCard sx={{ marginBottom: '24px' }}>
           {/* HSC Marks Section */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <Typography sx={{ fontWeight: 700, color: '#0D47A1', fontSize: '22px' }}>
+              <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', fontSize: '22px' }}>
                 HSC Marks & Cut-Off Calculation
               </Typography>
               <RadioGroup
@@ -399,14 +402,14 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
               </RadioGroup>
             </Box>
 
-            <Table sx={{ border: '1px solid #E6ECF5', borderRadius: '8px', overflow: 'hidden', mb: '16px' }}>
-              <TableHead sx={{ backgroundColor: '#F5F8FC' }}>
+            <Table sx={{ border: `1px solid ${isDark ? '#334155' : '#E6ECF5'}`, borderRadius: '8px', overflow: 'hidden', mb: '16px' }}>
+              <TableHead sx={{ backgroundColor: isDark ? '#0F172A' : '#F5F8FC' }}>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 700, color: '#0D47A1', fontSize: '13px', padding: '10px 14px' }}>Subject</TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: '#0D47A1', fontSize: '13px', padding: '10px 14px' }}>Month & Year</TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: '#0D47A1', fontSize: '13px', padding: '10px 14px' }}>Max Marks</TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: '#0D47A1', fontSize: '13px', padding: '10px 14px' }}>Marks Obtained</TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: '#0D47A1', fontSize: '13px', padding: '10px 14px' }}>Percentage (%)</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: isDark ? '#38BDF8' : '#0D47A1', fontSize: '13px', padding: '10px 14px' }}>Subject</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: isDark ? '#38BDF8' : '#0D47A1', fontSize: '13px', padding: '10px 14px' }}>Month & Year</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: isDark ? '#38BDF8' : '#0D47A1', fontSize: '13px', padding: '10px 14px' }}>Max Marks</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: isDark ? '#38BDF8' : '#0D47A1', fontSize: '13px', padding: '10px 14px' }}>Marks Obtained</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: isDark ? '#38BDF8' : '#0D47A1', fontSize: '13px', padding: '10px 14px' }}>Percentage (%)</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -495,10 +498,10 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
 
       {program === 'Second Year B.Tech (Lateral Entry)' && (
         <AppCard>
-          <Typography sx={{ fontWeight: 700, color: '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
+          <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
             Diploma Qualification Details
           </Typography>
-          <Typography sx={{ color: '#667085', marginBottom: '24px', fontSize: '14px' }}>
+          <Typography sx={{ color: isDark ? '#CBD5E1' : '#667085', marginBottom: '24px', fontSize: '14px' }}>
             Enter the student's Diploma course marks for lateral entry admission.
           </Typography>
 
@@ -622,10 +625,10 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
 
       {program === 'PG' && (
         <AppCard>
-          <Typography sx={{ fontWeight: 700, color: '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
+          <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
             PG Qualifying Degree Details
           </Typography>
-          <Typography sx={{ color: '#667085', marginBottom: '24px', fontSize: '14px' }}>
+          <Typography sx={{ color: isDark ? '#CBD5E1' : '#667085', marginBottom: '24px', fontSize: '14px' }}>
             Enter the qualifying undergraduate degree details for postgraduate admission.
           </Typography>
 

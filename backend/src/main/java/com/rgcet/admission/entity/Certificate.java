@@ -6,6 +6,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+
+import com.rgcet.admission.common.TextUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,4 +28,10 @@ public class Certificate {
 
     @Column(name = "certificate_name", nullable = false, unique = true)
     private String certificateName;
+
+    @PrePersist
+    @PreUpdate
+    public void normalizeTextFields() {
+        this.certificateName = TextUtil.upper(this.certificateName);
+    }
 }

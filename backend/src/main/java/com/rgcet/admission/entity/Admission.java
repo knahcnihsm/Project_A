@@ -10,6 +10,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+
+import com.rgcet.admission.common.TextUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -49,4 +53,10 @@ public class Admission {
 
     @Column(name = "date_of_admission")
     private LocalDate dateOfAdmission;
+
+    @PrePersist
+    @PreUpdate
+    public void normalizeTextFields() {
+        this.batch = TextUtil.upper(this.batch);
+    }
 }

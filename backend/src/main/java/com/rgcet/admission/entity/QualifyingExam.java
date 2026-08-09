@@ -11,6 +11,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+
+import com.rgcet.admission.common.TextUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -64,4 +68,15 @@ public class QualifyingExam {
 
     @OneToMany(mappedBy = "qualifyingExam", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<HSCVocationalMark> vocationalMarks = new ArrayList<>();
+
+    @PrePersist
+    @PreUpdate
+    public void normalizeTextFields() {
+        this.institutionName = TextUtil.upper(this.institutionName);
+        this.institutionPlace = TextUtil.upper(this.institutionPlace);
+        this.examPassed = TextUtil.upper(this.examPassed);
+        this.monthYearOfPassing = TextUtil.upper(this.monthYearOfPassing);
+        this.sslcRegistrationNo = TextUtil.upper(this.sslcRegistrationNo);
+        this.hscRegistrationNo = TextUtil.upper(this.hscRegistrationNo);
+    }
 }

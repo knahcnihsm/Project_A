@@ -15,19 +15,19 @@ import {
   Upload,
   ShieldCheck,
   CheckCircle2,
-  ArrowRight,
+  XCircle,
   Download,
+  UserPlus,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { bulkAdmissionApi } from '../../api/client';
 import {
-  bulkUpdateApi,
-} from '../../api/client';
-import {
-  BulkUpdatePreview,
+  BulkAdmissionPreview,
   BulkUpdateSchema,
   BulkUpdateSheet,
   BulkUpdateTable,
 } from '../../api/types';
+import { useAdmission } from '../../context/AdmissionContext';
 import { useThemeContext } from '../../context/ThemeContext';
 import { toUpper } from '../../utils/caseUtils';
 
@@ -46,176 +46,87 @@ const toRowString = (value: unknown): string => {
 
 const tableColumns = (table: BulkUpdateTable): string[] => table.columns.map((c) => c.name);
 
-const FIELD_LABELS: Record<string, string> = {
-  application_no: 'Application No',
-  register_no: 'Register Number',
-  student_name: 'Student Name',
-  date_of_birth: 'Date of Birth',
-  aadhaar_no: 'Aadhaar No',
-  gender: 'Gender',
-  district: 'District',
-  nationality: 'Nationality',
-  caste: 'Caste',
-  mobile_number: 'Mobile Number',
-  email_id: 'Email',
-  father_name: 'Father Name',
-  father_mobile_no: 'Father Mobile No',
-  father_occupation: 'Father Occupation',
-  annual_income: 'Annual Income',
-  category_id: 'Category',
-  program_id: 'Program',
-  department_id: 'Department',
-  batch: 'Batch',
-  date_of_admission: 'Date of Admission',
-  address_type: 'Address Type',
-  address_line: 'Address',
-  pincode: 'Pincode',
-  phone: 'Phone',
-  mobile: 'Mobile',
-  email: 'Email',
-  same_as_permanent: 'Same as Permanent',
-  institution_name: 'Institution',
-  institution_place: 'Institution Place',
-  exam_passed: 'Exam Passed',
-  month_year_of_passing: 'Month/Year of Passing',
-  sslc_registration_no: 'SSLC Reg No',
-  sslc_percentage: 'SSLC %',
-  hsc_registration_no: 'HSC Reg No',
-  hsc_percentage: 'HSC %',
-  diploma: 'Diploma',
-  board: 'Board',
-  second_year_percentage: 'Second Year %',
-  third_year_percentage: 'Third Year %',
-  aggregate_percentage: 'Aggregate %',
-  university_name: 'University',
-  university_place: 'University Place',
-  total_percentage: 'Total %',
-  main_subject_percentage: 'Main Subject %',
-  degree_registration_no: 'Degree Reg No',
-  cut_off_mark: 'Cut-off Mark',
-  merit_percent: 'Merit %',
-  original_tuition_fee: 'Original Tuition Fee',
-  scholarship_amount: 'Scholarship Amount',
-  tuition_fee_per_year: 'Tuition Fee / Year',
-  course_duration_years: 'Duration (Years)',
-  total_tuition_fee: 'Total Tuition Fee',
-  bus_required: 'Bus Required',
-  route_id: 'Bus Route',
-  bus_stop_id: 'Bus Stop',
-  bus_fee: 'Bus Fee',
-  hostel_required: 'Hostel Required',
-  hostel_id: 'Hostel',
-  hostel_fee: 'Hostel Fee',
-  paid_amount: 'Paid Amount',
-  pending_amount: 'Pending Amount',
-  certificate_id: 'Certificate',
-  is_submitted: 'Submitted',
-  file_path: 'File Path',
-};
-
-const fieldLabel = (name: string): string => {
-  const mapped = FIELD_LABELS[name];
-  if (mapped) return mapped;
-  return name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-};
-
-const valueText = (value: string | null | undefined): string =>
-  value && value.trim().length > 0 ? value : '(empty)';
-
 const SAMPLE_DATA: Record<string, Record<string, string>[]> = {
   student_details: [
     {
-      application_no: 'RGCET/2026/2001',
-      register_no: '26BTECH001',
-      student_name: 'Aarav Sharma',
-      date_of_birth: '2008-06-10',
-      aadhaar_no: '123412341200',
-      gender: 'Male',
-      district: 'Karaikal',
+      application_no: 'RGCET/2026/2011',
+      register_no: '26BTECH011',
+      student_name: 'Kavya Krishnan',
+      date_of_birth: '2008-05-18',
+      aadhaar_no: '123412341211',
+      gender: 'Female',
+      district: 'Puducherry',
       nationality: 'Indian',
-      caste: 'OTHERS',
-      mobile_number: '9840112233',
-      email_id: 'aarav.sharma@example.com',
+      caste: 'OBC',
+      mobile_number: '9840112299',
+      email_id: 'kavya.krishnan@example.com',
     },
   ],
   parent_details: [
     {
-      application_no: 'RGCET/2026/2001',
-      father_name: 'Father 1',
-      father_mobile_no: '9876543001',
-      father_occupation: 'Farmer',
-      annual_income: '400000',
+      application_no: 'RGCET/2026/2011',
+      father_name: 'Krishnan V',
+      father_mobile_no: '9876543011',
+      father_occupation: 'Teacher',
+      annual_income: '450000',
+    },
+  ],
+  address: [
+    {
+      application_no: 'RGCET/2026/2011',
+      address_type: 'PERMANENT',
+      address_line: 'No.12, Anna Nagar, Puducherry',
+      pincode: '605002',
+      phone: '',
+      mobile: '9840112299',
+      email: 'kavya.krishnan@example.com',
+    },
+    {
+      application_no: 'RGCET/2026/2011',
+      address_type: 'COMMUNICATION',
+      address_line: 'No.12, Anna Nagar, Puducherry',
+      pincode: '605002',
+      phone: '',
+      mobile: '9840112299',
+      email: 'kavya.krishnan@example.com',
     },
   ],
   admission: [
     {
-      application_no: 'RGCET/2026/2001',
-      category_id: 'MANAGEMENT',
+      application_no: 'RGCET/2026/2011',
+      category_id: 'CENTAC',
       program_id: 'First Year B.Tech',
       department_id: 'Computer Science & Engineering (CSE)',
       batch: '2026-2030',
       date_of_admission: '2026-08-01',
     },
   ],
-  address: [
-    {
-      application_no: 'RGCET/2026/2001',
-      address_type: 'PERMANENT',
-      address_line: 'No.1, Gandhi Street, Puducherry',
-      pincode: '605002',
-      phone: '',
-      mobile: '9876543001',
-      email: 'student1@mail.com',
-      same_as_permanent: '',
-    },
-    {
-      application_no: 'RGCET/2026/2001',
-      address_type: 'COMMUNICATION',
-      address_line: 'No.1, Gandhi Street, Puducherry',
-      pincode: '605002',
-      phone: '',
-      mobile: '9876543001',
-      email: 'student1@mail.com',
-      same_as_permanent: '',
-    },
-  ],
   qualifying_examination: [
     {
-      application_no: 'RGCET/2026/2001',
+      application_no: 'RGCET/2026/2011',
       institution_name: 'Govt Hr Sec School',
       institution_place: 'Puducherry',
       exam_passed: 'HSC',
       month_year_of_passing: 'May 2026',
-      sslc_registration_no: 'SSLC001',
-      sslc_percentage: '92',
-      hsc_registration_no: 'HSC001',
-      hsc_percentage: '89',
+      sslc_registration_no: 'SSLC011',
+      sslc_percentage: '91',
+      hsc_registration_no: 'HSC011',
+      hsc_percentage: '88',
+      cut_off_mark: '180',
     },
   ],
   student_fee: [
     {
-      application_no: 'RGCET/2026/2001',
-      cut_off_mark: '284',
-      merit_percent: '94.67',
-      original_tuition_fee: '100000',
-      scholarship_amount: '20000',
-      tuition_fee_per_year: '80000',
-      course_duration_years: '4',
-      total_tuition_fee: '320000',
-      bus_required: 'FALSE',
-      route_id: '',
-      bus_stop_id: '',
+      application_no: 'RGCET/2026/2011',
+      fee_per_year: '75000',
+      paid_fee: '75000',
       bus_fee: '0',
-      hostel_required: 'FALSE',
-      hostel_id: '',
       hostel_fee: '0',
-      paid_amount: '',
-      pending_amount: '',
     },
   ],
   student_certificate: [
     {
-      application_no: 'RGCET/2026/2001',
+      application_no: 'RGCET/2026/2011',
       certificate_id: 'Provisional Allotment Order',
       is_submitted: 'TRUE',
       file_path: '',
@@ -223,10 +134,11 @@ const SAMPLE_DATA: Record<string, Record<string, string>[]> = {
   ],
 };
 
-export const BulkUpdatePage: React.FC = () => {
+export const BulkAddAdmissionPage: React.FC = () => {
   const { mode } = useThemeContext();
   const isDark = mode === 'dark';
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { refreshStudents } = useAdmission();
 
   const [schema, setSchema] = useState<BulkUpdateSchema | null>(null);
   const [schemaError, setSchemaError] = useState<string>('');
@@ -234,7 +146,7 @@ export const BulkUpdatePage: React.FC = () => {
   const [parsedSheets, setParsedSheets] = useState<ParsedSheet[]>([]);
   const [fileName, setFileName] = useState<string>('');
 
-  const [preview, setPreview] = useState<BulkUpdatePreview | null>(null);
+  const [preview, setPreview] = useState<BulkAdmissionPreview | null>(null);
 
   const [loadingSchema, setLoadingSchema] = useState(false);
   const [validating, setValidating] = useState(false);
@@ -257,7 +169,7 @@ export const BulkUpdatePage: React.FC = () => {
     setLoadingSchema(true);
     setSchemaError('');
     try {
-      setSchema(await bulkUpdateApi.schema());
+      setSchema(await bulkAdmissionApi.schema());
     } catch (e) {
       setSchemaError(e instanceof Error ? e.message : 'Failed to load schema');
     } finally {
@@ -311,7 +223,7 @@ export const BulkUpdatePage: React.FC = () => {
       const payload: { sheets: BulkUpdateSheet[] } = {
         sheets: parsedSheets.map((s) => ({ tableName: s.tableName, rows: s.rows })),
       };
-      setPreview(await bulkUpdateApi.validate(payload));
+      setPreview(await bulkAdmissionApi.validate(payload));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Validation failed');
     } finally {
@@ -327,9 +239,10 @@ export const BulkUpdatePage: React.FC = () => {
       const payload: { sheets: BulkUpdateSheet[] } = {
         sheets: parsedSheets.map((s) => ({ tableName: s.tableName, rows: s.rows })),
       };
-      const result = await bulkUpdateApi.apply(payload);
-      const message = `Bulk update applied successfully: ${result.summary.updatedRecords} updated, ${result.summary.skippedRecords} skipped, ${result.summary.failedRecords} failed.`;
+      const result = await bulkAdmissionApi.apply(payload);
+      const message = `Bulk admission added successfully: ${result.summary.createdRecords} created, ${result.summary.failedRecords} failed.`;
       resetAll();
+      await refreshStudents();
       setSuccessMsg(message);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Apply failed');
@@ -345,7 +258,7 @@ export const BulkUpdatePage: React.FC = () => {
       const worksheet = XLSX.utils.aoa_to_sheet([tableColumns(table)]);
       XLSX.utils.book_append_sheet(workbook, worksheet, table.tableName.slice(0, 31));
     });
-    XLSX.writeFile(workbook, 'bulk_update_template.xlsx');
+    XLSX.writeFile(workbook, 'bulk_add_admission_template.xlsx');
   };
 
   const handleDownloadSample = () => {
@@ -358,7 +271,7 @@ export const BulkUpdatePage: React.FC = () => {
       const worksheet = XLSX.utils.aoa_to_sheet(sheetRows);
       XLSX.utils.book_append_sheet(workbook, worksheet, table.tableName.slice(0, 31));
     });
-    XLSX.writeFile(workbook, 'bulk_update_sample.xlsx');
+    XLSX.writeFile(workbook, 'bulk_add_admission_sample.xlsx');
   };
 
   const handleDownloadErrorReport = () => {
@@ -367,6 +280,7 @@ export const BulkUpdatePage: React.FC = () => {
       .map((r) => ({
         'Application No': toUpper(r.applicationNo),
         'Student Name': toUpper(r.studentName),
+        Program: r.program ? toUpper(r.program) : '',
         Status: 'INVALID',
         Errors: r.errors.join('; '),
       }));
@@ -374,12 +288,12 @@ export const BulkUpdatePage: React.FC = () => {
     const worksheet = XLSX.utils.json_to_sheet(records);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Error Report');
-    XLSX.writeFile(workbook, 'bulk_update_error_report.xlsx');
+    XLSX.writeFile(workbook, 'bulk_add_admission_error_report.xlsx');
   };
 
   const totalParsedRows = parsedSheets.reduce((sum, s) => sum + s.rows.length, 0);
-  const changedRecords = preview?.records.filter((r) => r.valid && r.changes.length > 0) ?? [];
-  const unchangedCount = preview ? preview.summary.unchangedRecords : 0;
+  const validRecords = preview?.records.filter((r) => r.valid) ?? [];
+  const invalidRecords = preview?.records.filter((r) => !r.valid) ?? [];
 
   const renderSummaryChip = (
     label: string,
@@ -403,10 +317,10 @@ export const BulkUpdatePage: React.FC = () => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
           <Box>
             <Typography variant="h4" sx={{ fontWeight: 800, color: isDark ? '#FFFFFF' : '#0D47A1', fontSize: '1.75rem' }}>
-              Bulk Student Update
+              Bulk Add Admission
             </Typography>
             <Typography variant="body1" sx={{ color: isDark ? '#CBD5E1' : '#667085', fontSize: '0.95rem' }}>
-              Upload an Excel workbook and apply field-level changes to existing admission records.
+              Upload an Excel workbook to add new admission records. Fees are entered manually (fee per year, paid fee, bus/hostel fee).
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -433,7 +347,7 @@ export const BulkUpdatePage: React.FC = () => {
         </Box>
         {schemaError && (
           <Alert severity="warning" sx={{ fontSize: '0.85rem', marginTop: '12px' }}>
-            {schemaError} — the bulk update API may be offline.
+            {schemaError} — the bulk add admission API may be offline.
           </Alert>
         )}
       </Box>
@@ -464,7 +378,7 @@ export const BulkUpdatePage: React.FC = () => {
                 1. Upload Excel Workbook
               </Typography>
               <Typography variant="body2" sx={{ color: isDark ? '#CBD5E1' : '#667085' }}>
-                Each sheet name must match a table name; the first row is the header.
+                Each sheet name must match a table name; the first row is the header. The required qualification sheet depends on the program.
               </Typography>
             </Box>
           </Box>
@@ -507,10 +421,10 @@ export const BulkUpdatePage: React.FC = () => {
             </Box>
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#1A2B49', fontSize: '1rem' }}>
-                2. Validate & Preview Changes
+                2. Validate & Preview New Admissions
               </Typography>
               <Typography variant="body2" sx={{ color: isDark ? '#CBD5E1' : '#667085' }}>
-                No data is modified — the server returns a preview of every change.
+                No data is modified — the server checks every record and reports errors.
               </Typography>
             </Box>
           </Box>
@@ -527,100 +441,98 @@ export const BulkUpdatePage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Changed Details */}
+      {/* Preview */}
       {preview && (
         <Card elevation={0} sx={{ border: `1px solid ${isDark ? '#334155' : '#E6ECF5'}`, borderRadius: '16px', backgroundColor: isDark ? '#1E293B' : '#FFFFFF', marginBottom: '20px' }}>
           <CardContent>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
               <Box sx={{ width: 40, height: 40, borderRadius: '10px', backgroundColor: isDark ? 'rgba(217, 119, 6, 0.15)' : '#FEF3C7', color: '#D97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CheckCircle2 size={20} />
+                <UserPlus size={20} />
               </Box>
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h6" sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#1A2B49', fontSize: '1rem' }}>
-                  Changed Details
+                  New Admissions
                 </Typography>
                 <Typography variant="body2" sx={{ color: isDark ? '#CBD5E1' : '#667085' }}>
-                  Only records with changes are listed below.
+                  {validRecords.length} record(s) are ready to be added. Invalid records are listed with their errors.
                 </Typography>
               </Box>
             </Box>
 
-            {changedRecords.length === 0 ? (
-              <Typography sx={{ fontSize: '0.9rem', color: isDark ? '#94A3B8' : '#475569' }}>
-                No changes found in the uploaded data.
-              </Typography>
-            ) : (
-              <>
-                {changedRecords.map((record) => (
-                  <Card
-                    key={record.applicationNo}
-                    variant="outlined"
-                    elevation={0}
-                    sx={{ border: `1px solid ${isDark ? '#334155' : '#E6ECF5'}`, borderRadius: '12px', marginBottom: '12px', backgroundColor: isDark ? '#0D1117' : '#FFFFFF' }}
-                  >
-                    <CardContent>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
-                        <Box>
-                          <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#1A2B49', fontSize: '1rem' }}>
-                            {toUpper(record.studentName)}
-                          </Typography>
-                          <Typography sx={{ fontSize: '0.8rem', color: isDark ? '#94A3B8' : '#475569', fontFamily: 'monospace' }}>
-                            {toUpper(record.applicationNo)}
-                          </Typography>
-                        </Box>
-                        <Chip
-                          icon={<CheckCircle2 size={13} />}
-                          label="VALID"
-                          size="small"
-                          sx={{ backgroundColor: isDark ? 'rgba(22, 163, 74, 0.15)' : '#DCFCE7', color: '#16A34A', fontSize: '0.7rem', fontWeight: 700 }}
-                        />
-                      </Box>
-
-                      <Typography sx={{ fontWeight: 600, fontSize: '0.75rem', color: isDark ? '#94A3B8' : '#667085', letterSpacing: '0.04em', marginBottom: '4px' }}>
-                        CHANGED DETAILS
+            {preview.records.map((record) => (
+              <Card
+                key={record.applicationNo}
+                variant="outlined"
+                elevation={0}
+                sx={{
+                  border: record.valid ? `1px solid ${isDark ? '#334155' : '#E6ECF5'}` : '1px solid #FECACA',
+                  borderRadius: '12px',
+                  marginBottom: '12px',
+                  backgroundColor: record.valid ? (isDark ? '#0D1117' : '#FFFFFF') : (isDark ? 'rgba(220, 38, 38, 0.08)' : '#FFF7F7'),
+                }}
+              >
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+                    <Box>
+                      <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#1A2B49', fontSize: '1rem' }}>
+                        {toUpper(record.studentName) || '(No student name)'}
                       </Typography>
+                      <Typography sx={{ fontSize: '0.8rem', color: isDark ? '#94A3B8' : '#475569', fontFamily: 'monospace' }}>
+                        {toUpper(record.applicationNo)}
+                      </Typography>
+                    </Box>
+                    {record.valid ? (
+                      <Chip
+                        icon={<CheckCircle2 size={13} />}
+                        label="VALID"
+                        size="small"
+                        sx={{ backgroundColor: isDark ? 'rgba(22, 163, 74, 0.15)' : '#DCFCE7', color: '#16A34A', fontSize: '0.7rem', fontWeight: 700 }}
+                      />
+                    ) : (
+                      <Chip
+                        icon={<XCircle size={13} />}
+                        label="INVALID"
+                        size="small"
+                        sx={{ backgroundColor: isDark ? 'rgba(220, 38, 38, 0.15)' : '#FEE2E2', color: '#DC2626', fontSize: '0.7rem', fontWeight: 700 }}
+                      />
+                    )}
+                  </Box>
 
-                      {record.changes.map((change, i) => (
-                        <Box
-                          key={`${change.tableName}-${change.fieldName}-${i}`}
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            padding: '8px 0',
-                            borderTop: i === 0 ? 'none' : `1px solid ${isDark ? '#334155' : '#EEF2F7'}`,
-                          }}
-                        >
-                          <Box sx={{ width: '180px', flexShrink: 0 }}>
-                            <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: isDark ? '#CBD5E1' : '#475569' }}>
-                              {fieldLabel(change.fieldName)}
-                            </Typography>
-                            <Typography sx={{ fontSize: '0.68rem', color: '#94A3B8' }}>
-                              {change.tableName}
-                            </Typography>
-                          </Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                            <Typography sx={{ fontSize: '0.82rem', color: '#DC2626', textDecoration: 'line-through' }}>
-                              {valueText(change.oldValue)}
-                            </Typography>
-                            <ArrowRight size={14} color="#94A3B8" />
-                            <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#16A34A' }}>
-                              {valueText(change.newValue)}
-                            </Typography>
-                          </Box>
-                        </Box>
+                  <Box sx={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: record.errors.length > 0 ? '8px' : 0 }}>
+                    {record.program && (
+                      <Box>
+                        <Typography sx={{ fontWeight: 600, fontSize: '0.7rem', color: '#94A3B8', letterSpacing: '0.04em' }}>
+                          PROGRAM
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: isDark ? '#FFFFFF' : '#1A2B49' }}>
+                          {record.program}
+                        </Typography>
+                      </Box>
+                    )}
+                    {record.totalFee && (
+                      <Box>
+                        <Typography sx={{ fontWeight: 600, fontSize: '0.7rem', color: '#94A3B8', letterSpacing: '0.04em' }}>
+                          TOTAL FEE
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: '#16A34A' }}>
+                          ₹{Number(record.totalFee).toLocaleString('en-IN')}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {record.errors.length > 0 && (
+                    <Box sx={{ marginTop: '8px', padding: '10px 12px', borderRadius: '8px', backgroundColor: isDark ? 'rgba(220, 38, 38, 0.1)' : '#FEF2F2' }}>
+                      {record.errors.map((err, i) => (
+                        <Typography key={i} sx={{ fontSize: '0.78rem', color: isDark ? '#FCA5A5' : '#B91C1C', marginBottom: i === record.errors.length - 1 ? 0 : '4px' }}>
+                          {err}
+                        </Typography>
                       ))}
-                    </CardContent>
-                  </Card>
-                ))}
-
-                {unchangedCount > 0 && (
-                  <Typography sx={{ fontSize: '0.85rem', color: '#94A3B8', marginTop: '4px' }}>
-                    {unchangedCount} record(s) unchanged — nothing to apply.
-                  </Typography>
-                )}
-              </>
-            )}
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
           </CardContent>
         </Card>
       )}
@@ -635,10 +547,10 @@ export const BulkUpdatePage: React.FC = () => {
               </Box>
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h6" sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#1A2B49', fontSize: '1rem' }}>
-                  3. Apply Records
+                  3. Add Records
                 </Typography>
                 <Typography variant="body2" sx={{ color: isDark ? '#CBD5E1' : '#667085' }}>
-                  {changedRecords.length} record(s) will be updated. Invalid and unchanged records are skipped.
+                  {validRecords.length} new admission(s) will be created with the manual fee details. Invalid records are skipped.
                 </Typography>
               </Box>
             </Box>
@@ -649,7 +561,7 @@ export const BulkUpdatePage: React.FC = () => {
               {renderSummaryChip('INVALID', preview.summary.invalidRecords, '#DC2626', isDark ? 'rgba(220, 38, 38, 0.15)' : '#FEE2E2')}
             </Box>
 
-            {preview.summary.invalidRecords > 0 && (
+            {invalidRecords.length > 0 && (
               <Button
                 size="small"
                 startIcon={<Download size={16} />}
@@ -662,12 +574,12 @@ export const BulkUpdatePage: React.FC = () => {
 
             <Button
               variant="contained"
-              startIcon={applying ? <CircularProgress size={16} color="inherit" /> : <CheckCircle2 size={18} />}
+              startIcon={applying ? <CircularProgress size={16} color="inherit" /> : <UserPlus size={18} />}
               onClick={handleApply}
-              disabled={applying || changedRecords.length === 0}
+              disabled={applying || validRecords.length === 0}
               sx={{ backgroundColor: '#DC2626', borderRadius: '8px', fontWeight: 600 }}
             >
-              {applying ? 'Applying…' : `Apply ${changedRecords.length} Record(s)`}
+              {applying ? 'Adding…' : `Add ${validRecords.length} New Admission(s)`}
             </Button>
           </CardContent>
         </Card>

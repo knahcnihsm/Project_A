@@ -100,17 +100,32 @@ const DetailField: React.FC<{
           fontSize: '14.5px',
           color: isDark ? '#F8FAFC' : '#1E293B',
           wordBreak: 'break-word',
+          textTransform: 'uppercase',
         }}
       >
-        {value !== undefined && value !== null && value !== '' ? (
-          value
-        ) : (
-          <Typography component="span" sx={{ color: isDark ? '#64748B' : '#94A3B8', fontStyle: 'italic', fontSize: '13.5px' }}>
-            N/A
-          </Typography>
-        )}
+        {value}
       </Typography>
     </Box>
+  );
+};
+
+const isEmptyValue = (value: React.ReactNode): boolean =>
+  value === undefined || value === null || value === '';
+
+// Field box + grid cell that hides entirely when the database has no value.
+const FieldCell: React.FC<{
+  label: string;
+  value: React.ReactNode;
+  icon?: React.ReactNode;
+  xs?: number;
+  sm?: number;
+  md?: number;
+}> = ({ label, value, icon, xs = 12, sm, md }) => {
+  if (isEmptyValue(value)) return null;
+  return (
+    <Grid item xs={xs} sm={sm} md={md}>
+      <DetailField label={label} value={value} icon={icon} />
+    </Grid>
   );
 };
 
@@ -221,6 +236,10 @@ export const StudentViewModal: React.FC = () => {
   // Fee values for Bus & Hostel cards
   const busFee = s.fee.busFee || 0;
   const hostelFee = s.fee.hostelFee || 0;
+
+  // DB-derived cut-off values
+  const engineeringCutOff = s.hscMarks?.engineeringCutOff || s.fee.cutOffMark;
+  const cutOffPct = getCutOffPercentage();
 
   return (
     <>
@@ -409,42 +428,20 @@ export const StudentViewModal: React.FC = () => {
                   {/* Personal Fields Grid */}
                   <Grid item xs={12} md={9}>
                     <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6} md={4}>
-                        <DetailField label="Application Number" value={s.personal.applicationNumber} icon={<Hash size={14} />} />
-                      </Grid>
-                      <Grid item xs={12} sm={6} md={4}>
-                        <DetailField label="Register Number" value={s.personal.registerNumber} icon={<Hash size={14} />} />
-                      </Grid>
-                      <Grid item xs={12} sm={6} md={4}>
-                        <DetailField label="Student Full Name" value={s.personal.studentName} icon={<User size={14} />} />
-                      </Grid>
+                      <FieldCell sm={6} md={4} label="Application Number" value={s.personal.applicationNumber} icon={<Hash size={14} />} />
+                      <FieldCell sm={6} md={4} label="Register Number" value={s.personal.registerNumber} icon={<Hash size={14} />} />
+                      <FieldCell sm={6} md={4} label="Student Full Name" value={s.personal.studentName} icon={<User size={14} />} />
 
-                      <Grid item xs={12} sm={6} md={4}>
-                        <DetailField label="Date of Birth" value={formatDateDisplay(s.personal.dateOfBirth)} icon={<Calendar size={14} />} />
-                      </Grid>
-                      <Grid item xs={12} sm={6} md={4}>
-                        <DetailField label="Age" value={s.personal.age ? `${s.personal.age} Years` : 'N/A'} icon={<User size={14} />} />
-                      </Grid>
-                      <Grid item xs={12} sm={6} md={4}>
-                        <DetailField label="Gender" value={s.personal.gender} icon={<User size={14} />} />
-                      </Grid>
+                      <FieldCell sm={6} md={4} label="Date of Birth" value={formatDateDisplay(s.personal.dateOfBirth)} icon={<Calendar size={14} />} />
+                      <FieldCell sm={6} md={4} label="Age" value={s.personal.age ? `${s.personal.age} Years` : undefined} icon={<User size={14} />} />
+                      <FieldCell sm={6} md={4} label="Gender" value={s.personal.gender} icon={<User size={14} />} />
 
-                      <Grid item xs={12} sm={6} md={4}>
-                        <DetailField label="Aadhaar Number" value={s.personal.aadhaarNumber} icon={<Shield size={14} />} />
-                      </Grid>
-                      <Grid item xs={12} sm={6} md={4}>
-                        <DetailField label="Nationality" value={s.personal.nationality} icon={<MapPin size={14} />} />
-                      </Grid>
-                      <Grid item xs={12} sm={6} md={4}>
-                        <DetailField label="Caste" value={s.personal.caste} icon={<Users size={14} />} />
-                      </Grid>
+                      <FieldCell sm={6} md={4} label="Aadhaar Number" value={s.personal.aadhaarNumber} icon={<Shield size={14} />} />
+                      <FieldCell sm={6} md={4} label="Nationality" value={s.personal.nationality} icon={<MapPin size={14} />} />
+                      <FieldCell sm={6} md={4} label="Caste" value={s.personal.caste} icon={<Users size={14} />} />
 
-                      <Grid item xs={12} sm={6} md={4}>
-                        <DetailField label="Mobile Number" value={s.communication?.permanentAddress?.mobileNumber} icon={<Phone size={14} />} />
-                      </Grid>
-                      <Grid item xs={12} sm={6} md={4}>
-                        <DetailField label="Email ID" value={s.communication?.permanentAddress?.email} icon={<Mail size={14} />} />
-                      </Grid>
+                      <FieldCell sm={6} md={4} label="Mobile Number" value={s.communication?.permanentAddress?.mobileNumber} icon={<Phone size={14} />} />
+                      <FieldCell sm={6} md={4} label="Email ID" value={s.communication?.permanentAddress?.email} icon={<Mail size={14} />} />
                     </Grid>
                   </Grid>
                 </Grid>
@@ -471,18 +468,10 @@ export const StudentViewModal: React.FC = () => {
                       👨 Father Details
                     </Typography>
                   </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <DetailField label="Father Name" value={s.parent.fatherName} icon={<User size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <DetailField label="Parent Mobile Number" value={s.parent.fatherMobile || s.parent.parentMobile} icon={<Phone size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <DetailField label="Occupation" value={s.parent.fatherOccupation} icon={<BookOpen size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <DetailField label="Annual Income" value={s.parent.annualIncome ? `₹ ${s.parent.annualIncome.toLocaleString('en-IN')}` : 'N/A'} icon={<CreditCard size={14} />} />
-                  </Grid>
+                  <FieldCell sm={6} label="Father Name" value={s.parent.fatherName} icon={<User size={14} />} />
+                  <FieldCell sm={6} label="Parent Mobile Number" value={s.parent.fatherMobile || s.parent.parentMobile} icon={<Phone size={14} />} />
+                  <FieldCell sm={6} label="Occupation" value={s.parent.fatherOccupation} icon={<BookOpen size={14} />} />
+                  <FieldCell sm={6} label="Annual Income" value={s.parent.annualIncome ? `₹ ${s.parent.annualIncome.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
                 </Grid>
               </Paper>
             </Grid>
@@ -502,28 +491,16 @@ export const StudentViewModal: React.FC = () => {
                 <SectionHeader title="SECTION 3: COMMUNICATION DETAILS" icon={<MapPin size={20} />} />
 
                 <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <DetailField label="Permanent Address" value={s.communication.permanentAddress.addressLine} icon={<MapPin size={14} />} />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <DetailField
-                      label="Communication Address"
-                      value={s.communication.sameAsPermanent ? s.communication.permanentAddress.addressLine + ' (Same as Permanent)' : s.communication.communicationAddress.addressLine}
-                      icon={<MapPin size={14} />}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <DetailField label="District" value={s.personal.district || 'Puducherry'} icon={<MapPin size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <DetailField label="Pincode" value={s.communication.permanentAddress.pinCode} icon={<Hash size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <DetailField label="Mobile Number" value={s.communication.permanentAddress.mobileNumber} icon={<Phone size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <DetailField label="Email ID" value={s.communication.permanentAddress.email} icon={<Mail size={14} />} />
-                  </Grid>
+                  <FieldCell label="Permanent Address" value={s.communication.permanentAddress.addressLine} icon={<MapPin size={14} />} />
+                  <FieldCell
+                    label="Communication Address"
+                    value={s.communication.sameAsPermanent ? s.communication.permanentAddress.addressLine + ' (Same as Permanent)' : s.communication.communicationAddress.addressLine}
+                    icon={<MapPin size={14} />}
+                  />
+                  <FieldCell sm={6} label="District" value={s.personal.district} icon={<MapPin size={14} />} />
+                  <FieldCell sm={6} label="Pincode" value={s.communication.permanentAddress.pinCode} icon={<Hash size={14} />} />
+                  <FieldCell sm={6} label="Mobile Number" value={s.communication.permanentAddress.mobileNumber} icon={<Phone size={14} />} />
+                  <FieldCell sm={6} label="Email ID" value={s.communication.permanentAddress.email} icon={<Mail size={14} />} />
                 </Grid>
               </Paper>
             </Grid>
@@ -542,29 +519,15 @@ export const StudentViewModal: React.FC = () => {
                 <SectionHeader title="SECTION 4: ADMISSION DETAILS" icon={<GraduationCap size={20} />} />
 
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <DetailField label="Admission Number" value={s.personal.applicationNumber} icon={<Hash size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <DetailField label="Admission Type" value={s.academic.admissionCategory} icon={<Award size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <DetailField label="Academic Year" value={s.academic.batch} icon={<Calendar size={14} />} />
-                  </Grid>
+                  <FieldCell sm={6} md={4} label="Admission Number" value={s.personal.applicationNumber} icon={<Hash size={14} />} />
+                  <FieldCell sm={6} md={4} label="Admission Type" value={s.academic.admissionCategory} icon={<Award size={14} />} />
+                  <FieldCell sm={6} md={4} label="Academic Year" value={s.academic.batch} icon={<Calendar size={14} />} />
 
-                  <Grid item xs={12} sm={6} md={4}>
-                    <DetailField label="Department" value={s.academic.department} icon={<BookOpen size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <DetailField label="Programme" value={s.academic.program} icon={<GraduationCap size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <DetailField label="Semester" value={s.academic.semester || 'Semester I'} icon={<Calendar size={14} />} />
-                  </Grid>
+                  <FieldCell sm={6} md={4} label="Department" value={s.academic.department} icon={<BookOpen size={14} />} />
+                  <FieldCell sm={6} md={4} label="Programme" value={s.academic.program} icon={<GraduationCap size={14} />} />
+                  <FieldCell sm={6} md={4} label="Semester" value={s.academic.semester} icon={<Calendar size={14} />} />
 
-                  <Grid item xs={12} sm={6} md={4}>
-                    <DetailField label="Joining Date" value={formatDateDisplay(s.academic.dateOfAdmission)} icon={<Calendar size={14} />} />
-                  </Grid>
+                  <FieldCell sm={6} md={4} label="Joining Date" value={formatDateDisplay(s.academic.dateOfAdmission)} icon={<Calendar size={14} />} />
                 </Grid>
               </Paper>
             </Grid>
@@ -590,21 +553,11 @@ export const StudentViewModal: React.FC = () => {
                         <Award size={16} /> 10th (SSLC) Details
                       </Typography>
                       <Grid container spacing={1.5}>
-                        <Grid item xs={6}>
-                          <DetailField label="Board" value={s.qualifyingExam?.sslcBoard || s.qualifyingExam?.examinationPassed} />
-                        </Grid>
-                        <Grid item xs={6}>
-                          <DetailField label="School Name" value={s.qualifyingExam?.sslcSchoolName || s.qualifyingExam?.institutionName} />
-                        </Grid>
-                        <Grid item xs={6}>
-                          <DetailField label="Register Number" value={s.qualifyingExam?.sslcRegisterNumber} />
-                        </Grid>
-                        <Grid item xs={6}>
-                          <DetailField label="Year of Passing" value={s.qualifyingExam?.monthYearPassing} />
-                        </Grid>
-                        <Grid item xs={12}>
-                          <DetailField label="SSLC Percentage" value={s.qualifyingExam?.sslcPercentage ? `${s.qualifyingExam.sslcPercentage}%` : undefined} />
-                        </Grid>
+                        <FieldCell xs={6} label="Board" value={s.qualifyingExam?.sslcBoard || s.qualifyingExam?.examinationPassed} />
+                        <FieldCell xs={6} label="School Name" value={s.qualifyingExam?.sslcSchoolName || s.qualifyingExam?.institutionName} />
+                        <FieldCell xs={6} label="Register Number" value={s.qualifyingExam?.sslcRegisterNumber} />
+                        <FieldCell xs={6} label="Year of Passing" value={s.qualifyingExam?.monthYearPassing} />
+                        <FieldCell label="SSLC Percentage" value={s.qualifyingExam?.sslcPercentage ? `${s.qualifyingExam.sslcPercentage}%` : undefined} />
                       </Grid>
                     </Box>
                   </Grid>
@@ -617,21 +570,11 @@ export const StudentViewModal: React.FC = () => {
                           <Award size={16} /> 12th (HSC) Details
                         </Typography>
                         <Grid container spacing={1.5}>
-                          <Grid item xs={6}>
-                            <DetailField label="Board" value={s.qualifyingExam?.hscBoard || s.qualifyingExam?.examinationPassed} />
-                          </Grid>
-                          <Grid item xs={6}>
-                            <DetailField label="School Name" value={s.qualifyingExam?.hscSchoolName || s.qualifyingExam?.institutionName} />
-                          </Grid>
-                          <Grid item xs={6}>
-                            <DetailField label="Register Number" value={s.qualifyingExam?.hscRegisterNumber} />
-                          </Grid>
-                          <Grid item xs={6}>
-                            <DetailField label="Year of Passing" value={s.qualifyingExam?.monthYearPassing} />
-                          </Grid>
-                          <Grid item xs={12}>
-                            <DetailField label="HSC Percentage" value={s.hscMarks?.overallPercentage || s.qualifyingExam?.hscPercentage ? `${s.hscMarks?.overallPercentage || s.qualifyingExam?.hscPercentage}%` : undefined} />
-                          </Grid>
+                          <FieldCell xs={6} label="Board" value={s.qualifyingExam?.hscBoard || s.qualifyingExam?.examinationPassed} />
+                          <FieldCell xs={6} label="School Name" value={s.qualifyingExam?.hscSchoolName || s.qualifyingExam?.institutionName} />
+                          <FieldCell xs={6} label="Register Number" value={s.qualifyingExam?.hscRegisterNumber} />
+                          <FieldCell xs={6} label="Year of Passing" value={s.qualifyingExam?.monthYearPassing} />
+                          <FieldCell label="HSC Percentage" value={s.hscMarks?.overallPercentage || s.qualifyingExam?.hscPercentage ? `${s.hscMarks?.overallPercentage || s.qualifyingExam?.hscPercentage}%` : undefined} />
                         </Grid>
                       </Box>
                     </Grid>
@@ -645,12 +588,7 @@ export const StudentViewModal: React.FC = () => {
                           <Award size={16} /> Vocational Details
                         </Typography>
                         <Grid container spacing={1.5}>
-                          <Grid item xs={12} sm={6}>
-                            <DetailField label="Stream" value="Vocational Stream" />
-                          </Grid>
-                          <Grid item xs={12} sm={6}>
-                            <DetailField label="Cut-Off Percentage" value={getCutOffPercentage()} />
-                          </Grid>
+                          <FieldCell sm={6} label="Stream" value="Vocational Stream" />
                         </Grid>
                       </Box>
                     </Grid>
@@ -664,21 +602,11 @@ export const StudentViewModal: React.FC = () => {
                           <Award size={16} /> Diploma Details (Lateral Entry)
                         </Typography>
                         <Grid container spacing={1.5}>
-                          <Grid item xs={12} sm={6} md={4}>
-                            <DetailField label="Diploma Course" value={s.diplomaDetails?.diplomaCourse} />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={4}>
-                            <DetailField label="Institution Name" value={s.diplomaDetails?.institutionName} />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={4}>
-                            <DetailField label="Board" value={s.diplomaDetails?.board} />
-                          </Grid>
-                          <Grid item xs={6} sm={6}>
-                            <DetailField label="2nd Year %" value={s.diplomaDetails?.secondYearPercentage ? `${s.diplomaDetails.secondYearPercentage}%` : undefined} />
-                          </Grid>
-                          <Grid item xs={6} sm={6}>
-                            <DetailField label="Aggregate %" value={s.diplomaDetails?.aggregatePercentage ? `${s.diplomaDetails.aggregatePercentage}%` : undefined} />
-                          </Grid>
+                          <FieldCell sm={6} md={4} label="Diploma Course" value={s.diplomaDetails?.diplomaCourse} />
+                          <FieldCell sm={6} md={4} label="Institution Name" value={s.diplomaDetails?.institutionName} />
+                          <FieldCell sm={6} md={4} label="Board" value={s.diplomaDetails?.board} />
+                          <FieldCell xs={6} sm={6} label="2nd Year %" value={s.diplomaDetails?.secondYearPercentage ? `${s.diplomaDetails.secondYearPercentage}%` : undefined} />
+                          <FieldCell xs={6} sm={6} label="Aggregate %" value={s.diplomaDetails?.aggregatePercentage ? `${s.diplomaDetails.aggregatePercentage}%` : undefined} />
                         </Grid>
                       </Box>
                     </Grid>
@@ -692,44 +620,30 @@ export const StudentViewModal: React.FC = () => {
                           <Award size={16} /> Undergraduate (UG) / Qualifying Degree Details
                         </Typography>
                         <Grid container spacing={1.5}>
-                          <Grid item xs={12} sm={6} md={4}>
-                            <DetailField label="Degree Passed" value={s.pgQualification?.examinationPassed || s.qualifyingExam?.examinationPassed} />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={4}>
-                            <DetailField label="University Name" value={s.pgQualification?.universityName} />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={4}>
-                            <DetailField label="University Place" value={s.pgQualification?.universityPlace} />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={4}>
-                            <DetailField label="Institution Name" value={s.pgQualification?.institutionName} />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={4}>
-                            <DetailField label="Institution Place" value={s.pgQualification?.institutionPlace} />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={4}>
-                            <DetailField label="Degree Register Number" value={s.pgQualification?.degreeRegistrationNumber} />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={4}>
-                            <DetailField label="Month & Year of Passing" value={s.pgQualification?.monthYearPassing} />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={4}>
-                            <DetailField label="Total Percentage" value={s.pgQualification?.totalPercentage ? `${s.pgQualification.totalPercentage}%` : undefined} />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={4}>
-                            <DetailField label="Main Subject Percentage" value={s.pgQualification?.mainSubjectPercentage ? `${s.pgQualification.mainSubjectPercentage}%` : undefined} />
-                          </Grid>
+                          <FieldCell sm={6} md={4} label="Degree Passed" value={s.pgQualification?.examinationPassed || s.qualifyingExam?.examinationPassed} />
+                          <FieldCell sm={6} md={4} label="University Name" value={s.pgQualification?.universityName} />
+                          <FieldCell sm={6} md={4} label="University Place" value={s.pgQualification?.universityPlace} />
+                          <FieldCell sm={6} md={4} label="Institution Name" value={s.pgQualification?.institutionName} />
+                          <FieldCell sm={6} md={4} label="Institution Place" value={s.pgQualification?.institutionPlace} />
+                          <FieldCell sm={6} md={4} label="Degree Register Number" value={s.pgQualification?.degreeRegistrationNumber} />
+                          <FieldCell sm={6} md={4} label="Month & Year of Passing" value={s.pgQualification?.monthYearPassing} />
+                          <FieldCell sm={6} md={4} label="Total Percentage" value={s.pgQualification?.totalPercentage ? `${s.pgQualification.totalPercentage}%` : undefined} />
+                          <FieldCell sm={6} md={4} label="Main Subject Percentage" value={s.pgQualification?.mainSubjectPercentage ? `${s.pgQualification.mainSubjectPercentage}%` : undefined} />
                         </Grid>
                       </Box>
                     </Grid>
                   )}
 
                   {/* Cut-Off Mark & Cut-Off Percentage Summary (Displayed ONLY for First Year B.Tech) */}
-                  {isFirstYear && (s.hscMarks?.engineeringCutOff || s.fee.cutOffMark || getCutOffPercentage()) && (
+                  {isFirstYear && (engineeringCutOff || cutOffPct) && (
                     <Grid item xs={12}>
                       <Box sx={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                        <DetailField label="Engineering Cut-Off Mark" value={s.hscMarks?.engineeringCutOff || s.fee.cutOffMark ? `${s.hscMarks?.engineeringCutOff || s.fee.cutOffMark} / 300` : undefined} icon={<Award size={14} />} />
-                        <DetailField label="Cut-Off Percentage" value={getCutOffPercentage()} icon={<Award size={14} />} />
+                        {engineeringCutOff && (
+                          <DetailField label="Engineering Cut-Off Mark" value={`${engineeringCutOff} / 300`} icon={<Award size={14} />} />
+                        )}
+                        {cutOffPct && (
+                          <DetailField label="Cut-Off Percentage" value={cutOffPct} icon={<Award size={14} />} />
+                        )}
                       </Box>
                     </Grid>
                   )}
@@ -752,29 +666,22 @@ export const StudentViewModal: React.FC = () => {
                 <SectionHeader title="SECTION 6: BUS DETAILS" icon={<Bus size={20} />} />
 
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <DetailField
-                      label="Bus Required"
-                      value={
-                        <Chip
-                          label={s.fee.busRouteSelected || s.fee.busTransportRequired ? 'YES' : 'NO'}
-                          color={s.fee.busRouteSelected || s.fee.busTransportRequired ? 'primary' : 'default'}
-                          size="small"
-                          sx={{ fontWeight: 700 }}
-                        />
-                      }
-                      icon={<Bus size={14} />}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <DetailField label="Bus Fee" value={busFee ? `₹ ${busFee.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <DetailField label="Route" value={s.fee.busRouteSelected} icon={<MapPin size={14} />} />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <DetailField label="Bus Stop" value={s.fee.busStopSelected} icon={<MapPin size={14} />} />
-                  </Grid>
+                  <FieldCell
+                    sm={6}
+                    label="Bus Required"
+                    value={
+                      <Chip
+                        label={s.fee.busRouteSelected || s.fee.busTransportRequired ? 'YES' : 'NO'}
+                        color={s.fee.busRouteSelected || s.fee.busTransportRequired ? 'primary' : 'default'}
+                        size="small"
+                        sx={{ fontWeight: 700 }}
+                      />
+                    }
+                    icon={<Bus size={14} />}
+                  />
+                  <FieldCell sm={6} label="Bus Fee" value={busFee ? `₹ ${busFee.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
+                  <FieldCell label="Route" value={s.fee.busRouteSelected} icon={<MapPin size={14} />} />
+                  <FieldCell label="Bus Stop" value={s.fee.busStopSelected} icon={<MapPin size={14} />} />
                 </Grid>
               </Paper>
             </Grid>
@@ -793,23 +700,20 @@ export const StudentViewModal: React.FC = () => {
                 <SectionHeader title="SECTION 7: HOSTEL DETAILS" icon={<Home size={20} />} />
 
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <DetailField
-                      label="Hostel Required"
-                      value={
-                        <Chip
-                          label={s.fee.hostelRequired ? 'YES' : 'NO'}
-                          color={s.fee.hostelRequired ? 'primary' : 'default'}
-                          size="small"
-                          sx={{ fontWeight: 700 }}
-                        />
-                      }
-                      icon={<Home size={14} />}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <DetailField label="Hostel Fee" value={hostelFee ? `₹ ${hostelFee.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
-                  </Grid>
+                  <FieldCell
+                    sm={6}
+                    label="Hostel Required"
+                    value={
+                      <Chip
+                        label={s.fee.hostelRequired ? 'YES' : 'NO'}
+                        color={s.fee.hostelRequired ? 'primary' : 'default'}
+                        size="small"
+                        sx={{ fontWeight: 700 }}
+                      />
+                    }
+                    icon={<Home size={14} />}
+                  />
+                  <FieldCell sm={6} label="Hostel Fee" value={hostelFee ? `₹ ${hostelFee.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
                 </Grid>
               </Paper>
             </Grid>
@@ -828,33 +732,15 @@ export const StudentViewModal: React.FC = () => {
                 <SectionHeader title="SECTION 8: FEE DETAILS" icon={<CreditCard size={20} />} />
 
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <DetailField label="Merit Score" value={s.fee.meritPercent !== undefined && s.fee.meritPercent !== null ? `${s.fee.meritPercent}%` : undefined} icon={<Award size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <DetailField label="Original Tuition Fee (Per Year)" value={s.fee.originalTuitionFee ? `₹ ${s.fee.originalTuitionFee.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <DetailField label="Scholarship Amount (Per Year)" value={s.fee.scholarshipAmount ? `₹ ${s.fee.scholarshipAmount.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <DetailField label="Final Tuition Fee (Per Year)" value={s.fee.tuitionFeePerYear ? `₹ ${s.fee.tuitionFeePerYear.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <DetailField label="Course Duration" value={s.fee.courseDurationYears ? `${s.fee.courseDurationYears} Years` : undefined} icon={<Calendar size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <DetailField label="Total Tuition Fee" value={s.fee.totalTuitionFee ? `₹ ${s.fee.totalTuitionFee.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <DetailField label="Bus Fee" value={busFee ? `₹ ${busFee.toLocaleString('en-IN')}` : undefined} icon={<Bus size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <DetailField label="Hostel Fee" value={hostelFee ? `₹ ${hostelFee.toLocaleString('en-IN')}` : undefined} icon={<Home size={14} />} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <DetailField label="GRAND TOTAL FEE" value={s.fee.grandTotalFee ? `₹ ${s.fee.grandTotalFee.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
-                  </Grid>
+                  <FieldCell sm={6} md={4} label="Merit Score" value={s.fee.meritPercent !== undefined && s.fee.meritPercent !== null ? `${s.fee.meritPercent}%` : undefined} icon={<Award size={14} />} />
+                  <FieldCell sm={6} md={4} label="Original Tuition Fee (Per Year)" value={s.fee.originalTuitionFee ? `₹ ${s.fee.originalTuitionFee.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
+                  <FieldCell sm={6} md={4} label="Scholarship Amount (Per Year)" value={s.fee.scholarshipAmount ? `₹ ${s.fee.scholarshipAmount.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
+                  <FieldCell sm={6} md={4} label="Final Tuition Fee (Per Year)" value={s.fee.tuitionFeePerYear ? `₹ ${s.fee.tuitionFeePerYear.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
+                  <FieldCell sm={6} md={4} label="Course Duration" value={s.fee.courseDurationYears ? `${s.fee.courseDurationYears} Years` : undefined} icon={<Calendar size={14} />} />
+                  <FieldCell sm={6} md={4} label="Total Tuition Fee" value={s.fee.totalTuitionFee ? `₹ ${s.fee.totalTuitionFee.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
+                  <FieldCell sm={6} md={4} label="Bus Fee" value={busFee ? `₹ ${busFee.toLocaleString('en-IN')}` : undefined} icon={<Bus size={14} />} />
+                  <FieldCell sm={6} md={4} label="Hostel Fee" value={hostelFee ? `₹ ${hostelFee.toLocaleString('en-IN')}` : undefined} icon={<Home size={14} />} />
+                  <FieldCell sm={6} md={4} label="GRAND TOTAL FEE" value={s.fee.grandTotalFee ? `₹ ${s.fee.grandTotalFee.toLocaleString('en-IN')}` : undefined} icon={<CreditCard size={14} />} />
                 </Grid>
               </Paper>
             </Grid>

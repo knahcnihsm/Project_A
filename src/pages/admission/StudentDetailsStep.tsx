@@ -11,6 +11,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { studentDetailsSchema, StudentDetailsFormData } from '../../schemas/student.schema';
 import { useAdmission } from '../../context/AdmissionContext';
+import { useThemeContext } from '../../context/ThemeContext';
 import { DISTRICTS } from '../../utils/constants';
 import { calculateAgeFromDOB } from '../../utils/dateUtils';
 import { AppCard } from '../../components/ui/AppCard';
@@ -47,6 +48,9 @@ const fieldSx = {
 };
 
 export const StudentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
+  const { mode } = useThemeContext();
+  const isDark = mode === 'dark';
+
   const { draftStudent, updateDraftSection, isViewReadOnly } = useAdmission();
 
   // Determine initial states for custom entries
@@ -110,10 +114,10 @@ export const StudentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext })
   return (
     <Box component="form" id="wizard-step-form" onSubmit={handleSubmit(onSubmit)}>
       <AppCard>
-        <Typography sx={{ fontWeight: 700, color: '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
+        <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
           Student Personal Details
         </Typography>
-        <Typography sx={{ color: '#667085', marginBottom: '24px', fontSize: '14px' }}>
+        <Typography sx={{ color: isDark ? '#CBD5E1' : '#667085', marginBottom: '24px', fontSize: '14px' }}>
           Enter the student's personal information to begin the admission process.
         </Typography>
 

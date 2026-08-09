@@ -4,6 +4,16 @@
   padding: 0;
 }
 
+/* Display all form text as uppercase (stored values are normalized to uppercase on save) */
+input,
+textarea,
+select,
+.MuiOutlinedInput-input,
+.MuiInputBase-input,
+.MuiSelect-select {
+  text-transform: uppercase;
+}
+
 html,
 body,
 #root {

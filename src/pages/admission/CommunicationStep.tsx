@@ -11,6 +11,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { communicationSchema, CommunicationFormData } from '../../schemas/communication.schema';
 import { useAdmission } from '../../context/AdmissionContext';
+import { useThemeContext } from '../../context/ThemeContext';
 import { AppCard } from '../../components/ui/AppCard';
 
 const fieldSx = {
@@ -43,6 +44,8 @@ const fieldSx = {
 };
 
 export const CommunicationStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
+  const { mode } = useThemeContext();
+  const isDark = mode === 'dark';
   const { draftStudent, updateDraftSection, isViewReadOnly } = useAdmission();
 
   const {
@@ -95,10 +98,10 @@ export const CommunicationStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
     <Box component="form" id="wizard-step-form" onSubmit={handleSubmit(onSubmit)}>
       {/* Permanent Address Card */}
       <AppCard sx={{ marginBottom: '24px' }}>
-        <Typography sx={{ fontWeight: 700, color: '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
+        <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
           Permanent Address
         </Typography>
-        <Typography sx={{ color: '#667085', marginBottom: '24px', fontSize: '14px' }}>
+        <Typography sx={{ color: isDark ? '#CBD5E1' : '#667085', marginBottom: '24px', fontSize: '14px' }}>
           Enter the student's primary permanent address information.
         </Typography>
 
@@ -200,7 +203,7 @@ export const CommunicationStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
       {/* Communication Address Card */}
       <AppCard>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <Typography sx={{ fontWeight: 700, color: '#0D47A1', fontSize: '22px' }}>
+          <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', fontSize: '22px' }}>
             Communication Address
           </Typography>
           <Controller
@@ -218,7 +221,7 @@ export const CommunicationStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
                   />
                 }
                 label="Same as Permanent Address"
-                sx={{ '& .MuiTypography-root': { fontWeight: 600, color: '#0D47A1', fontSize: '14.5px' } }}
+                sx={{ '& .MuiTypography-root': { fontWeight: 600, color: isDark ? '#38BDF8' : '#0D47A1', fontSize: '14.5px' } }}
               />
             )}
           />

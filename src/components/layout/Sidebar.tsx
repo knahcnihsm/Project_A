@@ -82,15 +82,32 @@ export const Sidebar: React.FC = () => {
   };
 
   // 1. Dashboard active/inactive style
+  // 1. Dashboard active/inactive style
   const navItemStyle = (isActive: boolean) => ({
     borderRadius: '8px',
     marginBottom: '6px',
     padding: '8px 12px',
-    backgroundColor: isActive ? 'rgba(255, 255, 255, 0.95)' : 'transparent', // White background pill
-    color: isActive ? '#0B3D91' : '#FFFFFF', // Navy blue text for active
+    backgroundColor: isActive
+      ? isDark
+        ? 'rgba(56, 189, 248, 0.18)'
+        : 'rgba(255, 255, 255, 0.95)'
+      : 'transparent',
+    color: isActive
+      ? isDark
+        ? '#38BDF8'
+        : '#0B3D91'
+      : isDark
+      ? '#CBD5E1'
+      : '#FFFFFF',
     transition: 'all 180ms ease-in-out',
     '&:hover': {
-      backgroundColor: isActive ? 'rgba(255, 255, 255, 0.98)' : 'rgba(255, 255, 255, 0.12)',
+      backgroundColor: isActive
+        ? isDark
+          ? 'rgba(56, 189, 248, 0.25)'
+          : 'rgba(255, 255, 255, 0.98)'
+        : isDark
+        ? '#334155'
+        : 'rgba(255, 255, 255, 0.12)',
     },
   });
 
@@ -99,11 +116,22 @@ export const Sidebar: React.FC = () => {
     borderRadius: '8px',
     marginBottom: '6px',
     padding: '8px 12px',
-    backgroundColor: isActive ? '#1A73E8' : 'transparent', // Light Blue Active Background
-    color: '#FFFFFF', // White Text
+    backgroundColor: isActive
+      ? isDark
+        ? '#38BDF8'
+        : '#1A73E8'
+      : 'transparent',
+    color: isActive && isDark ? '#0F172A' : '#FFFFFF',
+    fontWeight: isActive ? 700 : 500,
     transition: 'all 180ms ease-in-out',
     '&:hover': {
-      backgroundColor: isActive ? '#1565C0' : 'rgba(255, 255, 255, 0.12)',
+      backgroundColor: isActive
+        ? isDark
+          ? '#7DD3FC'
+          : '#1565C0'
+        : isDark
+        ? '#334155'
+        : 'rgba(255, 255, 255, 0.12)',
     },
   });
 
@@ -112,12 +140,22 @@ export const Sidebar: React.FC = () => {
     borderRadius: '6px',
     marginBottom: '4px',
     padding: '6px 12px 6px 36px',
-    backgroundColor: isActive ? 'rgba(255, 255, 255, 0.15)' : 'transparent', // Slightly lighter blue background
-    color: '#FFFFFF', // White text
-    borderLeft: isActive ? '3px solid #38BDF8' : 'none', // Blue left indicator
+    backgroundColor: isActive
+      ? isDark
+        ? 'rgba(56, 189, 248, 0.15)'
+        : 'rgba(255, 255, 255, 0.15)'
+      : 'transparent',
+    color: isActive && isDark ? '#38BDF8' : '#FFFFFF',
+    borderLeft: isActive ? '3px solid #38BDF8' : 'none',
     transition: 'all 180ms ease-in-out',
     '&:hover': {
-      backgroundColor: isActive ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+      backgroundColor: isActive
+        ? isDark
+          ? 'rgba(56, 189, 248, 0.25)'
+          : 'rgba(255, 255, 255, 0.2)'
+        : isDark
+        ? '#334155'
+        : 'rgba(255, 255, 255, 0.08)',
     },
   });
 
@@ -155,14 +193,14 @@ export const Sidebar: React.FC = () => {
         position: 'sticky',
         top: '64px',
         background: isDark
-          ? '#000000'
-          : 'linear-gradient(180deg, #0A2D6E 0%, #0B3D91 55%, #1565C0 100%)', // Original blue gradient
+          ? '#0F172A'
+          : 'linear-gradient(180deg, #0A2D6E 0%, #0B3D91 55%, #1565C0 100%)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
         color: '#FFFFFF',
         boxShadow: '4px 0 20px rgba(0, 0, 0, 0.15)',
-        borderRight: isDark ? '1px solid #222222' : 'none',
+        borderRight: isDark ? '1px solid #334155' : 'none',
         overflowY: 'hidden', // Disabled vertical scrollbar
         zIndex: 1000,
       }}
@@ -185,7 +223,7 @@ export const Sidebar: React.FC = () => {
                 },
               }}
             >
-              <ListItemIcon sx={{ minWidth: '30px', color: '#FFFFFF' }}>
+              <ListItemIcon sx={{ minWidth: '30px', color: isDark ? '#CBD5E1' : '#FFFFFF' }}>
                 <ArrowLeft size={17} />
               </ListItemIcon>
               <ListItemText
@@ -205,7 +243,7 @@ export const Sidebar: React.FC = () => {
                 onClick={() => setActiveStep(0)}
                 sx={stepNavItemStyle(activeStep === 0)}
               >
-                <ListItemIcon sx={{ minWidth: '30px', color: '#FFFFFF' }}>
+                <ListItemIcon sx={{ minWidth: '30px', color: isDark ? (activeStep === 0 ? '#0F172A' : '#CBD5E1') : '#FFFFFF' }}>
                   {activeStep > 0 ? <CheckCircle2 size={17} color="#38BDF8" /> : <User size={17} />}
                 </ListItemIcon>
                 <ListItemText
@@ -224,7 +262,7 @@ export const Sidebar: React.FC = () => {
                 onClick={() => setActiveStep(1)}
                 sx={stepNavItemStyle(activeStep === 1)}
               >
-                <ListItemIcon sx={{ minWidth: '30px', color: '#FFFFFF' }}>
+                <ListItemIcon sx={{ minWidth: '30px', color: isDark ? (activeStep === 1 ? '#0F172A' : '#CBD5E1') : '#FFFFFF' }}>
                   {activeStep > 1 ? <CheckCircle2 size={17} color="#38BDF8" /> : <Users size={17} />}
                 </ListItemIcon>
                 <ListItemText
@@ -243,7 +281,7 @@ export const Sidebar: React.FC = () => {
                 onClick={() => setActiveStep(2)}
                 sx={stepNavItemStyle(activeStep === 2)}
               >
-                <ListItemIcon sx={{ minWidth: '30px', color: '#FFFFFF' }}>
+                <ListItemIcon sx={{ minWidth: '30px', color: isDark ? (activeStep === 2 ? '#0F172A' : '#CBD5E1') : '#FFFFFF' }}>
                   {activeStep > 2 ? <CheckCircle2 size={17} color="#38BDF8" /> : <MapPin size={17} />}
                 </ListItemIcon>
                 <ListItemText
@@ -266,7 +304,7 @@ export const Sidebar: React.FC = () => {
                   }}
                   sx={stepNavItemStyle(activeStep === 3 || activeStep === 4)}
                 >
-                  <ListItemIcon sx={{ minWidth: '30px', color: '#FFFFFF' }}>
+                  <ListItemIcon sx={{ minWidth: '30px', color: isDark ? ((activeStep === 3 || activeStep === 4) ? '#0F172A' : '#CBD5E1') : '#FFFFFF' }}>
                     {activeStep > 4 ? <CheckCircle2 size={17} color="#38BDF8" /> : <GraduationCap size={17} />}
                   </ListItemIcon>
                   <ListItemText
@@ -320,7 +358,7 @@ export const Sidebar: React.FC = () => {
                 onClick={() => setActiveStep(5)}
                 sx={stepNavItemStyle(activeStep === 5)}
               >
-                <ListItemIcon sx={{ minWidth: '30px', color: '#FFFFFF' }}>
+                <ListItemIcon sx={{ minWidth: '30px', color: isDark ? (activeStep === 5 ? '#0F172A' : '#CBD5E1') : '#FFFFFF' }}>
                   {activeStep > 5 ? <CheckCircle2 size={17} color="#38BDF8" /> : <CreditCard size={17} />}
                 </ListItemIcon>
                 <ListItemText
@@ -339,7 +377,7 @@ export const Sidebar: React.FC = () => {
                 onClick={() => setActiveStep(6)}
                 sx={stepNavItemStyle(activeStep === 6)}
               >
-                <ListItemIcon sx={{ minWidth: '30px', color: '#FFFFFF' }}>
+                <ListItemIcon sx={{ minWidth: '30px', color: isDark ? (activeStep === 6 ? '#0F172A' : '#CBD5E1') : '#FFFFFF' }}>
                   {activeStep > 6 ? <CheckCircle2 size={17} color="#38BDF8" /> : <FileText size={17} />}
                 </ListItemIcon>
                 <ListItemText
@@ -365,7 +403,9 @@ export const Sidebar: React.FC = () => {
               <ListItemIcon
                 sx={{
                   minWidth: '30px',
-                  color: location.pathname === '/' ? '#0B3D91' : '#FFFFFF',
+                  color: location.pathname === '/'
+                    ? (isDark ? '#38BDF8' : '#0B3D91')
+                    : (isDark ? '#CBD5E1' : '#FFFFFF'),
                 }}
               >
                 <LayoutDashboard size={17} />
@@ -386,7 +426,7 @@ export const Sidebar: React.FC = () => {
               onClick={handleAddAdmissionClick}
               sx={navItemStyle(false)}
             >
-              <ListItemIcon sx={{ minWidth: '30px', color: '#FFFFFF' }}>
+              <ListItemIcon sx={{ minWidth: '30px', color: isDark ? '#CBD5E1' : '#FFFFFF' }}>
                 <UserPlus size={17} />
               </ListItemIcon>
               <ListItemText
@@ -400,7 +440,7 @@ export const Sidebar: React.FC = () => {
               onClick={handleEditClick}
               sx={navItemStyle(false)}
             >
-              <ListItemIcon sx={{ minWidth: '30px', color: '#FFFFFF' }}>
+              <ListItemIcon sx={{ minWidth: '30px', color: isDark ? '#CBD5E1' : '#FFFFFF' }}>
                 <Pencil size={17} />
               </ListItemIcon>
               <ListItemText
@@ -417,7 +457,9 @@ export const Sidebar: React.FC = () => {
               <ListItemIcon
                 sx={{
                   minWidth: '30px',
-                  color: location.pathname === '/archive' ? '#0B3D91' : '#FFFFFF',
+                  color: location.pathname === '/archive'
+                    ? (isDark ? '#38BDF8' : '#0B3D91')
+                    : (isDark ? '#CBD5E1' : '#FFFFFF'),
                 }}
               >
                 <Archive size={17} />
@@ -441,13 +483,41 @@ export const Sidebar: React.FC = () => {
               <ListItemIcon
                 sx={{
                   minWidth: '30px',
-                  color: location.pathname === '/bulk-update' ? '#0B3D91' : '#FFFFFF',
+                  color: location.pathname === '/bulk-update'
+                    ? (isDark ? '#38BDF8' : '#0B3D91')
+                    : (isDark ? '#CBD5E1' : '#FFFFFF'),
                 }}
               >
                 <ListChecks size={17} />
               </ListItemIcon>
               <ListItemText
                 primary="BULK UPDATE"
+                primaryTypographyProps={{
+                  fontSize: '11.5px',
+                  fontWeight: 600,
+                  letterSpacing: '0.04em',
+                  color: 'inherit',
+                }}
+              />
+            </ListItemButton>
+
+            {/* Bulk Add Admission */}
+            <ListItemButton
+              onClick={() => navigate('/bulk-add-admission')}
+              sx={navItemStyle(location.pathname === '/bulk-add-admission')}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: '30px',
+                  color: location.pathname === '/bulk-add-admission'
+                    ? (isDark ? '#38BDF8' : '#0B3D91')
+                    : (isDark ? '#CBD5E1' : '#FFFFFF'),
+                }}
+              >
+                <UserPlus size={17} />
+              </ListItemIcon>
+              <ListItemText
+                primary="BULK ADD ADMISSION"
                 primaryTypographyProps={{
                   fontSize: '11.5px',
                   fontWeight: 600,
@@ -502,7 +572,7 @@ export const Sidebar: React.FC = () => {
                     '&:hover': { backgroundColor: 'rgba(255,255,255,0.12)' },
                   }}
                 >
-                  <ListItemIcon sx={{ minWidth: '30px', color: '#FFFFFF' }}>
+                  <ListItemIcon sx={{ minWidth: '30px', color: isDark ? '#CBD5E1' : '#FFFFFF' }}>
                     <FileSpreadsheet size={15} />
                   </ListItemIcon>
                   <ListItemText
@@ -533,7 +603,7 @@ export const Sidebar: React.FC = () => {
                     '&:hover': { backgroundColor: 'rgba(255,255,255,0.12)' },
                   }}
                 >
-                  <ListItemIcon sx={{ minWidth: '30px', color: '#FFFFFF' }}>
+                  <ListItemIcon sx={{ minWidth: '30px', color: isDark ? '#CBD5E1' : '#FFFFFF' }}>
                     <FileText size={15} />
                   </ListItemIcon>
                   <ListItemText

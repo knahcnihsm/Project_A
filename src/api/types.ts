@@ -426,3 +426,43 @@ export interface BulkUpdateApply {
   summary: BulkApplySummary;
   results: BulkRecordResult[];
 }
+
+// ---------------- Bulk Add Admission ----------------
+
+export interface BulkAdmissionRecordPreview {
+  applicationNo: string;
+  studentName: string;
+  program: string;
+  totalFee: string;
+  valid: boolean;
+  errors: string[];
+}
+
+export interface BulkAdmissionPreviewSummary {
+  totalRecords: number;
+  validRecords: number;
+  invalidRecords: number;
+}
+
+export interface BulkAdmissionPreview {
+  summary: BulkAdmissionPreviewSummary;
+  records: BulkAdmissionRecordPreview[];
+}
+
+export interface BulkAdmissionApplySummary {
+  totalRecords: number;
+  createdRecords: number;
+  failedRecords: number;
+}
+
+export interface BulkAdmissionResult {
+  applicationNo: string;
+  studentName: string;
+  status: string;
+  errors: string[];
+}
+
+export interface BulkAdmissionApply {
+  summary: BulkAdmissionApplySummary;
+  results: BulkAdmissionResult[];
+}

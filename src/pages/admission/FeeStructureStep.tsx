@@ -10,6 +10,7 @@ import {
   InputAdornment,
 } from '@mui/material';
 import { useAdmission } from '../../context/AdmissionContext';
+import { useThemeContext } from '../../context/ThemeContext';
 import { AppCard } from '../../components/ui/AppCard';
 import { SummaryCard } from '../../components/ui/SummaryCard';
 import { BUS_ROUTES_WITH_STOPS } from '../../utils/constants';
@@ -47,6 +48,8 @@ const fieldSx = {
 };
 
 export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
+  const { mode } = useThemeContext();
+  const isDark = mode === 'dark';
   const { draftStudent, updateDraftSection, isViewReadOnly, masterData } = useAdmission();
 
   const category = draftStudent.academic?.admissionCategory;
@@ -125,10 +128,10 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
   return (
     <Box component="form" id="wizard-step-form" onSubmit={handleSubmit}>
       <AppCard>
-        <Typography sx={{ fontWeight: 700, color: '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
+        <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
           Fee Structure & Optional Facilities
         </Typography>
-        <Typography sx={{ color: '#667085', marginBottom: '24px', fontSize: '14px' }}>
+        <Typography sx={{ color: isDark ? '#CBD5E1' : '#667085', marginBottom: '24px', fontSize: '14px' }}>
           Assign the student's tuition fee and select optional hostel/bus transport routes.
         </Typography>
 

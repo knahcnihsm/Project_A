@@ -11,6 +11,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+
+import com.rgcet.admission.common.TextUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -52,4 +56,14 @@ public class Address {
 
     @Column(name = "same_as_permanent")
     private Boolean sameAsPermanent;
+
+    @PrePersist
+    @PreUpdate
+    public void normalizeTextFields() {
+        this.addressLine = TextUtil.upper(this.addressLine);
+        this.pincode = TextUtil.upper(this.pincode);
+        this.phone = TextUtil.upper(this.phone);
+        this.mobile = TextUtil.upper(this.mobile);
+        this.email = TextUtil.upper(this.email);
+    }
 }

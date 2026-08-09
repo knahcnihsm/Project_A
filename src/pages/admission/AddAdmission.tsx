@@ -74,10 +74,10 @@ export const AddAdmission: React.FC = () => {
     <Box sx={{ maxWidth: '100%', width: '100%', margin: '0 auto' }}>
       {/* Page Header */}
       <Box sx={{ marginBottom: '20px' }}>
-        <Typography sx={{ fontWeight: 700, color: '#0D47A1', fontSize: '28px', lineHeight: '36px' }}>
+        <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', fontSize: '28px', lineHeight: '36px' }}>
           {getPageTitle()}
         </Typography>
-        <Typography sx={{ color: '#667085', fontSize: '14px', fontWeight: 500, marginTop: '4px' }}>
+        <Typography sx={{ color: isDark ? '#CBD5E1' : '#667085', fontSize: '14px', fontWeight: 500, marginTop: '4px' }}>
           Step {activeStep + 1} of 7 — {getStepTitle()}
         </Typography>
       </Box>
@@ -96,8 +96,8 @@ export const AddAdmission: React.FC = () => {
       {/* Bottom Sticky Action Bar */}
       <Box
         sx={{
-          backgroundColor: isDark ? '#161B22' : '#FFFFFF',
-          border: `1px solid ${isDark ? '#30363D' : '#E6ECF5'}`,
+          backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+          border: `1px solid ${isDark ? '#334155' : '#E6ECF5'}`,
           borderRadius: '14px',
           padding: '12px 20px',
           display: 'flex',
@@ -117,7 +117,7 @@ export const AddAdmission: React.FC = () => {
           variant="outlined"
           startIcon={<ArrowLeft size={16} />}
           sx={{
-            borderColor: isDark ? '#30363D' : '#D8E4F2',
+            borderColor: isDark ? '#334155' : '#D8E4F2',
             color: isDark ? '#CBD5E1' : '#1A2B49',
             borderRadius: '14px',
             fontWeight: 600,
@@ -128,8 +128,8 @@ export const AddAdmission: React.FC = () => {
               backgroundColor: isDark ? 'rgba(56,189,248,0.08)' : 'rgba(26,43,73,0.06)',
             },
             '&.Mui-disabled': {
-              borderColor: isDark ? '#21262D' : '#E6ECF5',
-              color: isDark ? '#484F58' : '#9BA3AF',
+              borderColor: isDark ? '#334155' : '#E6ECF5',
+              color: isDark ? '#64748B' : '#9BA3AF',
             },
           }}
         >

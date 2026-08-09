@@ -29,6 +29,7 @@ import { Search, RotateCcw, Eye, Archive, Filter, X, ChevronDown } from 'lucide-
 import { useNavigate } from 'react-router-dom';
 import { useAdmission } from '../../context/AdmissionContext';
 import { formatDateDisplay } from '../../utils/dateUtils';
+import { toUpper } from '../../utils/caseUtils';
 import { ARCHIVE_REASONS } from '../../utils/constants';
 import { useThemeContext } from '../../context/ThemeContext';
 
@@ -110,12 +111,12 @@ export const ArchivedStudents: React.FC = () => {
     // 2. Department
     const matchesDept =
       appliedFilters.department === 'All' ||
-      student.academic.department === appliedFilters.department;
+      student.academic.department.toUpperCase() === appliedFilters.department.toUpperCase();
 
     // 3. Admission Type
     const matchesAdmissionType =
       appliedFilters.admissionType === 'All' ||
-      student.academic.admissionCategory === appliedFilters.admissionType;
+      student.academic.admissionCategory.toUpperCase() === appliedFilters.admissionType.toUpperCase();
 
     // 4. Academic Year
     const admissionYear = student.academic.dateOfAdmission ? parseInt(student.academic.dateOfAdmission.split('-')[0]) : null;
@@ -133,18 +134,18 @@ export const ArchivedStudents: React.FC = () => {
     // 5. Gender
     let matchesGender = true;
     if (appliedFilters.gender !== 'All') {
+      const gender = student.personal.gender.toUpperCase();
       if (appliedFilters.gender === 'Other') {
-        matchesGender =
-          student.personal.gender !== 'Male' && student.personal.gender !== 'Female';
+        matchesGender = gender !== 'MALE' && gender !== 'FEMALE';
       } else {
-        matchesGender = student.personal.gender === appliedFilters.gender;
+        matchesGender = gender === appliedFilters.gender.toUpperCase();
       }
     }
 
     // 6. Archive Reason
     const matchesReason =
       appliedFilters.archiveReason === 'All' ||
-      student.archiveReason === appliedFilters.archiveReason;
+      (student.archiveReason || '').toUpperCase() === appliedFilters.archiveReason.toUpperCase();
 
     // 7. Date Range
     const studentDate = student.academic.dateOfAdmission;
@@ -209,7 +210,7 @@ export const ArchivedStudents: React.FC = () => {
   // Styles matching dashboard
   const thStyle = {
     fontWeight: 700,
-    color: isDark ? '#FFFFFF' : '#0D47A1',
+    color: isDark ? '#38BDF8' : '#0D47A1',
     letterSpacing: '0.04em',
     fontSize: '11.5px',
     padding: '12px 14px',
@@ -431,7 +432,7 @@ export const ArchivedStudents: React.FC = () => {
                 >
                   <MenuItem value="All">All Types</MenuItem>
                   <MenuItem value="CENTAC">CENTAC</MenuItem>
-                  <MenuItem value="Management">Management</MenuItem>
+                  <MenuItem value="MANAGEMENT">MANAGEMENT</MenuItem>
                 </Select>
               </FormControl>
 
@@ -673,18 +674,18 @@ export const ArchivedStudents: React.FC = () => {
                         />
                       </TableCell>
                       <TableCell sx={{ ...tdStyle, fontWeight: 600, color: isDark ? '#FFFFFF' : '#1E293B' }}>
-                        {student.personal.applicationNumber}
+                        {toUpper(student.personal.applicationNumber)}
                       </TableCell>
                       <TableCell sx={{ ...tdStyle, fontWeight: 600, color: isDark ? '#38BDF8' : '#0D47A1' }}>
-                        {student.personal.registerNumber}
+                        {toUpper(student.personal.registerNumber)}
                       </TableCell>
                       <TableCell sx={{ ...tdStyle, fontWeight: 700, color: isDark ? '#FFFFFF' : '#1E293B' }}>
-                        {student.personal.studentName}
+                        {toUpper(student.personal.studentName)}
                       </TableCell>
-                      <TableCell sx={tdStyle}>{student.academic.department}</TableCell>
+                      <TableCell sx={tdStyle}>{toUpper(student.academic.department)}</TableCell>
                       <TableCell sx={tdStyle}>
                         <Chip
-                          label={student.archiveReason || 'TC Issued'}
+                          label={toUpper(student.archiveReason) || 'TC ISSUED'}
                           color="error"
                           variant="outlined"
                           size="small"

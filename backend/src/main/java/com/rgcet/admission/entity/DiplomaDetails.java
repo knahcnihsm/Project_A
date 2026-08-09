@@ -8,6 +8,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+
+import com.rgcet.admission.common.TextUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -47,4 +51,12 @@ public class DiplomaDetails {
 
     @Column(name = "aggregate_percentage")
     private BigDecimal aggregatePercentage;
+
+    @PrePersist
+    @PreUpdate
+    public void normalizeTextFields() {
+        this.diploma = TextUtil.upper(this.diploma);
+        this.institutionName = TextUtil.upper(this.institutionName);
+        this.board = TextUtil.upper(this.board);
+    }
 }

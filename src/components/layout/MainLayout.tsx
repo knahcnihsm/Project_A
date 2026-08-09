@@ -14,7 +14,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
   const isDark = mode === 'dark';
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: isDark ? '#0D1117' : '#F5F8FC' }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: isDark ? '#0F172A' : '#F5F8FC' }}>
       <Header />
       <Box sx={{ display: 'flex', flexGrow: 1 }}>
         <Sidebar />

@@ -9,6 +9,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+
+import com.rgcet.admission.common.TextUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -39,4 +43,11 @@ public class Archive {
 
     @Column(name = "archived_date")
     private LocalDateTime archivedDate;
+
+    @PrePersist
+    @PreUpdate
+    public void normalizeTextFields() {
+        this.archiveReason = TextUtil.upper(this.archiveReason);
+        this.description = TextUtil.upper(this.description);
+    }
 }

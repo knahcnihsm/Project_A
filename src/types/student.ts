@@ -39,7 +39,7 @@ export interface CommunicationDetails {
   sameAsPermanent: boolean;
 }
 
-export type AdmissionCategory = 'CENTAC' | 'Management';
+export type AdmissionCategory = 'CENTAC' | 'MANAGEMENT';
 export type ProgramType = 'First Year B.Tech' | 'Second Year B.Tech (Lateral Entry)' | 'PG';
 
 export interface AcademicDetails {
