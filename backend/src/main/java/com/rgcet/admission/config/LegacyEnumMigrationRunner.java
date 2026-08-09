@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -17,12 +19,14 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class LegacyEnumMigrationRunner implements ApplicationRunner {
 
     private final JdbcTemplate jdbcTemplate;
 
     @Override
     public void run(ApplicationArguments args) {
+        dropStaleEnumCheckConstraints();
         int genderRows = jdbcTemplate.update(
                 "UPDATE student_details SET gender = ? WHERE gender = ?", "OTHERS", "TRANSGENDER");
         int obcRows = jdbcTemplate.update(
@@ -33,5 +37,16 @@ public class LegacyEnumMigrationRunner implements ApplicationRunner {
             log.info("Legacy enum migration: gender={}, caste->OBC={}, caste->OTHERS={}",
                     genderRows, obcRows, othersRows);
         }
+    }
+
+    /**
+     * Drops the enum CHECK constraints Hibernate generated for gender/caste columns
+     * against the OLD enum values. Hibernate's ddl-auto=update never alters existing
+     * constraints, so without this the UPDATEs below (e.g. writing 'OBC') would be
+     * rejected by the stale constraint that only allows OC/BC/BCM/MBC/SC/SCA/ST.
+     */
+    private void dropStaleEnumCheckConstraints() {
+        jdbcTemplate.execute("ALTER TABLE student_details DROP CONSTRAINT IF EXISTS student_details_gender_check");
+        jdbcTemplate.execute("ALTER TABLE student_details DROP CONSTRAINT IF EXISTS student_details_caste_check");
     }
 }

@@ -22,6 +22,8 @@ class LegacyEnumMigrationRunnerTest {
         LegacyEnumMigrationRunner runner = new LegacyEnumMigrationRunner(jdbcTemplate);
         runner.run(null);
 
+        verify(jdbcTemplate).execute("ALTER TABLE student_details DROP CONSTRAINT IF EXISTS student_details_gender_check");
+        verify(jdbcTemplate).execute("ALTER TABLE student_details DROP CONSTRAINT IF EXISTS student_details_caste_check");
         verify(jdbcTemplate).update("UPDATE student_details SET gender = ? WHERE gender = ?", "OTHERS", "TRANSGENDER");
         verify(jdbcTemplate).update("UPDATE student_details SET caste = ? WHERE caste IN (?, ?, ?)", "OBC", "BC", "BCM", "MBC");
         verify(jdbcTemplate).update("UPDATE student_details SET caste = ? WHERE caste IN (?, ?)", "OTHERS", "OC", "SCA");
