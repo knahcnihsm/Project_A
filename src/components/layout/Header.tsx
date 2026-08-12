@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -20,12 +20,41 @@ import {
 import { useThemeContext } from '../../context/ThemeContext';
 import { useAdmission } from '../../context/AdmissionContext';
 import { useNavigate } from 'react-router-dom';
+import { profileApi } from '../../api/client';
 
 export const Header: React.FC = () => {
   const { mode, toggleTheme } = useThemeContext();
   const { requestNavigation } = useAdmission();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [adminName, setAdminName] = useState(() => {
+    return localStorage.getItem('rgcet_admin_name') || 'ADMIN USER';
+  });
+
+  useEffect(() => {
+    // 1. Fetch Admin Profile from Backend on mount
+    profileApi
+      .getProfile()
+      .then((res) => {
+        if (res && res.adminName) {
+          setAdminName(res.adminName);
+          localStorage.setItem('rgcet_admin_name', res.adminName);
+          localStorage.setItem('rgcet_admin_username', res.username);
+        }
+      })
+      .catch(() => {
+        // Fallback to localStorage
+      });
+
+    // 2. Listen for profile updates from Settings page
+    const handleProfileUpdate = () => {
+      setAdminName(localStorage.getItem('rgcet_admin_name') || 'ADMIN USER');
+    };
+    window.addEventListener('rgcet_profile_update', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('rgcet_profile_update', handleProfileUpdate);
+    };
+  }, []);
 
   const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -33,6 +62,19 @@ export const Header: React.FC = () => {
 
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const navigateToSettings = () => {
+    handleClose();
+    requestNavigation(() => navigate('/settings'));
+  };
+
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
   };
 
   const isDark = mode === 'dark';
@@ -215,6 +257,7 @@ export const Header: React.FC = () => {
         <Tooltip title="System Settings">
           <IconButton
             aria-label="Settings"
+            onClick={navigateToSettings}
             sx={{
               width: 38,
               height: 38,
@@ -262,7 +305,7 @@ export const Header: React.FC = () => {
               fontSize: '12px',
             }}
           >
-            AU
+            {getInitials(adminName)}
           </Avatar>
           <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
             <Typography
@@ -275,7 +318,7 @@ export const Header: React.FC = () => {
                 textTransform: 'uppercase',
               }}
             >
-              ADMIN USER
+              {adminName}
             </Typography>
             <Typography
               sx={{
@@ -306,8 +349,11 @@ export const Header: React.FC = () => {
             },
           }}
         >
-          <MenuItem onClick={handleClose} sx={{ gap: '10px', fontWeight: 600, fontSize: '14px' }}>
+          <MenuItem onClick={navigateToSettings} sx={{ gap: '10px', fontWeight: 600, fontSize: '14px' }}>
             <User size={16} /> Profile Overview
+          </MenuItem>
+          <MenuItem onClick={navigateToSettings} sx={{ gap: '10px', fontWeight: 600, fontSize: '14px' }}>
+            <Settings size={16} /> Settings
           </MenuItem>
           <Divider sx={{ borderColor: isDark ? '#334155' : '#D6E4F0' }} />
           <MenuItem

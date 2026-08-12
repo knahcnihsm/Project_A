@@ -7,6 +7,7 @@ import { ArchivedStudents } from '../pages/archive/ArchivedStudents';
 import { ExportPage } from '../pages/export/ExportPage';
 import { BulkUpdatePage } from '../pages/bulk/BulkUpdatePage';
 import { BulkAddAdmissionPage } from '../pages/bulk/BulkAddAdmissionPage';
+import { SettingsPage } from '../pages/settings/Settings';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -19,8 +20,10 @@ export const AppRoutes: React.FC = () => {
         <Route path="/export" element={<ExportPage />} />
         <Route path="/bulk-update" element={<BulkUpdatePage />} />
         <Route path="/bulk-add-admission" element={<BulkAddAdmissionPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </MainLayout>
   );
 };
+

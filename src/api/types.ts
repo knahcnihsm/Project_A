@@ -466,3 +466,19 @@ export interface BulkAdmissionApply {
   summary: BulkAdmissionApplySummary;
   results: BulkAdmissionResult[];
 }
+
+// ---------------- Admin Profile API ----------------
+
+export interface AdminProfileDto {
+  id: number;
+  adminName: string;
+  username: string;
+  role: string;
+}
+
+export interface UpdateAdminProfileRequest {
+  adminName?: string;
+  username?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}

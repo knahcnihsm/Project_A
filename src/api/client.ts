@@ -28,8 +28,8 @@ import {
   StudentResponseDto,
   StudentStatsDto,
   StudentSummaryDto,
-  StudentStatus,
-  SubmitAdmissionRequest,
+  AdminProfileDto,
+  UpdateAdminProfileRequest,
 } from './types';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8080';
@@ -205,4 +205,12 @@ export const bulkAdmissionApi = {
     post<BulkAdmissionPreview>('/api/bulk-admission/validate', body),
   apply: (body: BulkUpdateRequest) =>
     post<BulkAdmissionApply>('/api/bulk-admission/apply', body),
+};
+
+// ---------------- Admin Profile API ----------------
+
+export const profileApi = {
+  getProfile: () => get<AdminProfileDto>('/api/profile'),
+  updateProfile: (body: UpdateAdminProfileRequest) =>
+    put<AdminProfileDto>('/api/profile', body),
 };
