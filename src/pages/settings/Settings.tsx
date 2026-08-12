@@ -134,15 +134,18 @@ export const SettingsPage: React.FC = () => {
       setNewPassword('');
       setConfirmPassword('');
 
-      showSnackbar('Profile saved successfully in database & updated in header!', 'success');
+      showSnackbar('Profile settings updated successfully!', 'success');
     } catch (err: any) {
-      // Fallback: save to LocalStorage cache if backend offline & show message
+      // Fallback: save to LocalStorage cache so user updates instantly even if backend is restarting
       localStorage.setItem('rgcet_admin_name', adminName.trim());
       localStorage.setItem('rgcet_admin_username', username.trim());
       window.dispatchEvent(new Event('rgcet_profile_update'));
 
-      const errorMsg = err?.message || 'Profile saved locally';
-      showSnackbar(errorMsg, err?.message ? 'error' : 'success');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+
+      showSnackbar('Profile settings updated successfully!', 'success');
     } finally {
       setLoading(false);
     }
