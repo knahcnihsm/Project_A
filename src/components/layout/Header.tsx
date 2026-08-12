@@ -28,7 +28,11 @@ export const Header: React.FC = () => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [adminName, setAdminName] = useState(() => {
-    return localStorage.getItem('rgcet_admin_name') || 'ADMIN USER';
+    const savedName = localStorage.getItem('rgcet_admin_name');
+    const savedUser = localStorage.getItem('rgcet_admin_username');
+    if (savedName && savedName.trim() && savedName !== 'ADMIN USER') return savedName;
+    if (savedUser && savedUser.trim() && savedUser !== 'admin') return savedUser;
+    return savedName || 'ADMIN USER';
   });
 
   useEffect(() => {
@@ -36,10 +40,11 @@ export const Header: React.FC = () => {
     profileApi
       .getProfile()
       .then((res) => {
-        if (res && res.adminName) {
-          setAdminName(res.adminName);
-          localStorage.setItem('rgcet_admin_name', res.adminName);
-          localStorage.setItem('rgcet_admin_username', res.username);
+        if (res) {
+          const name = res.adminName || res.username || 'ADMIN USER';
+          setAdminName(name);
+          if (res.adminName) localStorage.setItem('rgcet_admin_name', res.adminName);
+          if (res.username) localStorage.setItem('rgcet_admin_username', res.username);
         }
       })
       .catch(() => {
@@ -48,7 +53,17 @@ export const Header: React.FC = () => {
 
     // 2. Listen for profile updates from Settings page
     const handleProfileUpdate = () => {
-      setAdminName(localStorage.getItem('rgcet_admin_name') || 'ADMIN USER');
+      const savedName = localStorage.getItem('rgcet_admin_name');
+      const savedUser = localStorage.getItem('rgcet_admin_username');
+      let name = 'ADMIN USER';
+      if (savedName && savedName.trim() && savedName !== 'ADMIN USER') {
+        name = savedName;
+      } else if (savedUser && savedUser.trim() && savedUser !== 'admin') {
+        name = savedUser;
+      } else if (savedName) {
+        name = savedName;
+      }
+      setAdminName(name);
     };
     window.addEventListener('rgcet_profile_update', handleProfileUpdate);
     return () => {

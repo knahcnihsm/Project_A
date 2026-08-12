@@ -28,6 +28,8 @@ import {
   StudentResponseDto,
   StudentStatsDto,
   StudentSummaryDto,
+  StudentStatus,
+  SubmitAdmissionRequest,
   AdminProfileDto,
   UpdateAdminProfileRequest,
 } from './types';
