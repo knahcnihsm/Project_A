@@ -5,7 +5,7 @@ export const parentDetailsSchema = z.object({
   fatherMobile: z
     .string()
     .regex(/^\d{10}$/, 'Mobile Number must be exactly 10 digits'),
-  fatherOccupation: z.string().optional(),
+  fatherOccupation: z.string().min(1, 'Father Occupation is required'),
   annualIncome: z.number().min(0, 'Annual Income cannot be negative'),
 });
 

@@ -129,14 +129,14 @@ export const generateStudentPdf = (student: StudentRecord) => {
     ['District', upper(student.personal.district)],
     ['Mobile Number', upper(student.personal.mobileNumber ?? '')],
   ]);
-  drawFullRow('Email ID', upper(student.personal.emailId ?? ''));
+  drawFullRow('Email ID', student.personal.emailId || '—');
 
   // 2. Contact Information
   drawSection('2. Contact Information');
   drawFullRow('Permanent Address', upper(student.communication.permanentAddress.addressLine));
   drawRow([
     ['Mobile Number', upper(student.communication.permanentAddress.mobileNumber)],
-    ['Email', upper(student.communication.permanentAddress.email)],
+    ['Email', student.communication.permanentAddress.email || '—'],
   ]);
   drawRow([
     ['PIN Code', upper(student.communication.permanentAddress.pinCode)],

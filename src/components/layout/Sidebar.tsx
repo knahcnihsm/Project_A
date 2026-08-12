@@ -28,9 +28,19 @@ import {
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAdmission } from '../../context/AdmissionContext';
+import { useThemeContext } from '../../context/ThemeContext';
 import { exportStudentsToExcel } from '../../utils/exportExcel';
 import { generateStudentPdf } from '../../utils/exportPdf';
-import { useThemeContext } from '../../context/ThemeContext';
+import {
+  isStudentDetailsComplete,
+  isParentDetailsComplete,
+  isCommunicationComplete,
+  isAdmissionDetailsComplete,
+  isQualifyingExamComplete,
+  isAcademicComplete,
+  isFeeComplete,
+  isCertificatesComplete,
+} from '../../utils/sectionValidation';
 
 export const Sidebar: React.FC = () => {
   const navigate = useNavigate();
@@ -47,6 +57,8 @@ export const Sidebar: React.FC = () => {
     startAddAdmission,
     draftStudent,
     showWarningModal,
+    requestNavigation,
+    tryNavigateToStep,
   } = useAdmission();
 
   const [exportOpen, setExportOpen] = useState<boolean>(true);
@@ -60,8 +72,10 @@ export const Sidebar: React.FC = () => {
     if (selectedStudentIds.length === 1) {
       const studentToEdit = students.find((s) => s.id === selectedStudentIds[0]);
       if (studentToEdit) {
-        startEditStudent(studentToEdit);
-        navigate('/EditStudent');
+        requestNavigation(() => {
+          startEditStudent(studentToEdit);
+          navigate('/EditStudent');
+        });
       }
     } else if (selectedStudentIds.length === 0) {
       showWarningModal(
@@ -77,8 +91,10 @@ export const Sidebar: React.FC = () => {
   };
 
   const handleAddAdmissionClick = () => {
-    startAddAdmission();
-    navigate('/admission');
+    requestNavigation(() => {
+      startAddAdmission();
+      navigate('/admission');
+    });
   };
 
   // 1. Dashboard active/inactive style
@@ -97,8 +113,8 @@ export const Sidebar: React.FC = () => {
         ? '#38BDF8'
         : '#0B3D91'
       : isDark
-      ? '#CBD5E1'
-      : '#FFFFFF',
+        ? '#CBD5E1'
+        : '#FFFFFF',
     transition: 'all 180ms ease-in-out',
     '&:hover': {
       backgroundColor: isActive
@@ -106,8 +122,8 @@ export const Sidebar: React.FC = () => {
           ? 'rgba(56, 189, 248, 0.25)'
           : 'rgba(255, 255, 255, 0.98)'
         : isDark
-        ? '#334155'
-        : 'rgba(255, 255, 255, 0.12)',
+          ? '#334155'
+          : 'rgba(255, 255, 255, 0.12)',
     },
   });
 
@@ -130,8 +146,8 @@ export const Sidebar: React.FC = () => {
           ? '#7DD3FC'
           : '#1565C0'
         : isDark
-        ? '#334155'
-        : 'rgba(255, 255, 255, 0.12)',
+          ? '#334155'
+          : 'rgba(255, 255, 255, 0.12)',
     },
   });
 
@@ -154,8 +170,8 @@ export const Sidebar: React.FC = () => {
           ? 'rgba(56, 189, 248, 0.25)'
           : 'rgba(255, 255, 255, 0.2)'
         : isDark
-        ? '#334155'
-        : 'rgba(255, 255, 255, 0.08)',
+          ? '#334155'
+          : 'rgba(255, 255, 255, 0.08)',
     },
   });
 
@@ -197,22 +213,21 @@ export const Sidebar: React.FC = () => {
           : 'linear-gradient(180deg, #0A2D6E 0%, #0B3D91 55%, #1565C0 100%)',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'space-between',
         color: '#FFFFFF',
         boxShadow: '4px 0 20px rgba(0, 0, 0, 0.15)',
         borderRight: isDark ? '1px solid #334155' : 'none',
-        overflowY: 'hidden', // Disabled vertical scrollbar
+        overflow: 'hidden',
         zIndex: 1000,
       }}
     >
       {/* Navigation Menu */}
-      <Box sx={{ padding: '8px 8px', flexGrow: 1 }}>
+      <Box sx={{ padding: '8px 8px', flex: '0 0 auto' }}>
         {isAdmissionRoute ? (
           /* Step Wizard Navigation Mode (Dashboard-Style Design) */
           <Box>
             {/* Back to Dashboard Button (Styled like Dashboard item) */}
             <ListItemButton
-              onClick={() => navigate('/')}
+              onClick={() => requestNavigation(() => navigate('/'))}
               sx={{
                 borderRadius: '8px',
                 marginBottom: '16px',
@@ -240,11 +255,11 @@ export const Sidebar: React.FC = () => {
             <List disablePadding>
               {/* 1. Student Details */}
               <ListItemButton
-                onClick={() => setActiveStep(0)}
+                onClick={() => tryNavigateToStep(0)}
                 sx={stepNavItemStyle(activeStep === 0)}
               >
                 <ListItemIcon sx={{ minWidth: '30px', color: isDark ? (activeStep === 0 ? '#0F172A' : '#CBD5E1') : '#FFFFFF' }}>
-                  {activeStep > 0 ? <CheckCircle2 size={17} color="#38BDF8" /> : <User size={17} />}
+                  {isStudentDetailsComplete(draftStudent) ? <CheckCircle2 size={17} color="#38BDF8" /> : <User size={17} />}
                 </ListItemIcon>
                 <ListItemText
                   primary="STUDENT DETAILS"
@@ -259,11 +274,11 @@ export const Sidebar: React.FC = () => {
 
               {/* 2. Parent Details */}
               <ListItemButton
-                onClick={() => setActiveStep(1)}
+                onClick={() => tryNavigateToStep(1)}
                 sx={stepNavItemStyle(activeStep === 1)}
               >
                 <ListItemIcon sx={{ minWidth: '30px', color: isDark ? (activeStep === 1 ? '#0F172A' : '#CBD5E1') : '#FFFFFF' }}>
-                  {activeStep > 1 ? <CheckCircle2 size={17} color="#38BDF8" /> : <Users size={17} />}
+                  {isParentDetailsComplete(draftStudent) ? <CheckCircle2 size={17} color="#38BDF8" /> : <Users size={17} />}
                 </ListItemIcon>
                 <ListItemText
                   primary="PARENT DETAILS"
@@ -278,11 +293,11 @@ export const Sidebar: React.FC = () => {
 
               {/* 3. Communication */}
               <ListItemButton
-                onClick={() => setActiveStep(2)}
+                onClick={() => tryNavigateToStep(2)}
                 sx={stepNavItemStyle(activeStep === 2)}
               >
                 <ListItemIcon sx={{ minWidth: '30px', color: isDark ? (activeStep === 2 ? '#0F172A' : '#CBD5E1') : '#FFFFFF' }}>
-                  {activeStep > 2 ? <CheckCircle2 size={17} color="#38BDF8" /> : <MapPin size={17} />}
+                  {isCommunicationComplete(draftStudent) ? <CheckCircle2 size={17} color="#38BDF8" /> : <MapPin size={17} />}
                 </ListItemIcon>
                 <ListItemText
                   primary="COMMUNICATION"
@@ -300,12 +315,12 @@ export const Sidebar: React.FC = () => {
                 <ListItemButton
                   onClick={() => {
                     setAcademicMenuOpen(!academicMenuOpen);
-                    setActiveStep(3);
+                    tryNavigateToStep(3);
                   }}
                   sx={stepNavItemStyle(activeStep === 3 || activeStep === 4)}
                 >
                   <ListItemIcon sx={{ minWidth: '30px', color: isDark ? ((activeStep === 3 || activeStep === 4) ? '#0F172A' : '#CBD5E1') : '#FFFFFF' }}>
-                    {activeStep > 4 ? <CheckCircle2 size={17} color="#38BDF8" /> : <GraduationCap size={17} />}
+                    {isAcademicComplete(draftStudent) ? <CheckCircle2 size={17} color="#38BDF8" /> : <GraduationCap size={17} />}
                   </ListItemIcon>
                   <ListItemText
                     primary="ACADEMIC DETAILS"
@@ -331,12 +346,22 @@ export const Sidebar: React.FC = () => {
                         isSubActive = true;
                       }
 
+                      const isSubComplete =
+                        subStep.stepId === 3
+                          ? isAdmissionDetailsComplete(draftStudent)
+                          : isQualifyingExamComplete(draftStudent);
+
                       return (
                         <ListItemButton
                           key={index}
-                          onClick={() => setActiveStep(subStep.stepId)}
+                          onClick={() => tryNavigateToStep(subStep.stepId)}
                           sx={subNavItemStyle(isSubActive)}
                         >
+                          {isSubComplete && (
+                            <Box sx={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}>
+                              <CheckCircle2 size={14} color="#38BDF8" />
+                            </Box>
+                          )}
                           <ListItemText
                             primary={subStep.label}
                             primaryTypographyProps={{
@@ -355,11 +380,11 @@ export const Sidebar: React.FC = () => {
 
               {/* 5. Fee Structure */}
               <ListItemButton
-                onClick={() => setActiveStep(5)}
+                onClick={() => tryNavigateToStep(5)}
                 sx={stepNavItemStyle(activeStep === 5)}
               >
                 <ListItemIcon sx={{ minWidth: '30px', color: isDark ? (activeStep === 5 ? '#0F172A' : '#CBD5E1') : '#FFFFFF' }}>
-                  {activeStep > 5 ? <CheckCircle2 size={17} color="#38BDF8" /> : <CreditCard size={17} />}
+                  {isFeeComplete(draftStudent) ? <CheckCircle2 size={17} color="#38BDF8" /> : <CreditCard size={17} />}
                 </ListItemIcon>
                 <ListItemText
                   primary="FEE STRUCTURE"
@@ -374,11 +399,11 @@ export const Sidebar: React.FC = () => {
 
               {/* 6. Certificates Upload */}
               <ListItemButton
-                onClick={() => setActiveStep(6)}
+                onClick={() => tryNavigateToStep(6)}
                 sx={stepNavItemStyle(activeStep === 6)}
               >
                 <ListItemIcon sx={{ minWidth: '30px', color: isDark ? (activeStep === 6 ? '#0F172A' : '#CBD5E1') : '#FFFFFF' }}>
-                  {activeStep > 6 ? <CheckCircle2 size={17} color="#38BDF8" /> : <FileText size={17} />}
+                  {isCertificatesComplete(draftStudent) ? <CheckCircle2 size={17} color="#38BDF8" /> : <FileText size={17} />}
                 </ListItemIcon>
                 <ListItemText
                   primary="CERTIFICATES UPLOAD"
@@ -397,7 +422,7 @@ export const Sidebar: React.FC = () => {
           <List disablePadding>
             {/* Dashboard */}
             <ListItemButton
-              onClick={() => navigate('/')}
+              onClick={() => requestNavigation(() => navigate('/'))}
               sx={navItemStyle(location.pathname === '/')}
             >
               <ListItemIcon
@@ -451,7 +476,7 @@ export const Sidebar: React.FC = () => {
 
             {/* Archive Students List */}
             <ListItemButton
-              onClick={() => navigate('/archive')}
+              onClick={() => requestNavigation(() => navigate('/archive'))}
               sx={navItemStyle(location.pathname === '/archive')}
             >
               <ListItemIcon
@@ -477,7 +502,7 @@ export const Sidebar: React.FC = () => {
 
             {/* Bulk Update */}
             <ListItemButton
-              onClick={() => navigate('/bulk-update')}
+              onClick={() => requestNavigation(() => navigate('/bulk-update'))}
               sx={navItemStyle(location.pathname === '/bulk-update')}
             >
               <ListItemIcon
@@ -503,7 +528,7 @@ export const Sidebar: React.FC = () => {
 
             {/* Bulk Add Admission */}
             <ListItemButton
-              onClick={() => navigate('/bulk-add-admission')}
+              onClick={() => requestNavigation(() => navigate('/bulk-add-admission'))}
               sx={navItemStyle(location.pathname === '/bulk-add-admission')}
             >
               <ListItemIcon
@@ -527,31 +552,75 @@ export const Sidebar: React.FC = () => {
               />
             </ListItemButton>
 
+          </List>
+        )}
+      </Box>
+
+      {/* Bottom Campus Building Illustration, Export & Version Container */}
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: '200px',
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          borderTop: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.2)'}`,
+          backgroundImage: isDark
+            ? `linear-gradient(180deg, rgba(15, 23, 42, 0.1) 0%, rgba(15, 23, 42, 0.35) 40%, rgba(15, 23, 42, 0.85) 100%), url('/images/dark-logo.png')`
+            : `linear-gradient(180deg, rgba(11, 61, 145, 0.1) 0%, rgba(11, 61, 145, 0.35) 40%, rgba(11, 61, 145, 0.85) 100%), url('/images/light-logo.png')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center bottom',
+          backgroundRepeat: 'no-repeat',
+          transition: 'background-image 200ms ease-in-out',
+        }}
+      >
+        {!isAdmissionRoute ? (
+          <Box
+            sx={{
+              margin: '10px 10px 0 10px',
+              padding: '8px 8px 4px 8px',
+              borderRadius: '14px',
+              backgroundColor: isDark
+                ? 'rgba(15, 23, 42, 0.12)'
+                : 'rgba(255, 255, 255, 0.30)',
+              backdropFilter: isDark
+                ? 'blur(3px) saturate(120%)'
+                : 'blur(5px) saturate(160%)',
+              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.45)'
+                }`,
+              boxShadow: isDark
+                ? '0 4px 16px 0 rgba(0, 0, 0, 0.2)'
+                : '0 6px 20px 0 rgba(0, 0, 0, 0.15)',
+              transition: 'all 200ms ease-in-out',
+            }}
+          >
             {/* Export Section Header */}
-            <Box sx={{ padding: '10px 12px 4px' }}>
+            <Box sx={{ padding: '6px 8px 4px 8px' }}>
               <Typography
                 sx={{
                   fontSize: '10px',
                   fontWeight: 700,
-                  color: 'rgba(255,255,255,0.55)',
-                  letterSpacing: '0.1em',
+                  color: '#FFFFFF',
+                  letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   cursor: 'pointer',
                   userSelect: 'none',
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.4)',
                 }}
                 onClick={() => setExportOpen(!exportOpen)}
               >
                 EXPORT
-                {exportOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                {exportOpen ? <ChevronDown size={14} color="#FFFFFF" /> : <ChevronRight size={14} color="#FFFFFF" />}
               </Typography>
             </Box>
 
             {/* Export Submenu Items */}
-            <Collapse in={exportOpen} timeout="auto" unmountOnExit>
-              <List disablePadding>
+            <Collapse in={exportOpen} timeout="auto" unmountOnExit sx={{ backgroundColor: 'transparent !important' }}>
+              <List disablePadding sx={{ backgroundColor: 'transparent !important' }}>
                 <ListItemButton
                   onClick={() => {
                     if (selectedStudentIds.length === 0) {
@@ -565,21 +634,41 @@ export const Sidebar: React.FC = () => {
                     exportStudentsToExcel(selected, 'Exported_Selected_Students.xlsx');
                   }}
                   sx={{
-                    borderRadius: '6px',
-                    marginBottom: '6px',
-                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    marginBottom: '4px',
+                    padding: '6px 10px',
                     color: '#E0F2FE',
-                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.12)' },
+                    backgroundColor: 'transparent !important',
+                    '&:hover': {
+                      backgroundColor: isDark
+                        ? 'rgba(255, 255, 255, 0.15) !important'
+                        : 'rgba(255, 255, 255, 0.3) !important',
+                    },
                   }}
                 >
-                  <ListItemIcon sx={{ minWidth: '30px', color: isDark ? '#CBD5E1' : '#FFFFFF' }}>
+                  <ListItemIcon sx={{ minWidth: '28px', color: '#FFFFFF' }}>
                     <FileSpreadsheet size={15} />
                   </ListItemIcon>
                   <ListItemText
                     primary="EXPORT SELECTED"
                     secondary="STUDENT (EXCEL)"
-                    primaryTypographyProps={{ fontSize: '10.5px', fontWeight: 600, color: '#FFFFFF', letterSpacing: '0.02em' }}
-                    secondaryTypographyProps={{ fontSize: '9.5px', color: 'rgba(255,255,255,0.7)' }}
+                    primaryTypographyProps={{
+                      sx: {
+                        fontSize: '10.5px',
+                        fontWeight: 700,
+                        color: '#FFFFFF',
+                        letterSpacing: '0.02em',
+                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.4)',
+                      },
+                    }}
+                    secondaryTypographyProps={{
+                      sx: {
+                        fontSize: '9.5px',
+                        color: 'rgba(255, 255, 255, 0.85)',
+                        fontWeight: 500,
+                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                      },
+                    }}
                   />
                 </ListItemButton>
 
@@ -596,66 +685,49 @@ export const Sidebar: React.FC = () => {
                     selected.forEach((s) => generateStudentPdf(s));
                   }}
                   sx={{
-                    borderRadius: '6px',
-                    marginBottom: '6px',
-                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    marginBottom: '4px',
+                    padding: '6px 10px',
                     color: '#E0F2FE',
-                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.12)' },
+                    backgroundColor: 'transparent !important',
+                    '&:hover': {
+                      backgroundColor: isDark
+                        ? 'rgba(255, 255, 255, 0.15) !important'
+                        : 'rgba(255, 255, 255, 0.3) !important',
+                    },
                   }}
                 >
-                  <ListItemIcon sx={{ minWidth: '30px', color: isDark ? '#CBD5E1' : '#FFFFFF' }}>
+                  <ListItemIcon sx={{ minWidth: '28px', color: '#FFFFFF' }}>
                     <FileText size={15} />
                   </ListItemIcon>
                   <ListItemText
                     primary="EXPORT STUDENT"
                     secondary="DETAILS (PDF)"
-                    primaryTypographyProps={{ fontSize: '10.5px', fontWeight: 600, color: '#FFFFFF', letterSpacing: '0.02em' }}
-                    secondaryTypographyProps={{ fontSize: '9.5px', color: 'rgba(255,255,255,0.7)' }}
+                    primaryTypographyProps={{
+                      sx: {
+                        fontSize: '10.5px',
+                        fontWeight: 700,
+                        color: '#FFFFFF',
+                        letterSpacing: '0.02em',
+                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.4)',
+                      },
+                    }}
+                    secondaryTypographyProps={{
+                      sx: {
+                        fontSize: '9.5px',
+                        color: 'rgba(255, 255, 255, 0.85)',
+                        fontWeight: 500,
+                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                      },
+                    }}
                   />
                 </ListItemButton>
               </List>
             </Collapse>
-          </List>
-        )}
-      </Box>
+          </Box>
+        ) : null}
 
-      {/* Bottom Campus Building Illustration & Version (Original design) */}
-      <Box
-        sx={{
-          position: 'relative',
-          height: '170px',
-          overflow: 'hidden',
-          borderTop: '1px solid rgba(255, 255, 255, 0.15)',
-          flexShrink: 0,
-        }}
-      >
-        <Box
-          component="img"
-          src="/images/sidebar-building.png"
-          alt="Rajiv Gandhi College Building"
-          sx={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-          }}
-        />
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'linear-gradient(180deg, rgba(8, 47, 73, 0.5) 0%, rgba(11, 61, 145, 0.9) 100%)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'flex-end',
-            padding: '16px',
-          }}
-        >
+        <Box sx={{ padding: '16px', marginTop: 'auto' }}>
           <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '13px', color: '#FFFFFF', lineHeight: 1.3 }}>
             Academic ERP Systems
           </Typography>

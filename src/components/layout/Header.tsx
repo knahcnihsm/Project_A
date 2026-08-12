@@ -18,9 +18,13 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useThemeContext } from '../../context/ThemeContext';
+import { useAdmission } from '../../context/AdmissionContext';
+import { useNavigate } from 'react-router-dom';
 
 export const Header: React.FC = () => {
   const { mode, toggleTheme } = useThemeContext();
+  const { requestNavigation } = useAdmission();
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -55,6 +59,7 @@ export const Header: React.FC = () => {
     >
       {/* Left Branding - Logo section with fixed width matching sidebar */}
       <Box
+        onClick={() => requestNavigation(() => navigate('/'))}
         sx={{
           width: '240px',
           minWidth: '240px',
@@ -64,6 +69,7 @@ export const Header: React.FC = () => {
           padding: '0 16px',
           height: '100%',
           borderRight: `1px solid ${isDark ? '#334155' : '#D6E4F0'}`,
+          cursor: 'pointer',
         }}
       >
         <Box
@@ -302,9 +308,6 @@ export const Header: React.FC = () => {
         >
           <MenuItem onClick={handleClose} sx={{ gap: '10px', fontWeight: 600, fontSize: '14px' }}>
             <User size={16} /> Profile Overview
-          </MenuItem>
-          <MenuItem onClick={handleClose} sx={{ gap: '10px', fontWeight: 600, fontSize: '14px' }}>
-            <Settings size={16} /> System Settings
           </MenuItem>
           <Divider sx={{ borderColor: isDark ? '#334155' : '#D6E4F0' }} />
           <MenuItem

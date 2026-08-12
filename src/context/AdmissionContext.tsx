@@ -37,6 +37,14 @@ import { studentDetailsSchema } from '../schemas/student.schema';
 import { parentDetailsSchema } from '../schemas/parent.schema';
 import { communicationSchema } from '../schemas/communication.schema';
 import { academicDetailsSchema } from '../schemas/academic.schema';
+import {
+  isStudentDetailsComplete,
+  isParentDetailsComplete,
+  isCommunicationComplete,
+  isAdmissionDetailsComplete,
+  isQualifyingExamComplete,
+  isFeeComplete,
+} from '../utils/sectionValidation';
 
 export interface MasterData {
   programs: ProgramDto[];
@@ -109,8 +117,20 @@ interface AdmissionContextType {
   hideSnackbar: () => void;
 
   confirmDialog: ConfirmDialogState;
-  showConfirm: (title: string, message: string, onConfirm: () => void, confirmText?: string) => void;
+  showConfirm: (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    confirmText?: string,
+    cancelText?: string
+  ) => void;
   hideConfirm: () => void;
+
+  // Unsaved Changes Protection & Step Navigation Guards
+  isFormDirty: boolean;
+  clearCurrentDraft: () => void;
+  requestNavigation: (onConfirm: () => void) => void;
+  tryNavigateToStep: (targetStep: number) => boolean;
 
   // Warning Modal State
   warningModal: WarningModalState;
@@ -271,17 +291,153 @@ export const AdmissionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
+  // ---------------- Storage & Unsaved Changes Helpers ----------------
+
+  const getStorageKey = () => {
+    return isEditModeRef.current && editingStudentIdRef.current
+      ? `admission_draft_edit_${editingStudentIdRef.current}`
+      : 'admission_draft_new';
+  };
+
+  const clearCurrentDraft = () => {
+    try {
+      const key = getStorageKey();
+      localStorage.removeItem(key);
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const isFormDirty = React.useMemo(() => {
+    if (isViewReadOnly) return false;
+    const p = draftStudent.personal;
+    if (!isEditMode) {
+      return Boolean(
+        p?.studentName ||
+          p?.applicationNumber ||
+          p?.aadhaarNumber ||
+          p?.registerNumber ||
+          draftStudent.parent?.fatherName ||
+          draftStudent.communication?.permanentAddress?.addressLine
+      );
+    }
+    // Edit mode dirty check
+    const currentStr = JSON.stringify(draftStudent);
+    const existingStr = JSON.stringify(
+      students.find((s) => s.id === editingStudentId) || {}
+    );
+    return currentStr !== existingStr && Boolean(editingStudentId);
+  }, [draftStudent, isEditMode, editingStudentId, isViewReadOnly, students]);
+
+  // Save to localStorage when draft changes
+  useEffect(() => {
+    if (isViewReadOnly) return;
+    if (isFormDirty) {
+      try {
+        const key = getStorageKey();
+        localStorage.setItem(key, JSON.stringify(draftStudent));
+      } catch {
+        // ignore
+      }
+    }
+  }, [draftStudent, isFormDirty, isViewReadOnly]);
+
+  // Browser beforeunload protection
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isFormDirty) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isFormDirty]);
+
+  const resetFormState = () => {
+    try {
+      const key = getStorageKey();
+      localStorage.removeItem(key);
+    } catch {
+      // ignore
+    }
+    setDraftStudentSafe(JSON.parse(JSON.stringify(defaultDraft)));
+    setIsEditMode(false);
+    isEditModeRef.current = false;
+    setIsViewReadOnly(false);
+    isViewReadOnlyRef.current = false;
+    setEditingStudentId(null);
+    editingStudentIdRef.current = null;
+    setActiveStep(0);
+    activeStepRef.current = 0;
+  };
+
+  const requestNavigation = (onConfirmNav: () => void) => {
+    if (!isFormDirty) {
+      resetFormState();
+      onConfirmNav();
+      return;
+    }
+    showConfirm(
+      'Unsaved Changes Warning',
+      'Leaving this page will cause your unsaved form changes to be lost. Are you sure you want to proceed?',
+      () => {
+        resetFormState();
+        onConfirmNav();
+      },
+      'Leave / Go to Dashboard',
+      'Stay on Page'
+    );
+  };
+
+  const tryNavigateToStep = (targetStep: number): boolean => {
+    if (isViewReadOnlyRef.current) {
+      setActiveStepSafe(targetStep);
+      return true;
+    }
+
+    if (targetStep <= activeStepRef.current) {
+      setActiveStepSafe(targetStep);
+      return true;
+    }
+
+    const draft = draftRef.current;
+    const stepChecks: { step: number; name: string; isComplete: () => boolean }[] = [
+      { step: 0, name: 'Student Personal Information', isComplete: () => isStudentDetailsComplete(draft) },
+      { step: 1, name: 'Parent & Guardian Details', isComplete: () => isParentDetailsComplete(draft) },
+      { step: 2, name: 'Permanent & Communication Address', isComplete: () => isCommunicationComplete(draft) },
+      { step: 3, name: 'Academic Admission Details', isComplete: () => isAdmissionDetailsComplete(draft) },
+      { step: 4, name: 'Qualifying Examination / UG Details', isComplete: () => isQualifyingExamComplete(draft) },
+      { step: 5, name: 'Fee Structure & Facilities', isComplete: () => isFeeComplete(draft) },
+    ];
+
+    for (let s = 0; s < targetStep; s++) {
+      const check = stepChecks.find((c) => c.step === s);
+      if (check && !check.isComplete()) {
+        setActiveStepSafe(check.step);
+        showSnackbar(`Please complete all required fields in ${check.name} before moving forward.`, 'error');
+        return false;
+      }
+    }
+
+    setActiveStepSafe(targetStep);
+    return true;
+  };
+
   const showConfirm = (
     title: string,
     message: string,
     onConfirm: () => void,
-    confirmText: string = 'Confirm'
+    confirmText: string = 'Confirm',
+    cancelText: string = 'Cancel'
   ) => {
     setConfirmDialog({
       open: true,
       title,
       message,
       confirmText,
+      cancelText,
       onConfirm: () => {
         onConfirm();
         hideConfirm();
@@ -375,7 +531,19 @@ export const AdmissionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     editingStudentIdRef.current = null;
     setActiveStep(0);
     activeStepRef.current = 0;
-    setDraftStudentSafe(JSON.parse(JSON.stringify(defaultDraft)));
+
+    // Check localStorage for saved draft
+    let initialVal = JSON.parse(JSON.stringify(defaultDraft));
+    try {
+      const saved = localStorage.getItem('admission_draft_new');
+      if (saved) {
+        initialVal = { ...initialVal, ...JSON.parse(saved) };
+      }
+    } catch {
+      // ignore
+    }
+
+    setDraftStudentSafe(initialVal);
   };
 
   const startEditStudent = async (student: StudentRecord) => {
@@ -391,17 +559,29 @@ export const AdmissionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     activeStepRef.current = 0;
 
     if (preservingUnsaved) {
-      // Keep the in-progress draft (unsaved edits) intact; do not reload it
-      // from the backend when reopening the same student's edit page.
       return;
     }
 
-    setDraftStudentSafe(JSON.parse(JSON.stringify(student)));
+    let initialVal = JSON.parse(JSON.stringify(student));
+    try {
+      const saved = localStorage.getItem(`admission_draft_edit_${student.id}`);
+      if (saved) {
+        initialVal = { ...initialVal, ...JSON.parse(saved) };
+      }
+    } catch {
+      // ignore
+    }
+
+    setDraftStudentSafe(initialVal);
 
     try {
       const dto = await studentApi.getStudent(student.id);
       const dbRecord = toStudentRecord(dto);
-      setDraftStudentSafe(JSON.parse(JSON.stringify(dbRecord)));
+      // Only set dbRecord if no localStorage draft exists
+      const saved = localStorage.getItem(`admission_draft_edit_${student.id}`);
+      if (!saved) {
+        setDraftStudentSafe(JSON.parse(JSON.stringify(dbRecord)));
+      }
     } catch {
       // Keep existing record if error
     }
@@ -513,6 +693,7 @@ export const AdmissionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           ? 'Student details updated successfully!'
           : 'New Admission created successfully!'
       );
+      clearCurrentDraft();
       startAddAdmission();
       return true;
     } catch (e) {
@@ -600,6 +781,10 @@ export const AdmissionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         confirmDialog,
         showConfirm,
         hideConfirm,
+        isFormDirty,
+        clearCurrentDraft,
+        requestNavigation,
+        tryNavigateToStep,
         warningModal,
         showWarningModal,
         closeWarningModal,

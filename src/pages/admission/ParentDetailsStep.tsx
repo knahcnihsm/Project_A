@@ -6,15 +6,18 @@ import { parentDetailsSchema, ParentDetailsFormData } from '../../schemas/parent
 import { useAdmission } from '../../context/AdmissionContext';
 import { useThemeContext } from '../../context/ThemeContext';
 import { AppCard } from '../../components/ui/AppCard';
+import { handleFormEnterKeyDown } from '../../utils/enterKeyNavigation';
+import { getNoAutofillInputProps } from '../../utils/autofillHelper';
 
-const fieldSx = {
+const getFieldSx = (isDark: boolean) => ({
   '& .MuiInputLabel-root': {
     fontSize: '14.5px',
     fontWeight: 600,
-    color: '#344054',
+    color: isDark ? '#CBD5E1' : '#344054',
     transform: 'translate(14px, 14px) scale(1)',
   },
   '& .MuiInputLabel-shrink': {
+    color: isDark ? '#F8FAFC' : '#0D47A1',
     transform: 'translate(14px, -9px) scale(0.75)',
   },
   '& .MuiOutlinedInput-root': {
@@ -31,7 +34,7 @@ const fieldSx = {
       fontSize: '20px',
     },
   },
-};
+});
 
 export const ParentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
   const { mode } = useThemeContext();
@@ -69,8 +72,20 @@ export const ParentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
     onNext();
   };
 
+  const fieldSx = getFieldSx(isDark);
+
   return (
-    <Box component="form" id="wizard-step-form" onSubmit={handleSubmit(onSubmit)}>
+    <Box
+      component="form"
+      id="wizard-step-form"
+      autoComplete="off"
+      onKeyDown={(e) => handleFormEnterKeyDown(e, handleSubmit(onSubmit))}
+      onSubmit={handleSubmit(onSubmit)}
+    >
+      {/* Hidden dummy inputs to trap Chrome profile autofill */}
+      <input type="text" name="prevent_autofill_user" id="prevent_autofill_user" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+      <input type="password" name="prevent_autofill_pass" id="prevent_autofill_pass" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+
       <AppCard>
         <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
           Parent / Guardian Details
@@ -91,6 +106,7 @@ export const ParentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
                   fullWidth
                   sx={fieldSx}
                   disabled={isViewReadOnly}
+                  inputProps={getNoAutofillInputProps('father_name')}
                   error={!!errors.fatherName}
                   helperText={errors.fatherName?.message}
                 />
@@ -109,7 +125,7 @@ export const ParentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
                   fullWidth
                   sx={fieldSx}
                   disabled={isViewReadOnly}
-                  inputProps={{ maxLength: 10 }}
+                  inputProps={{ ...getNoAutofillInputProps('father_mobile'), maxLength: 10 }}
                   error={!!errors.fatherMobile}
                   helperText={errors.fatherMobile?.message}
                 />
@@ -124,10 +140,11 @@ export const ParentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Father Occupation"
+                  label="Father Occupation *"
                   fullWidth
                   sx={fieldSx}
                   disabled={isViewReadOnly}
+                  inputProps={getNoAutofillInputProps('father_occ')}
                   error={!!errors.fatherOccupation}
                   helperText={errors.fatherOccupation?.message}
                 />
@@ -148,6 +165,7 @@ export const ParentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
                   fullWidth
                   sx={fieldSx}
                   disabled={isViewReadOnly}
+                  inputProps={getNoAutofillInputProps('annual_income')}
                   InputProps={{
                     startAdornment: <InputAdornment position="start" sx={{ '& .MuiTypography-root': { fontSize: '15px' } }}>₹</InputAdornment>,
                   }}

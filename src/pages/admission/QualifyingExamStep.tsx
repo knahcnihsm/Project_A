@@ -18,6 +18,7 @@ import { useAdmission } from '../../context/AdmissionContext';
 import { useThemeContext } from '../../context/ThemeContext';
 import { AppCard } from '../../components/ui/AppCard';
 import { SummaryCard } from '../../components/ui/SummaryCard';
+import { handleFormEnterKeyDown } from '../../utils/enterKeyNavigation';
 import { calculateHSCCutOff } from '../../utils/cutoffCalculator';
 import { HSCSubjectMark, ExamPassed } from '../../types';
 
@@ -55,7 +56,7 @@ const fieldSx = {
 export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
   const { mode } = useThemeContext();
   const isDark = mode === 'dark';
-  const { draftStudent, updateDraftSection, isViewReadOnly } = useAdmission();
+  const { draftStudent, updateDraftSection, isViewReadOnly, showSnackbar } = useAdmission();
   const program = draftStudent.academic?.program || 'First Year B.Tech';
 
   // State for First Year B.Tech HSC Marks
@@ -261,6 +262,17 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
     e.preventDefault();
 
     if (program === 'First Year B.Tech') {
+      if (
+        !qualifyingData.institutionName ||
+        !qualifyingData.sslcRegisterNumber ||
+        !qualifyingData.hscRegisterNumber ||
+        !qualifyingData.examinationPassed ||
+        !qualifyingData.monthYearPassing
+      ) {
+        showSnackbar('Please complete all required Qualifying Examination fields before proceeding.', 'error');
+        return;
+      }
+
       updateDraftSection('qualifyingExam', qualifyingData as any);
       updateDraftSection('hscMarks', {
         stream,
@@ -276,6 +288,11 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
         cutOffMark: cutOff,
       });
     } else if (program === 'Second Year B.Tech (Lateral Entry)') {
+      if (!diploma.diplomaCourse || !diploma.institutionName || !diploma.board) {
+        showSnackbar('Please complete all required Diploma Details fields before proceeding.', 'error');
+        return;
+      }
+
       const diplomaData = {
         ...diploma,
         aggregatePercentage: diplomaAggregate,
@@ -286,6 +303,17 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
         cutOffMark: diplomaAggregate,
       });
     } else {
+      if (
+        !pg.examinationPassed ||
+        !pg.universityName ||
+        !pg.institutionName ||
+        !pg.degreeRegistrationNumber ||
+        !pg.monthYearPassing
+      ) {
+        showSnackbar('Please complete all required Undergraduate / Qualifying Degree fields before proceeding.', 'error');
+        return;
+      }
+
       updateDraftSection('pgQualification', pg as any);
       updateDraftSection('fee', {
         ...draftStudent.fee!,
@@ -297,7 +325,16 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
   };
 
   return (
-    <Box component="form" id="wizard-step-form" onSubmit={handleFormSubmit}>
+    <Box
+      component="form"
+      id="wizard-step-form"
+      onSubmit={handleFormSubmit}
+      autoComplete="off"
+      onKeyDown={(e) => handleFormEnterKeyDown(e, () => handleFormSubmit(e))}
+    >
+      {/* Hidden dummy inputs to trap Chrome profile autofill */}
+      <input type="text" name="prevent_autofill_user" id="prevent_autofill_user" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+      <input type="password" name="prevent_autofill_pass" id="prevent_autofill_pass" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
       {program === 'First Year B.Tech' && (
         <AppCard sx={{ marginBottom: '24px' }}>
           <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>

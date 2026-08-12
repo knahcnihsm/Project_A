@@ -4,14 +4,21 @@
   padding: 0;
 }
 
-/* Display all form text as uppercase (stored values are normalized to uppercase on save) */
-input,
+/* Display default form text as uppercase except for email fields which preserve exact case */
+input:not([type="email"]),
 textarea,
 select,
 .MuiOutlinedInput-input,
 .MuiInputBase-input,
 .MuiSelect-select {
   text-transform: uppercase;
+}
+
+input[type="email"],
+input[name*="email"],
+input[id*="email"],
+.no-uppercase {
+  text-transform: none !important;
 }
 
 html,

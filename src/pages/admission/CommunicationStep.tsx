@@ -13,15 +13,18 @@ import { communicationSchema, CommunicationFormData } from '../../schemas/commun
 import { useAdmission } from '../../context/AdmissionContext';
 import { useThemeContext } from '../../context/ThemeContext';
 import { AppCard } from '../../components/ui/AppCard';
+import { handleFormEnterKeyDown } from '../../utils/enterKeyNavigation';
+import { getNoAutofillInputProps } from '../../utils/autofillHelper';
 
-const fieldSx = {
+const getFieldSx = (isDark: boolean) => ({
   '& .MuiInputLabel-root': {
     fontSize: '14.5px',
     fontWeight: 600,
-    color: '#344054',
+    color: isDark ? '#CBD5E1' : '#344054',
     transform: 'translate(14px, 14px) scale(1)',
   },
   '& .MuiInputLabel-shrink': {
+    color: isDark ? '#F8FAFC' : '#0D47A1',
     transform: 'translate(14px, -9px) scale(0.75)',
   },
   '& .MuiOutlinedInput-root': {
@@ -41,7 +44,7 @@ const fieldSx = {
       fontSize: '20px',
     },
   },
-};
+});
 
 export const CommunicationStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
   const { mode } = useThemeContext();
@@ -85,17 +88,29 @@ export const CommunicationStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
 
   useEffect(() => {
     if (sameAsPermanent) {
-      setValue('communicationAddress', permAddress);
+      setValue('communicationAddress', { ...permAddress }, { shouldValidate: true, shouldDirty: true });
     }
-  }, [sameAsPermanent, permAddress, setValue]);
+  }, [sameAsPermanent, JSON.stringify(permAddress), setValue]);
 
   const onSubmit = async (data: CommunicationFormData) => {
     updateDraftSection('communication', data);
     onNext();
   };
 
+  const fieldSx = getFieldSx(isDark);
+
   return (
-    <Box component="form" id="wizard-step-form" onSubmit={handleSubmit(onSubmit)}>
+    <Box
+      component="form"
+      id="wizard-step-form"
+      autoComplete="off"
+      onKeyDown={(e) => handleFormEnterKeyDown(e, handleSubmit(onSubmit))}
+      onSubmit={handleSubmit(onSubmit)}
+    >
+      {/* Hidden dummy inputs to trap Chrome profile autofill */}
+      <input type="text" name="prevent_autofill_user" id="prevent_autofill_user" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+      <input type="password" name="prevent_autofill_pass" id="prevent_autofill_pass" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+
       {/* Permanent Address Card */}
       <AppCard sx={{ marginBottom: '24px' }}>
         <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
@@ -171,9 +186,14 @@ export const CommunicationStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Email Address *"
+                  value={field.value || ''}
+                  onChange={(e) => field.onChange(e.target.value.trim())}
+                  onBlur={(e) => field.onChange(e.target.value.trim())}
+                  autoComplete="off"
+                  inputProps={getNoAutofillInputProps('perm_email')}
+                  type="email"
                   fullWidth
-                  sx={fieldSx}
+                  sx={{ ...fieldSx, '& input': { textTransform: 'none' } }}
                   disabled={isViewReadOnly}
                   error={!!errors.permanentAddress?.email}
                   helperText={errors.permanentAddress?.email?.message}
@@ -293,9 +313,14 @@ export const CommunicationStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Email Address *"
+                  value={field.value || ''}
+                  onChange={(e) => field.onChange(e.target.value.trim())}
+                  onBlur={(e) => field.onChange(e.target.value.trim())}
+                  autoComplete="off"
+                  inputProps={getNoAutofillInputProps('comm_email')}
+                  type="email"
                   fullWidth
-                  sx={fieldSx}
+                  sx={{ ...fieldSx, '& input': { textTransform: 'none' } }}
                   disabled={sameAsPermanent || isViewReadOnly}
                   error={!!errors.communicationAddress?.email}
                   helperText={errors.communicationAddress?.email?.message}

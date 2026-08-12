@@ -137,7 +137,7 @@ public class StudentService {
         permanent.setPincode(permReq.pincode());
         permanent.setPhone(permReq.phone());
         permanent.setMobile(permReq.mobile());
-        permanent.setEmail(permReq.email());
+        permanent.setEmail(permReq.email() != null ? permReq.email().trim() : null);
         permanent.setSameAsPermanent(request.sameAsPermanent());
 
         Address communication = getAddress(student, AddressType.COMMUNICATION);
@@ -153,7 +153,7 @@ public class StudentService {
             communication.setPincode(commReq.pincode());
             communication.setPhone(commReq.phone());
             communication.setMobile(commReq.mobile());
-            communication.setEmail(commReq.email());
+            communication.setEmail(commReq.email() != null ? commReq.email().trim() : null);
         }
         communication.setSameAsPermanent(request.sameAsPermanent());
         touch(student);
@@ -569,7 +569,7 @@ public class StudentService {
         student.setAge(computeAge(req.dateOfBirth()));
         student.setAadhaarNo(req.aadhaarNumber());
         student.setMobileNumber(req.mobileNumber());
-        student.setEmailId(req.emailId());
+        student.setEmailId(req.emailId() != null ? req.emailId().trim() : null);
         student.setGender(req.gender());
         student.setDistrict(req.district());
         student.setNationality(req.nationality());

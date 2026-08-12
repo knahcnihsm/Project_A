@@ -95,8 +95,11 @@ export const darkTheme = createTheme({
           '&.Mui-focused': {
             color: '#38BDF8',
           },
+          '&.MuiInputLabel-shrink': {
+            color: '#F8FAFC',
+          },
           '&.Mui-disabled': {
-            color: '#64748B',
+            color: '#94A3B8',
           },
         },
       },

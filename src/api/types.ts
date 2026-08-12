@@ -5,7 +5,7 @@ export type PaymentStatus = 'PAID' | 'PARTIAL' | 'PENDING';
 
 export interface PersonalStepRequest {
   applicationNumber: string;
-  registerNumber: string;
+  registerNumber?: string;
   studentName: string;
   dateOfBirth: string;
   aadhaarNumber?: string;

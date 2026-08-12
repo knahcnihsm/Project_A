@@ -441,7 +441,7 @@ export const StudentViewModal: React.FC = () => {
                       <FieldCell sm={6} md={4} label="Caste" value={s.personal.caste} icon={<Users size={14} />} />
 
                       <FieldCell sm={6} md={4} label="Mobile Number" value={s.communication?.permanentAddress?.mobileNumber} icon={<Phone size={14} />} />
-                      <FieldCell sm={6} md={4} label="Email ID" value={s.communication?.permanentAddress?.email} icon={<Mail size={14} />} />
+                      <FieldCell sm={6} md={4} label="Email ID" value={s.personal.emailId || s.communication?.permanentAddress?.email || undefined} icon={<Mail size={14} />} />
                     </Grid>
                   </Grid>
                 </Grid>
@@ -500,7 +500,7 @@ export const StudentViewModal: React.FC = () => {
                   <FieldCell sm={6} label="District" value={s.personal.district} icon={<MapPin size={14} />} />
                   <FieldCell sm={6} label="Pincode" value={s.communication.permanentAddress.pinCode} icon={<Hash size={14} />} />
                   <FieldCell sm={6} label="Mobile Number" value={s.communication.permanentAddress.mobileNumber} icon={<Phone size={14} />} />
-                  <FieldCell sm={6} label="Email ID" value={s.communication.permanentAddress.email} icon={<Mail size={14} />} />
+                  <FieldCell sm={6} label="Email ID" value={s.communication.permanentAddress.email || undefined} icon={<Mail size={14} />} />
                 </Grid>
               </Paper>
             </Grid>
@@ -546,21 +546,23 @@ export const StudentViewModal: React.FC = () => {
                 <SectionHeader title="SECTION 5: ACADEMIC DETAILS" icon={<BookOpen size={20} />} />
 
                 <Grid container spacing={3}>
-                  {/* 10th SSLC Details */}
-                  <Grid item xs={12} md={isFirstYear || isLateralEntry ? 6 : 12}>
-                    <Box sx={{ p: 2, borderRadius: '12px', border: `1px solid ${isDark ? '#334155' : '#E2E8F0'}`, backgroundColor: isDark ? '#0F172A' : '#FAF9FF' }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: isDark ? '#38BDF8' : '#0B3D91', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Award size={16} /> 10th (SSLC) Details
-                      </Typography>
-                      <Grid container spacing={1.5}>
-                        <FieldCell xs={6} label="Board" value={s.qualifyingExam?.sslcBoard || s.qualifyingExam?.examinationPassed} />
-                        <FieldCell xs={6} label="School Name" value={s.qualifyingExam?.sslcSchoolName || s.qualifyingExam?.institutionName} />
-                        <FieldCell xs={6} label="Register Number" value={s.qualifyingExam?.sslcRegisterNumber} />
-                        <FieldCell xs={6} label="Year of Passing" value={s.qualifyingExam?.monthYearPassing} />
-                        <FieldCell label="SSLC Percentage" value={s.qualifyingExam?.sslcPercentage ? `${s.qualifyingExam.sslcPercentage}%` : undefined} />
-                      </Grid>
-                    </Box>
-                  </Grid>
+                  {/* 10th SSLC Details (Displayed ONLY for First Year & Lateral Entry) */}
+                  {(isFirstYear || isLateralEntry) && (
+                    <Grid item xs={12} md={6}>
+                      <Box sx={{ p: 2, borderRadius: '12px', border: `1px solid ${isDark ? '#334155' : '#E2E8F0'}`, backgroundColor: isDark ? '#0F172A' : '#FAF9FF' }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: isDark ? '#38BDF8' : '#0B3D91', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Award size={16} /> 10th (SSLC) Details
+                        </Typography>
+                        <Grid container spacing={1.5}>
+                          <FieldCell xs={6} label="Board" value={s.qualifyingExam?.sslcBoard || s.qualifyingExam?.examinationPassed} />
+                          <FieldCell xs={6} label="School Name" value={s.qualifyingExam?.sslcSchoolName || s.qualifyingExam?.institutionName} />
+                          <FieldCell xs={6} label="Register Number" value={s.qualifyingExam?.sslcRegisterNumber} />
+                          <FieldCell xs={6} label="Year of Passing" value={s.qualifyingExam?.monthYearPassing} />
+                          <FieldCell label="SSLC Percentage" value={s.qualifyingExam?.sslcPercentage ? `${s.qualifyingExam.sslcPercentage}%` : undefined} />
+                        </Grid>
+                      </Box>
+                    </Grid>
+                  )}
 
                   {/* 12th HSC Details (Displayed ONLY for First Year B.Tech) */}
                   {isFirstYear && (

@@ -47,10 +47,10 @@ export const DEPARTMENTS_BY_PROGRAM: Record<string, string[]> = {
     'Biomedical Engineering (BME)',
   ],
   PG: [
-    'M.Tech Computer Science & Engineering',
+    'MTech CSE',
     'M.Tech Wireless Communication',
     'Master of Business Administration',
-    'Master of Computer Applications',
+    'MCA',
   ],
 };
 

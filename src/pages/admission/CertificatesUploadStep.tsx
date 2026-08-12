@@ -20,6 +20,8 @@ import { useThemeContext } from '../../context/ThemeContext';
 import { AppCard } from '../../components/ui/AppCard';
 import { CertificateItem } from '../../types';
 
+import { handleFormEnterKeyDown } from '../../utils/enterKeyNavigation';
+
 export const CertificatesUploadStep: React.FC<{ onSave: () => void }> = ({ onSave }) => {
   const { mode } = useThemeContext();
   const isDark = mode === 'dark';
@@ -127,7 +129,17 @@ export const CertificatesUploadStep: React.FC<{ onSave: () => void }> = ({ onSav
   };
 
   return (
-    <Box component="form" id="wizard-step-form" onSubmit={handleSubmit}>
+    <Box
+      component="form"
+      id="wizard-step-form"
+      onSubmit={handleSubmit}
+      autoComplete="off"
+      onKeyDown={(e) => handleFormEnterKeyDown(e, () => handleSubmit(e))}
+    >
+      {/* Hidden dummy inputs to trap Chrome profile autofill */}
+      <input type="text" name="prevent_autofill_user" id="prevent_autofill_user" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+      <input type="password" name="prevent_autofill_pass" id="prevent_autofill_pass" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+
       <AppCard>
         <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
           Certificates & Document Verification
@@ -156,7 +168,7 @@ export const CertificatesUploadStep: React.FC<{ onSave: () => void }> = ({ onSav
                     size="small"
                   />
                 </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#1A2B49', fontSize: '13px', padding: '8px 14px' }}>
+                <TableCell sx={{ fontWeight: 600, color: isDark ? '#FFFFFF' : '#1A2B49', fontSize: '13px', padding: '8px 14px' }}>
                   {cert.name}
                 </TableCell>
                 <TableCell sx={{ padding: '8px 14px' }}>

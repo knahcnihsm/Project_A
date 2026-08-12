@@ -789,7 +789,7 @@ public class BulkUpdateService {
             case "nationality" -> student.setNationality(value);
             case "caste" -> student.setCaste(Caste.valueOf(value));
             case "mobile_number" -> student.setMobileNumber(value);
-            case "email_id" -> student.setEmailId(value);
+            case "email_id" -> student.setEmailId(value != null ? value.trim() : null);
             default -> { /* no-op */ }
         }
     }
@@ -824,7 +824,7 @@ public class BulkUpdateService {
             case "pincode" -> address.setPincode(value);
             case "phone" -> address.setPhone(value);
             case "mobile" -> address.setMobile(value);
-            case "email" -> address.setEmail(value);
+            case "email" -> address.setEmail(value != null ? value.trim() : null);
             case "same_as_permanent" -> address.setSameAsPermanent(Boolean.valueOf(value));
             default -> { /* no-op */ }
         }

@@ -4,7 +4,7 @@ export type Nationality = 'Indian' | 'Other';
 
 export interface StudentPersonalDetails {
   applicationNumber: string;
-  registerNumber: string;
+  registerNumber?: string;
   studentName: string;
   dateOfBirth: string; // YYYY-MM-DD
   age: number;

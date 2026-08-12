@@ -554,7 +554,7 @@ public class BulkAdmissionService {
         student.setAge(ageOf(student.getDateOfBirth()));
         student.setAadhaarNo(str(studentRow, "aadhaar_no"));
         student.setMobileNumber(str(studentRow, "mobile_number"));
-        student.setEmailId(str(studentRow, "email_id"));
+        student.setEmailId(str(studentRow, "email_id") != null ? str(studentRow, "email_id").trim() : null);
         student.setGender(enumOf(Gender.class, studentRow, "gender"));
         student.setDistrict(str(studentRow, "district"));
         student.setNationality(str(studentRow, "nationality"));
@@ -581,7 +581,7 @@ public class BulkAdmissionService {
         perm.setPincode(str(permRow, "pincode"));
         perm.setPhone(str(permRow, "phone"));
         perm.setMobile(str(permRow, "mobile"));
-        perm.setEmail(str(permRow, "email"));
+        perm.setEmail(str(permRow, "email") != null ? str(permRow, "email").trim() : null);
         student.getAddresses().add(perm);
         if (commRow != null) {
             Address comm = new Address();
@@ -591,7 +591,7 @@ public class BulkAdmissionService {
             comm.setPincode(str(commRow, "pincode"));
             comm.setPhone(str(commRow, "phone"));
             comm.setMobile(str(commRow, "mobile"));
-            comm.setEmail(str(commRow, "email"));
+            comm.setEmail(str(commRow, "email") != null ? str(commRow, "email").trim() : null);
             student.getAddresses().add(comm);
         }
 

@@ -6,15 +6,17 @@ import { academicDetailsSchema, AcademicDetailsFormData } from '../../schemas/ac
 import { useAdmission } from '../../context/AdmissionContext';
 import { useThemeContext } from '../../context/ThemeContext';
 import { AppCard } from '../../components/ui/AppCard';
+import { handleFormEnterKeyDown } from '../../utils/enterKeyNavigation';
 
-const fieldSx = {
+const getFieldSx = (isDark: boolean) => ({
   '& .MuiInputLabel-root': {
     fontSize: '14.5px',
     fontWeight: 600,
-    color: '#344054',
+    color: isDark ? '#CBD5E1' : '#344054',
     transform: 'translate(14px, 14px) scale(1)',
   },
   '& .MuiInputLabel-shrink': {
+    color: isDark ? '#F8FAFC' : '#0D47A1',
     transform: 'translate(14px, -9px) scale(0.75)',
   },
   '& .MuiOutlinedInput-root': {
@@ -36,7 +38,7 @@ const fieldSx = {
       fontSize: '20px',
     },
   },
-};
+});
 
 export const AcademicDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
   const { mode } = useThemeContext();
@@ -67,9 +69,6 @@ export const AcademicDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }
   const watchProgram = watch('program');
   const prevProgramRef = useRef(watchProgram);
 
-  // Handle program change to auto-update available departments & batch.
-  // Only auto-fill when the program is actually changed by the user, never on
-  // mount/re-mount, so manually edited values are preserved between sections.
   useEffect(() => {
     const prevProgram = prevProgramRef.current;
     prevProgramRef.current = watchProgram;
@@ -101,8 +100,20 @@ export const AcademicDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext }
     onNext();
   };
 
+  const fieldSx = getFieldSx(isDark);
+
   return (
-    <Box component="form" id="wizard-step-form" onSubmit={handleSubmit(onSubmit)}>
+    <Box
+      component="form"
+      id="wizard-step-form"
+      autoComplete="off"
+      onKeyDown={(e) => handleFormEnterKeyDown(e, handleSubmit(onSubmit))}
+      onSubmit={handleSubmit(onSubmit)}
+    >
+      {/* Hidden dummy inputs to trap Chrome profile autofill */}
+      <input type="text" name="prevent_autofill_user" id="prevent_autofill_user" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+      <input type="password" name="prevent_autofill_pass" id="prevent_autofill_pass" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+
       <AppCard>
         <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
           Academic Admission Details

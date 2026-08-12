@@ -15,15 +15,17 @@ import { AppCard } from '../../components/ui/AppCard';
 import { SummaryCard } from '../../components/ui/SummaryCard';
 import { BUS_ROUTES_WITH_STOPS } from '../../utils/constants';
 import { calculateFeeDetails } from '../../utils/feeCalculator';
+import { handleFormEnterKeyDown } from '../../utils/enterKeyNavigation';
 
-const fieldSx = {
+const getFieldSx = (isDark: boolean) => ({
   '& .MuiInputLabel-root': {
     fontSize: '14.5px',
     fontWeight: 600,
-    color: '#344054',
+    color: isDark ? '#CBD5E1' : '#344054',
     transform: 'translate(14px, 14px) scale(1)',
   },
   '& .MuiInputLabel-shrink': {
+    color: isDark ? '#F8FAFC' : '#0D47A1',
     transform: 'translate(14px, -9px) scale(0.75)',
   },
   '& .MuiOutlinedInput-root': {
@@ -45,7 +47,7 @@ const fieldSx = {
       fontSize: '20px',
     },
   },
-};
+});
 
 export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
   const { mode } = useThemeContext();
@@ -57,8 +59,7 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
   const department = draftStudent.academic?.department;
   const initialCutoff = draftStudent.fee?.cutOffMark;
   const hscCutoff = draftStudent.hscMarks?.engineeringCutOff;
-  // Mirrors the backend: first-year candidates derive the cut-off from HSC marks when
-  // available, falling back to the manually entered / stored cut-off mark.
+
   const effectiveCutoff =
     program === 'First Year B.Tech' && hscCutoff !== undefined && hscCutoff > 0
       ? hscCutoff
@@ -125,8 +126,20 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
   const formatINR = (value: number | undefined): string =>
     (value ?? 0).toLocaleString('en-IN');
 
+  const fieldSx = getFieldSx(isDark);
+
   return (
-    <Box component="form" id="wizard-step-form" onSubmit={handleSubmit}>
+    <Box
+      component="form"
+      id="wizard-step-form"
+      autoComplete="off"
+      onKeyDown={(e) => handleFormEnterKeyDown(e, onNext)}
+      onSubmit={handleSubmit}
+    >
+      {/* Hidden dummy inputs to trap Chrome profile autofill */}
+      <input type="text" name="prevent_autofill_user" id="prevent_autofill_user" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+      <input type="password" name="prevent_autofill_pass" id="prevent_autofill_pass" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+
       <AppCard>
         <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', marginBottom: '4px', fontSize: '22px' }}>
           Fee Structure & Optional Facilities
@@ -216,7 +229,8 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
           <Grid item xs={12} sm={6}>
             <Box
               sx={{
-                border: '1px solid #D8E4F2',
+                border: `1px solid ${isDark ? '#334155' : '#D8E4F2'}`,
+                backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
                 borderRadius: '12px',
                 padding: '4px 16px',
                 display: 'flex',
@@ -225,7 +239,7 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
                 height: '50px',
               }}
             >
-              <Typography sx={{ fontWeight: 600, color: '#1A2B49', fontSize: '14.5px' }}>
+              <Typography sx={{ fontWeight: 600, color: isDark ? '#FFFFFF' : '#1A2B49', fontSize: '14.5px' }}>
                 Bus Transport
               </Typography>
               <FormControlLabel
@@ -246,7 +260,7 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
                   />
                 }
                 label={busTransport ? 'ON' : 'OFF (Default)'}
-                sx={{ margin: 0, '& .MuiFormControlLabel-label': { fontSize: '13px', fontWeight: 600 } }}
+                sx={{ margin: 0, '& .MuiFormControlLabel-label': { fontSize: '13px', fontWeight: 600, color: isDark ? '#38BDF8' : 'inherit' } }}
               />
             </Box>
           </Grid>
@@ -255,7 +269,8 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
           <Grid item xs={12} sm={6}>
             <Box
               sx={{
-                border: '1px solid #D8E4F2',
+                border: `1px solid ${isDark ? '#334155' : '#D8E4F2'}`,
+                backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
                 borderRadius: '12px',
                 padding: '4px 16px',
                 display: 'flex',
@@ -264,7 +279,7 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
                 height: '50px',
               }}
             >
-              <Typography sx={{ fontWeight: 600, color: '#1A2B49', fontSize: '14.5px' }}>
+              <Typography sx={{ fontWeight: 600, color: isDark ? '#FFFFFF' : '#1A2B49', fontSize: '14.5px' }}>
                 Hostel Accommodation
               </Typography>
               <FormControlLabel
@@ -278,7 +293,7 @@ export const FeeStructureStep: React.FC<{ onNext: () => void }> = ({ onNext }) =
                   />
                 }
                 label={hostel ? `Required (₹${formatINR(masterData.hostels?.[0]?.fee ?? 72000)}/yr)` : 'Not Required'}
-                sx={{ margin: 0, '& .MuiFormControlLabel-label': { fontSize: '13px', fontWeight: 600 } }}
+                sx={{ margin: 0, '& .MuiFormControlLabel-label': { fontSize: '13px', fontWeight: 600, color: isDark ? '#38BDF8' : 'inherit' } }}
               />
             </Box>
           </Grid>

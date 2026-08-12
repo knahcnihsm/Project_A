@@ -105,7 +105,7 @@ export const ArchivedStudents: React.FC = () => {
       !q ||
       student.personal.studentName.toLowerCase().includes(q) ||
       student.personal.applicationNumber.toLowerCase().includes(q) ||
-      student.personal.registerNumber.toLowerCase().includes(q) ||
+      (student.personal.registerNumber || '').toLowerCase().includes(q) ||
       student.academic.department.toLowerCase().includes(q);
 
     // 2. Department

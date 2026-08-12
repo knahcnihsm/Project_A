@@ -39,6 +39,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAdmission } from '../../context/AdmissionContext';
 import { generateStudentPdf } from '../../utils/exportPdf';
 import { formatDateDisplay } from '../../utils/dateUtils';
+import { getNoAutofillInputProps } from '../../utils/autofillHelper';
 import { toUpper } from '../../utils/caseUtils';
 import { StudentRecord } from '../../types';
 import { useThemeContext } from '../../context/ThemeContext';
@@ -115,8 +116,38 @@ export const Dashboard: React.FC = () => {
       toDate: '',
     };
     setAppliedFilters(defaultFilters);
+    setSearchQuery('');
     setActivePage(1);
   };
+
+  const hasActiveFilters = React.useMemo(() => {
+    return (
+      appliedFilters.department !== 'All' ||
+      appliedFilters.admissionType !== 'All' ||
+      appliedFilters.fromYear !== '' ||
+      appliedFilters.toYear !== '' ||
+      appliedFilters.gender !== 'All' ||
+      !appliedFilters.activeStatus ||
+      appliedFilters.archivedStatus ||
+      appliedFilters.fromDate !== '' ||
+      appliedFilters.toDate !== '' ||
+      searchQuery !== ''
+    );
+  }, [appliedFilters, searchQuery]);
+
+  // Requirement 15: ESC key clears selected student checkboxes
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        setSelectedStudentIds([]);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      setSelectedStudentIds([]); // Clear selection when leaving Dashboard
+    };
+  }, [setSelectedStudentIds]);
 
   const handleMoreClick = (event: React.MouseEvent<HTMLElement>, student: StudentRecord) => {
     setMoreMenuAnchor({ anchorEl: event.currentTarget, student });
@@ -147,7 +178,7 @@ export const Dashboard: React.FC = () => {
       !q ||
       student.personal.studentName.toLowerCase().includes(q) ||
       student.personal.applicationNumber.toLowerCase().includes(q) ||
-      student.personal.registerNumber.toLowerCase().includes(q) ||
+      (student.personal.registerNumber || '').toLowerCase().includes(q) ||
       student.academic.department.toLowerCase().includes(q);
 
     // 2. Department
@@ -210,11 +241,18 @@ export const Dashboard: React.FC = () => {
     activePage * pageSize
   );
 
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      setSelectedStudentIds(paginatedStudents.map((s) => s.id));
-    } else {
+  const isAllSelected =
+    paginatedStudents.length > 0 &&
+    paginatedStudents.every((s) => selectedStudentIds.includes(s.id));
+
+  const isSomeSelected =
+    selectedStudentIds.length > 0 && !isAllSelected;
+
+  const handleHeaderCheckboxChange = () => {
+    if (isSomeSelected || isAllSelected) {
       setSelectedStudentIds([]);
+    } else {
+      setSelectedStudentIds(paginatedStudents.map((s) => s.id));
     }
   };
 
@@ -224,9 +262,53 @@ export const Dashboard: React.FC = () => {
     );
   };
 
+  // Requirement 14: Short Programme Name Mapping
+  const getProgramDisplayName = (programName?: string): string => {
+    if (!programName) return '—';
+    const p = programName.toUpperCase();
+    if (
+      p.includes('MASTER OF COMPUTER APPLICATIONS') ||
+      p.includes('PG – MASTER OF COMPUTER APPLICATIONS') ||
+      p === 'MCA'
+    ) {
+      return 'MCA';
+    }
+    if (
+      p.includes('M.TECH COMPUTER SCIENCE & ENGINEERING') ||
+      p.includes('M.TECH COMPUTER SCIENCE') ||
+      p.includes('M.TECH CSE') ||
+      p.includes('MTECH CSE')
+    ) {
+      return 'MTech CSE';
+    }
+    return programName;
+  };
+
   // Helper to get short department code
-  const getDeptCode = (department: string): string => {
+  const getDeptCode = (department?: string, program?: string): string => {
+    if (!department) return '—';
     const dept = department.toUpperCase();
+    const prog = (program || '').toUpperCase();
+
+    if (
+      dept.includes('MASTER OF COMPUTER APPLICATIONS') ||
+      dept.includes('COMPUTER APPLICATIONS') ||
+      dept === 'MCA'
+    ) {
+      return 'MCA';
+    }
+
+    if (
+      dept.includes('M.TECH COMPUTER SCIENCE') ||
+      dept.includes('MTECH COMPUTER SCIENCE') ||
+      dept.includes('M.TECH CSE') ||
+      dept.includes('MTECH CSE') ||
+      (prog === 'PG' && (dept.includes('COMPUTER SCIENCE') || dept.includes('CSE'))) ||
+      (prog.includes('M.TECH') && (dept.includes('COMPUTER SCIENCE') || dept.includes('CSE')))
+    ) {
+      return 'MTech CSE';
+    }
+
     if (dept.includes('COMPUTER SCIENCE')) return 'CSE';
     if (dept.includes('ELECTRONICS') && dept.includes('COMM')) return 'ECE';
     if (dept.includes('ELECTRICAL')) return 'EEE';
@@ -280,6 +362,8 @@ export const Dashboard: React.FC = () => {
             setSearchQuery(e.target.value);
             setActivePage(1);
           }}
+          autoComplete="off"
+          inputProps={getNoAutofillInputProps('dash_search')}
           placeholder="Search Student (Name, Reg No, App No)..."
           sx={{
             flexGrow: 1,
@@ -316,6 +400,35 @@ export const Dashboard: React.FC = () => {
             ),
           }}
         />
+
+        {/* Requirement 17: Reset Filters Button (Appears ONLY when >=1 filter is active) */}
+        {hasActiveFilters && (
+          <Button
+            onClick={handleClearFilters}
+            variant="outlined"
+            color="error"
+            sx={{
+              height: '48px',
+              borderRadius: '10px',
+              padding: '0 16px',
+              fontSize: '13px',
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              borderColor: isDark ? '#EF4444' : '#DC2626',
+              color: isDark ? '#FCA5A5' : '#DC2626',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 180ms ease-in-out',
+              '&:hover': {
+                backgroundColor: isDark ? 'rgba(239, 68, 68, 0.15)' : '#FEF2F2',
+                borderColor: '#DC2626',
+              },
+            }}
+          >
+            <X size={16} /> RESET FILTERS
+          </Button>
+        )}
 
         {/* Filter Button */}
         <Button
@@ -415,6 +528,8 @@ export const Dashboard: React.FC = () => {
               >
                 <MenuItem value="All">All Departments</MenuItem>
                 <MenuItem value="Computer Science & Engineering (CSE)">Computer Science & Engineering (CSE)</MenuItem>
+                <MenuItem value="MTech CSE">MTech CSE</MenuItem>
+                <MenuItem value="MCA">MCA</MenuItem>
                 <MenuItem value="Artificial Intelligence & Data Science (AI & DS)">Artificial Intelligence & Data Science (AI & DS)</MenuItem>
                 <MenuItem value="Artificial Intelligence & Machine Learning (AI & ML)">Artificial Intelligence & Machine Learning (AI & ML)</MenuItem>
                 <MenuItem value="Electronics & Communication Engineering (ECE)">Electronics & Communication Engineering (ECE)</MenuItem>
@@ -664,15 +779,9 @@ export const Dashboard: React.FC = () => {
               >
                 <TableCell padding="checkbox" sx={{ paddingLeft: '18px', verticalAlign: 'middle', width: '52px' }}>
                   <Checkbox
-                    indeterminate={
-                      selectedStudentIds.length > 0 &&
-                      selectedStudentIds.length < paginatedStudents.length
-                    }
-                    checked={
-                      paginatedStudents.length > 0 &&
-                      selectedStudentIds.length === paginatedStudents.length
-                    }
-                    onChange={handleSelectAll}
+                    indeterminate={isSomeSelected}
+                    checked={isAllSelected}
+                    onChange={handleHeaderCheckboxChange}
                     sx={{
                       color: isDark ? '#38BDF8' : '#0B3D91',
                       '& .MuiSvgIcon-root': { fontSize: 20 },
@@ -740,7 +849,7 @@ export const Dashboard: React.FC = () => {
                         {toUpper(student.personal.registerNumber)}
                       </TableCell>
                       <TableCell sx={{ ...tdStyle, fontWeight: 500, color: isDark ? '#CBD5E1' : '#1E293B' }}>
-                        {toUpper(getDeptCode(student.academic.department))}
+                        {toUpper(getDeptCode(student.academic.department, student.academic.program))}
                       </TableCell>
                       <TableCell sx={{ ...tdStyle, fontWeight: 500, color: isDark ? '#CBD5E1' : '#374151' }}>
                         {toUpper(student.academic.admissionCategory)}
@@ -952,7 +1061,7 @@ export const Dashboard: React.FC = () => {
         <MenuItem
           onClick={() => {
             if (moreMenuAnchor.student) {
-              navigator.clipboard.writeText(moreMenuAnchor.student.personal.registerNumber);
+              navigator.clipboard.writeText(moreMenuAnchor.student.personal.registerNumber || '');
               showSnackbar('Register number copied to clipboard!');
             }
             handleMoreClose();

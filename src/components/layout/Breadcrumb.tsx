@@ -3,12 +3,14 @@ import { Breadcrumbs, Link, Typography, Box } from '@mui/material';
 import { ChevronRight, Home } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useThemeContext } from '../../context/ThemeContext';
+import { useAdmission } from '../../context/AdmissionContext';
 
 export const AppBreadcrumb: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { mode } = useThemeContext();
   const isDark = mode === 'dark';
+  const { requestNavigation } = useAdmission();
 
   const getBreadcrumbs = () => {
     const path = location.pathname;
@@ -48,7 +50,7 @@ export const AppBreadcrumb: React.FC = () => {
         <Link
           underline="hover"
           sx={{ display: 'flex', alignItems: 'center', color: isDark ? '#8B949E' : '#667085', fontSize: '14px', fontWeight: 500, cursor: 'pointer' }}
-          onClick={() => navigate('/')}
+          onClick={() => requestNavigation(() => navigate('/'))}
         >
           <Home size={14} style={{ marginRight: '6px' }} /> ERP Portal
         </Link>
@@ -63,7 +65,7 @@ export const AppBreadcrumb: React.FC = () => {
               key={crumb.path}
               underline="hover"
               sx={{ color: isDark ? '#8B949E' : '#667085', fontSize: '14px', fontWeight: 500, cursor: 'pointer' }}
-              onClick={() => navigate(crumb.path)}
+              onClick={() => requestNavigation(() => navigate(crumb.path))}
             >
               {crumb.label}
             </Link>

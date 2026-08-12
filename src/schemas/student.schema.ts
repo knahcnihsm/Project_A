@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const studentDetailsSchema = z.object({
   applicationNumber: z.string().min(1, 'Application Number is required'),
-  registerNumber: z.string().min(1, 'Register Number is required'),
+  registerNumber: z.string().optional().or(z.literal('')),
   studentName: z.string().min(1, 'Student Name is required'),
   dateOfBirth: z.string().min(1, 'Date of Birth is required'),
   age: z.number().min(16, 'Age must be at least 16'),

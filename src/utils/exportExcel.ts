@@ -3,8 +3,8 @@ import { StudentRecord } from '../types';
 
 export const exportStudentsToExcel = (students: StudentRecord[], filename: string = 'Students_List.xlsx') => {
   const exportData = students.map((s) => ({
-    'Application No': s.personal.applicationNumber.toUpperCase(),
-    'Register No': s.personal.registerNumber.toUpperCase(),
+    'Application No': (s.personal.applicationNumber || '').toUpperCase(),
+    'Register No': (s.personal.registerNumber || '').toUpperCase(),
     'Student Name': s.personal.studentName.toUpperCase(),
     'DOB': s.personal.dateOfBirth,
     'Gender': s.personal.gender.toUpperCase(),
@@ -18,7 +18,7 @@ export const exportStudentsToExcel = (students: StudentRecord[], filename: strin
     'Father Name': s.parent.fatherName.toUpperCase(),
     'Father Mobile': s.parent.fatherMobile.toUpperCase(),
     'Mobile Number': s.communication.permanentAddress.mobileNumber.toUpperCase(),
-    'Email': s.communication.permanentAddress.email.toUpperCase(),
+    'Email': (s.communication.permanentAddress.email || s.personal.emailId || '').trim(),
     'Cut-Off Mark': s.fee.cutOffMark ?? 'N/A',
     'Merit Score (%)': s.fee.meritPercent ?? 'N/A',
     'Original Tuition Fee (₹/Yr)': s.fee.originalTuitionFee ?? 'N/A',
