@@ -269,28 +269,6 @@ export const Header: React.FC = () => {
           </Tooltip>
         </Box>
 
-        <Tooltip title="System Settings">
-          <IconButton
-            aria-label="Settings"
-            onClick={navigateToSettings}
-            sx={{
-              width: 38,
-              height: 38,
-              backgroundColor: isDark ? '#1E293B' : '#F0F9FF',
-              border: `1px solid ${isDark ? '#334155' : '#D6E4F0'}`,
-              borderRadius: '10px',
-              color: isDark ? '#94A3B8' : '#64748B',
-              transition: 'all 200ms ease-in-out',
-              '&:hover': {
-                backgroundColor: isDark ? '#334155' : '#E0F2FE',
-                transform: 'scale(1.05)',
-              },
-            }}
-          >
-            <Settings size={18} />
-          </IconButton>
-        </Tooltip>
-
         {/* Admin User Profile */}
         <Box
           onClick={handleProfileClick}
@@ -364,9 +342,6 @@ export const Header: React.FC = () => {
             },
           }}
         >
-          <MenuItem onClick={navigateToSettings} sx={{ gap: '10px', fontWeight: 600, fontSize: '14px' }}>
-            <User size={16} /> Profile Overview
-          </MenuItem>
           <MenuItem onClick={navigateToSettings} sx={{ gap: '10px', fontWeight: 600, fontSize: '14px' }}>
             <Settings size={16} /> Settings
           </MenuItem>
