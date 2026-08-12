@@ -431,4 +431,86 @@ class BulkAdmissionServiceTest {
         assertEquals(Boolean.FALSE, captor.getValue().getFee().getBusRequired());
         assertEquals(Boolean.FALSE, captor.getValue().getFee().getHostelRequired());
     }
+
+    @Test
+    void applyPersistsHscMarksRows() {
+        BulkUpdateRequest req = new BulkUpdateRequest(List.of(
+                new SheetDto("student_details", rows(studentDetailsRow())),
+                new SheetDto("parent_details", rows(parentRow())),
+                new SheetDto("address", rows(permanentAddressRow())),
+                new SheetDto("admission", rows(admissionRow("First Year B.Tech"))),
+                new SheetDto("qualifying_examination", rows(qualifyingExamRow())),
+                new SheetDto("student_fee", rows(feeRow())),
+                new SheetDto("hsc_academic_marks", rows(
+                        row("application_no", APP_NO, "subject_name", "MATHEMATICS", "maximum_marks", "100",
+                                "marks_obtained", "90", "percentage", "90"),
+                        row("application_no", APP_NO, "subject_name", "PHYSICS", "maximum_marks", "100",
+                                "marks_obtained", "85", "percentage", "85"))),
+                new SheetDto("hsc_vocational_marks", rows(
+                        row("application_no", APP_NO, "subject_name", "PRACTICAL I",
+                                "maximum_marks", "100", "marks_obtained", "70", "percentage", "70")))));
+
+        BulkAdmissionApplyResponse result = bulkAdmissionService.apply(req);
+
+        assertEquals(1, result.summary().createdRecords());
+        ArgumentCaptor<Student> captor = ArgumentCaptor.forClass(Student.class);
+        verify(studentRepository).save(captor.capture());
+        Student saved = captor.getValue();
+        assertEquals(2, saved.getQualifyingExam().getAcademicMarks().size());
+        assertEquals(1, saved.getQualifyingExam().getVocationalMarks().size());
+        assertEquals("MATHEMATICS", saved.getQualifyingExam().getAcademicMarks().get(0).getSubjectName());
+        assertEquals(0, new BigDecimal("70").compareTo(
+                saved.getQualifyingExam().getVocationalMarks().get(0).getMarksObtained()));
+    }
+
+    @Test
+    void validateFlagsHscMarksNotApplicableForNonFirstYear() {
+        Program pg = new Program();
+        pg.setProgramId(20L);
+        pg.setProgramName("PG");
+        pg.setDurationYears(2);
+        when(programRepository.findAll()).thenReturn(List.of(pg));
+        when(programRepository.findById(20L)).thenReturn(Optional.of(pg));
+
+        BulkUpdateRequest req = new BulkUpdateRequest(List.of(
+                new SheetDto("student_details", rows(studentDetailsRow())),
+                new SheetDto("parent_details", rows(parentRow())),
+                new SheetDto("address", rows(permanentAddressRow())),
+                new SheetDto("admission", rows(admissionRow("PG"))),
+                new SheetDto("pg_qualification", rows(row(
+                        "application_no", APP_NO, "university_name", "Pondicherry University",
+                        "exam_passed", "PG"))),
+                new SheetDto("student_fee", rows(feeRow())),
+                new SheetDto("hsc_vocational_marks", rows(row(
+                        "application_no", APP_NO, "subject_name", "VOCATIONAL SUBJECT THEORY",
+                        "maximum_marks", "100", "marks_obtained", "80")))));
+
+        BulkAdmissionPreviewResponse preview = bulkAdmissionService.validate(req);
+
+        assertEquals(1, preview.summary().invalidRecords());
+        assertTrue(preview.records().get(0).errors().stream()
+                .anyMatch(e -> e.contains("hsc_vocational_marks is not applicable for program PG")));
+    }
+
+    @Test
+    void validateFlagsDuplicateHscSubjectRows() {
+        BulkUpdateRequest req = new BulkUpdateRequest(List.of(
+                new SheetDto("student_details", rows(studentDetailsRow())),
+                new SheetDto("parent_details", rows(parentRow())),
+                new SheetDto("address", rows(permanentAddressRow())),
+                new SheetDto("admission", rows(admissionRow("First Year B.Tech"))),
+                new SheetDto("qualifying_examination", rows(qualifyingExamRow())),
+                new SheetDto("student_fee", rows(feeRow())),
+                new SheetDto("hsc_academic_marks", rows(
+                        row("application_no", APP_NO, "subject_name", "MATHEMATICS", "maximum_marks", "100",
+                                "marks_obtained", "90"),
+                        row("application_no", APP_NO, "subject_name", "mathematics", "maximum_marks", "100",
+                                "marks_obtained", "95")))));
+
+        BulkAdmissionPreviewResponse preview = bulkAdmissionService.validate(req);
+
+        assertEquals(1, preview.summary().invalidRecords());
+        assertTrue(preview.records().get(0).errors().stream()
+                .anyMatch(e -> e.contains("duplicate hsc_academic_marks rows for the same subject")));
+    }
 }

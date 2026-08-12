@@ -9,7 +9,10 @@ import com.rgcet.admission.entity.AdmissionCategory;
 import com.rgcet.admission.entity.AuditLog;
 import com.rgcet.admission.entity.Department;
 import com.rgcet.admission.entity.Gender;
+import com.rgcet.admission.entity.HSCAcademicMark;
+import com.rgcet.admission.entity.HSCVocationalMark;
 import com.rgcet.admission.entity.Program;
+import com.rgcet.admission.entity.QualifyingExam;
 import com.rgcet.admission.entity.Student;
 import com.rgcet.admission.entity.StudentStatus;
 import com.rgcet.admission.repository.AdmissionCategoryRepository;
@@ -24,6 +27,7 @@ import com.rgcet.admission.repository.StudentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -358,5 +363,89 @@ class BulkUpdateServiceTest {
         assertEquals(category, admission.getCategory());
         verify(studentRepository).save(student);
         verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    void validateFlagsHscMarksNotApplicableForNonFirstYear() {
+        Student student = activeStudent();
+        Program pg = new Program();
+        pg.setProgramName("PG");
+        Admission admission = new Admission();
+        admission.setStudent(student);
+        admission.setProgram(pg);
+        student.setAdmission(admission);
+        givenStudent(student);
+
+        BulkUpdateRequest req = request("hsc_vocational_marks", List.of(
+                row("application_no", APP_NO, "subject_name", "PRACTICAL I",
+                        "marks_obtained", "75")));
+
+        BulkUpdatePreviewResponse preview = bulkUpdateService.validate(req);
+
+        assertEquals(1, preview.summary().invalidRecords());
+        assertTrue(preview.records().get(0).errors().stream()
+                .anyMatch(e -> e.contains("hsc_vocational_marks is not applicable for program PG")));
+    }
+
+    @Test
+    void applyUpdatesExistingHscMarksRow() {
+        Student student = activeStudent();
+        QualifyingExam exam = new QualifyingExam();
+        exam.setStudent(student);
+        student.setQualifyingExam(exam);
+        HSCVocationalMark mark = new HSCVocationalMark();
+        mark.setQualifyingExam(exam);
+        mark.setSubjectName("PRACTICAL I");
+        mark.setMaximumMarks(new BigDecimal("100"));
+        mark.setMarksObtained(new BigDecimal("70"));
+        mark.setPercentage(new BigDecimal("70"));
+        exam.getVocationalMarks().add(mark);
+
+        Program firstYear = new Program();
+        firstYear.setProgramName("First Year B.Tech");
+        Admission admission = new Admission();
+        admission.setStudent(student);
+        admission.setProgram(firstYear);
+        student.setAdmission(admission);
+        givenStudent(student);
+
+        BulkUpdateRequest req = request("hsc_vocational_marks", List.of(
+                row("application_no", APP_NO, "subject_name", "PRACTICAL I",
+                        "marks_obtained", "75")));
+
+        BulkUpdateApplyResponse result = bulkUpdateService.apply(req);
+
+        assertEquals(1, result.summary().updatedRecords());
+        assertEquals(0, new BigDecimal("75").compareTo(mark.getMarksObtained()));
+        verify(studentRepository).save(student);
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    void applyAddsNewHscMarksRowWhenMissing() {
+        Student student = activeStudent();
+        QualifyingExam exam = new QualifyingExam();
+        exam.setStudent(student);
+        student.setQualifyingExam(exam);
+        Program firstYear = new Program();
+        firstYear.setProgramName("First Year B.Tech");
+        Admission admission = new Admission();
+        admission.setStudent(student);
+        admission.setProgram(firstYear);
+        student.setAdmission(admission);
+        givenStudent(student);
+
+        BulkUpdateRequest req = request("hsc_academic_marks", List.of(
+                row("application_no", APP_NO, "subject_name", "MATHEMATICS",
+                        "maximum_marks", "100", "marks_obtained", "90")));
+
+        BulkUpdateApplyResponse result = bulkUpdateService.apply(req);
+
+        assertEquals(1, result.summary().updatedRecords());
+        assertEquals(1, exam.getAcademicMarks().size());
+        assertEquals("MATHEMATICS", exam.getAcademicMarks().get(0).getSubjectName());
+        assertEquals(0, new BigDecimal("90").compareTo(exam.getAcademicMarks().get(0).getMarksObtained()));
+        verify(studentRepository).save(student);
+        verify(auditLogRepository, atLeastOnce()).save(any(AuditLog.class));
     }
 }

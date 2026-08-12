@@ -173,6 +173,16 @@ marks_obtained
 percentage
 ```
 
+Canonical subject rows per vocational student (5 rows):
+
+- VOCATIONAL SUBJECT THEORY
+- RELATED SUBJECT I
+- RELATED SUBJECT II
+- RELATED SUBJECT II PRACTICAL I  (sub-row of Related Subject II)
+- RELATED SUBJECT II PRACTICAL II (sub-row of Related Subject II)
+
+Note: Practical sub-rows are excluded from the engineering cut-off (Vocational Subject Theory + Related Subject I + Related Subject II = 300) but count toward total marks / overall percentage.
+
 ## Hostel
 
 ```

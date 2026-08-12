@@ -119,14 +119,36 @@ export const QualifyingExamStep: React.FC<{ onNext: () => void }> = ({ onNext })
     });
   };
 
-  const [vocationalMarks, setVocationalMarks] = useState<HSCSubjectMark[]>(
-    draftStudent.hscMarks?.vocationalMarks.length
-      ? draftStudent.hscMarks.vocationalMarks
-      : [
-          { subject: 'Vocational Subject Theory', monthYear: '', maxMarks: 100, marksObtained: 0, percentage: 0 },
-          { subject: 'Related Subject I', monthYear: '', maxMarks: 100, marksObtained: 0, percentage: 0 },
-          { subject: 'Related Subject II', monthYear: '', maxMarks: 100, marksObtained: 0, percentage: 0 },
-        ]
+  const DEFAULT_VOCATIONAL_MARKS: HSCSubjectMark[] = [
+    { subject: 'Vocational Subject Theory', monthYear: '', maxMarks: 100, marksObtained: 0, percentage: 0 },
+    { subject: 'Related Subject I', monthYear: '', maxMarks: 100, marksObtained: 0, percentage: 0 },
+    { subject: 'Related Subject II', monthYear: '', maxMarks: 100, marksObtained: 0, percentage: 0 },
+    { subject: 'Practical I', monthYear: '', maxMarks: 100, marksObtained: 0, percentage: 0 },
+    { subject: 'Practical II', monthYear: '', maxMarks: 100, marksObtained: 0, percentage: 0 },
+  ];
+
+  const normalizeVocationalMarks = (marks: HSCSubjectMark[]): HSCSubjectMark[] => {
+    if (!marks || marks.length === 0) return DEFAULT_VOCATIONAL_MARKS;
+    const normalized = marks.map((m) => {
+      const s = m.subject.trim();
+      if (/^(practical i|related subject ii practical i)$/i.test(s)) return { ...m, subject: 'Practical I' };
+      if (/^(practical ii|related subject ii practical ii)$/i.test(s)) return { ...m, subject: 'Practical II' };
+      if (/^(theory|related subject ii theory)$/i.test(s)) return { ...m, subject: 'Related Subject II' };
+      return m;
+    });
+    const result = [...normalized];
+    const ensure = (subject: string) => {
+      if (!result.some((m) => m.subject.trim().toLowerCase() === subject.toLowerCase())) {
+        result.push({ subject, monthYear: '', maxMarks: 100, marksObtained: 0, percentage: 0 });
+      }
+    };
+    ensure('Practical I');
+    ensure('Practical II');
+    return result;
+  };
+
+  const [vocationalMarks, setVocationalMarks] = useState<HSCSubjectMark[]>(() =>
+    normalizeVocationalMarks(draftStudent.hscMarks?.vocationalMarks || [])
   );
 
   // State for Lateral Entry Diploma

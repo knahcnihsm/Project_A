@@ -114,6 +114,22 @@ public class BulkUpdateSchemaService {
                 col("hsc_registration_no", TYPE_STRING, false, null, null),
                 col("hsc_percentage", TYPE_NUMBER, false, null, null))));
 
+        tables.add(new TableDto("hsc_academic_marks", List.of(
+                key(),
+                col("subject_name", TYPE_STRING, false, null, null),
+                col("month_year", TYPE_STRING, false, null, null),
+                col("maximum_marks", TYPE_NUMBER, false, null, null),
+                col("marks_obtained", TYPE_NUMBER, false, null, null),
+                col("percentage", TYPE_NUMBER, false, null, null))));
+
+        tables.add(new TableDto("hsc_vocational_marks", List.of(
+                key(),
+                col("subject_name", TYPE_STRING, false, null, null),
+                col("month_year", TYPE_STRING, false, null, null),
+                col("maximum_marks", TYPE_NUMBER, false, null, null),
+                col("marks_obtained", TYPE_NUMBER, false, null, null),
+                col("percentage", TYPE_NUMBER, false, null, null))));
+
         tables.add(new TableDto("diploma_details", List.of(
                 key(),
                 col("diploma", TYPE_STRING, false, null, null),

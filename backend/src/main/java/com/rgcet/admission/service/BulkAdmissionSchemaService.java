@@ -113,6 +113,22 @@ public class BulkAdmissionSchemaService {
                 col("hsc_percentage", TYPE_NUMBER, true, null, null),
                 col("cut_off_mark", TYPE_NUMBER, false, null, null))));
 
+        tables.add(new TableDto("hsc_academic_marks", List.of(
+                key(),
+                col("subject_name", TYPE_STRING, true, null, null),
+                col("month_year", TYPE_STRING, false, null, null),
+                col("maximum_marks", TYPE_NUMBER, true, null, null),
+                col("marks_obtained", TYPE_NUMBER, true, null, null),
+                col("percentage", TYPE_NUMBER, false, null, null))));
+
+        tables.add(new TableDto("hsc_vocational_marks", List.of(
+                key(),
+                col("subject_name", TYPE_STRING, true, null, null),
+                col("month_year", TYPE_STRING, false, null, null),
+                col("maximum_marks", TYPE_NUMBER, true, null, null),
+                col("marks_obtained", TYPE_NUMBER, true, null, null),
+                col("percentage", TYPE_NUMBER, false, null, null))));
+
         tables.add(new TableDto("diploma_details", List.of(
                 key(),
                 col("diploma", TYPE_STRING, true, null, null),

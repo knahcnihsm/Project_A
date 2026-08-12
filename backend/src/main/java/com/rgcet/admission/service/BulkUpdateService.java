@@ -22,6 +22,8 @@ import com.rgcet.admission.entity.Certificate;
 import com.rgcet.admission.entity.Department;
 import com.rgcet.admission.entity.DiplomaDetails;
 import com.rgcet.admission.entity.Gender;
+import com.rgcet.admission.entity.HSCAcademicMark;
+import com.rgcet.admission.entity.HSCVocationalMark;
 import com.rgcet.admission.entity.Hostel;
 import com.rgcet.admission.entity.PGQualification;
 import com.rgcet.admission.entity.ParentDetails;
@@ -81,6 +83,8 @@ public class BulkUpdateService {
 
     private static final Set<String> ACADEMIC_TABLES = Set.of(
             "qualifying_examination", "diploma_details", "pg_qualification");
+    private static final Set<String> HSC_MARK_TABLES = Set.of(
+            "hsc_academic_marks", "hsc_vocational_marks");
 
     private static final Map<String, String> PROGRAM_ALIASES = Map.of(
             "FIRST YEAR", "First Year B.Tech",
@@ -299,6 +303,19 @@ public class BulkUpdateService {
                             break;
                         }
                     }
+                } else if (HSC_MARK_TABLES.contains(e.getKey())) {
+                    Set<String> subjects = new java.util.HashSet<>();
+                    for (Row row : rows) {
+                        if (!e.getKey().equals(row.table)) {
+                            continue;
+                        }
+                        String s = row.values.get("subject_name");
+                        if (s == null || !subjects.add(s.toUpperCase())) {
+                            outcome.errors.add(appNo + ": duplicate " + e.getKey()
+                                    + " rows for the same subject.");
+                            break;
+                        }
+                    }
                 } else {
                     outcome.errors.add(appNo + ": multiple rows supplied for table '" + e.getKey() + "'.");
                 }
@@ -319,6 +336,10 @@ public class BulkUpdateService {
             if (allowed != null && !allowed.contains(row.table)) {
                 outcome.errors.add(row.table + " is not applicable for program " + programName);
             }
+        }
+        if (HSC_MARK_TABLES.contains(row.table)
+                && programName != null && !"First Year B.Tech".equals(programName)) {
+            outcome.errors.add(row.table + " is not applicable for program " + programName);
         }
 
         Map<String, ColumnDto> columns = new LinkedHashMap<>();
@@ -472,7 +493,8 @@ public class BulkUpdateService {
 
     private boolean isDiscriminatorColumn(String table, String column) {
         return ("address".equals(table) && "address_type".equals(column))
-                || ("student_certificate".equals(table) && "certificate_id".equals(column));
+                || ("student_certificate".equals(table) && "certificate_id".equals(column))
+                || (HSC_MARK_TABLES.contains(table) && "subject_name".equals(column));
     }
 
     private String canonicalizeForColumn(com.rgcet.admission.dto.BulkUpdateDtos.TableDto table,
@@ -534,6 +556,44 @@ public class BulkUpdateService {
             case "pg_qualification" -> currentPg(student, column);
             case "student_fee" -> currentFee(student, row, column);
             case "student_certificate" -> currentCertificate(student, row, column);
+            case "hsc_academic_marks" -> currentHscAcademic(student, row, column);
+            case "hsc_vocational_marks" -> currentHscVocational(student, row, column);
+            default -> null;
+        };
+    }
+
+    private String currentHscAcademic(Student student, Row row, String column) {
+        QualifyingExam exam = student.getQualifyingExam();
+        if (exam == null) {
+            return null;
+        }
+        HSCAcademicMark mark = findHscAcademic(exam, subjectOf(row));
+        if (mark == null) {
+            return null;
+        }
+        return switch (column) {
+            case "month_year" -> mark.getMonthYear();
+            case "maximum_marks" -> plain(mark.getMaximumMarks());
+            case "marks_obtained" -> plain(mark.getMarksObtained());
+            case "percentage" -> plain(mark.getPercentage());
+            default -> null;
+        };
+    }
+
+    private String currentHscVocational(Student student, Row row, String column) {
+        QualifyingExam exam = student.getQualifyingExam();
+        if (exam == null) {
+            return null;
+        }
+        HSCVocationalMark mark = findHscVocational(exam, subjectOf(row));
+        if (mark == null) {
+            return null;
+        }
+        return switch (column) {
+            case "month_year" -> mark.getMonthYear();
+            case "maximum_marks" -> plain(mark.getMaximumMarks());
+            case "marks_obtained" -> plain(mark.getMarksObtained());
+            case "percentage" -> plain(mark.getPercentage());
             default -> null;
         };
     }
@@ -712,6 +772,8 @@ public class BulkUpdateService {
             case "pg_qualification" -> applyPg(student, column, value);
             case "student_fee" -> applyFee(student, row, column, value);
             case "student_certificate" -> applyCertificate(student, row, column, value);
+            case "hsc_academic_marks" -> applyHscAcademic(student, row, column, value);
+            case "hsc_vocational_marks" -> applyHscVocational(student, row, column, value);
             default -> { /* no-op */ }
         }
     }
@@ -858,6 +920,50 @@ public class BulkUpdateService {
         }
     }
 
+    private void applyHscAcademic(Student student, Row row, String column, String value) {
+        QualifyingExam exam = getOrCreateQualifyingExam(student);
+        String subject = subjectOf(row);
+        if (subject == null) {
+            return;
+        }
+        HSCAcademicMark mark = findHscAcademic(exam, subject);
+        if (mark == null) {
+            mark = new HSCAcademicMark();
+            mark.setQualifyingExam(exam);
+            mark.setSubjectName(subject);
+            exam.getAcademicMarks().add(mark);
+        }
+        switch (column) {
+            case "month_year" -> mark.setMonthYear(value);
+            case "maximum_marks" -> mark.setMaximumMarks(new BigDecimal(value));
+            case "marks_obtained" -> mark.setMarksObtained(new BigDecimal(value));
+            case "percentage" -> mark.setPercentage(new BigDecimal(value));
+            default -> { /* no-op */ }
+        }
+    }
+
+    private void applyHscVocational(Student student, Row row, String column, String value) {
+        QualifyingExam exam = getOrCreateQualifyingExam(student);
+        String subject = subjectOf(row);
+        if (subject == null) {
+            return;
+        }
+        HSCVocationalMark mark = findHscVocational(exam, subject);
+        if (mark == null) {
+            mark = new HSCVocationalMark();
+            mark.setQualifyingExam(exam);
+            mark.setSubjectName(subject);
+            exam.getVocationalMarks().add(mark);
+        }
+        switch (column) {
+            case "month_year" -> mark.setMonthYear(value);
+            case "maximum_marks" -> mark.setMaximumMarks(new BigDecimal(value));
+            case "marks_obtained" -> mark.setMarksObtained(new BigDecimal(value));
+            case "percentage" -> mark.setPercentage(new BigDecimal(value));
+            default -> { /* no-op */ }
+        }
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private ResolvedRef resolveReference(String fkReference, String rawValue) {
@@ -980,6 +1086,35 @@ public class BulkUpdateService {
         for (StudentCertificate sc : student.getCertificates()) {
             if (sc.getCertificate() != null && sc.getCertificate().getCertificateId().equals(certificateId)) {
                 return sc;
+            }
+        }
+        return null;
+    }
+
+    private static String subjectOf(Row row) {
+        String s = row.values.get("subject_name");
+        return isBlank(s) ? null : s.trim().toUpperCase();
+    }
+
+    private HSCAcademicMark findHscAcademic(QualifyingExam exam, String subject) {
+        if (subject == null) {
+            return null;
+        }
+        for (HSCAcademicMark mark : exam.getAcademicMarks()) {
+            if (subject.equalsIgnoreCase(mark.getSubjectName())) {
+                return mark;
+            }
+        }
+        return null;
+    }
+
+    private HSCVocationalMark findHscVocational(QualifyingExam exam, String subject) {
+        if (subject == null) {
+            return null;
+        }
+        for (HSCVocationalMark mark : exam.getVocationalMarks()) {
+            if (subject.equalsIgnoreCase(mark.getSubjectName())) {
+                return mark;
             }
         }
         return null;

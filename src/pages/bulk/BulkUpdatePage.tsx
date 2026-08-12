@@ -111,6 +111,11 @@ const FIELD_LABELS: Record<string, string> = {
   certificate_id: 'Certificate',
   is_submitted: 'Submitted',
   file_path: 'File Path',
+  subject_name: 'Subject',
+  month_year: 'Month/Year',
+  maximum_marks: 'Maximum Marks',
+  marks_obtained: 'Marks Obtained',
+  percentage: 'Percentage',
 };
 
 const fieldLabel = (name: string): string => {
@@ -219,6 +224,34 @@ const SAMPLE_DATA: Record<string, Record<string, string>[]> = {
       certificate_id: 'Provisional Allotment Order',
       is_submitted: 'TRUE',
       file_path: '',
+    },
+  ],
+  hsc_academic_marks: [
+    {
+      application_no: 'RGCET/2026/2001',
+      subject_name: 'MATHEMATICS',
+      month_year: 'MAY 2026',
+      maximum_marks: '100',
+      marks_obtained: '92',
+      percentage: '92',
+    },
+    {
+      application_no: 'RGCET/2026/2001',
+      subject_name: 'PHYSICS',
+      month_year: 'MAY 2026',
+      maximum_marks: '100',
+      marks_obtained: '86',
+      percentage: '86',
+    },
+  ],
+  hsc_vocational_marks: [
+    {
+      application_no: 'RGCET/2026/2001',
+      subject_name: 'PRACTICAL I',
+      month_year: 'MAY 2026',
+      maximum_marks: '100',
+      marks_obtained: '75',
+      percentage: '75',
     },
   ],
 };

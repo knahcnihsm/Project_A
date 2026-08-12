@@ -40,10 +40,18 @@ export const calculateHSCCutOff = (marks: HSCSubjectMark[], stream: 'Academic' |
     const cutoff = mathsPct + physicsPct + thirdPct;
     return Number(cutoff.toFixed(2));
   } else {
-    // Vocational Formula: Vocational Subject (100) + Related I (100) + Related II (100) = 300
-    const vocational = marks.find((m) => m.subject.toLowerCase().includes('vocational'));
-    const related1 = marks.find((m) => m.subject.toLowerCase().includes('related subject i'));
-    const related2 = marks.find((m) => m.subject.toLowerCase().includes('related subject ii'));
+    // Vocational Formula: Vocational Subject Theory (100) + Related I (100) + Related II (Theory) (100) = 300
+    // Practical sub-rows under Related Subject II (Practical I / Practical II) are NOT part of the cut-off.
+    const isPractical = (m: HSCSubjectMark): boolean => /practical/i.test(m.subject);
+    const vocational = marks.find((m) => /^vocational/i.test(m.subject.trim()) && !isPractical(m));
+    const related1 = marks.find((m) => {
+      const s = m.subject.trim().toLowerCase();
+      return !isPractical(m) && (s === 'related subject i' || s === 'related subject i theory');
+    });
+    const related2 = marks.find((m) => {
+      const s = m.subject.trim().toLowerCase();
+      return !isPractical(m) && (s === 'related subject ii' || s === 'related subject ii theory');
+    });
 
     const vocPct = vocational ? getPercentage(vocational) : 0;
     const r1Pct = related1 ? getPercentage(related1) : 0;

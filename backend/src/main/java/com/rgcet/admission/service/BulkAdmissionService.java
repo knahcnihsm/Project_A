@@ -20,6 +20,8 @@ import com.rgcet.admission.entity.Certificate;
 import com.rgcet.admission.entity.Department;
 import com.rgcet.admission.entity.DiplomaDetails;
 import com.rgcet.admission.entity.Gender;
+import com.rgcet.admission.entity.HSCAcademicMark;
+import com.rgcet.admission.entity.HSCVocationalMark;
 import com.rgcet.admission.entity.PGQualification;
 import com.rgcet.admission.entity.ParentDetails;
 import com.rgcet.admission.entity.PaymentStatus;
@@ -79,6 +81,8 @@ public class BulkAdmissionService {
 
     private static final Set<String> ACADEMIC_TABLES = Set.of(
             "qualifying_examination", "diploma_details", "pg_qualification");
+    private static final Set<String> HSC_MARK_TABLES = Set.of(
+            "hsc_academic_marks", "hsc_vocational_marks");
     private static final Set<String> CORE_TABLES = Set.of(
             "student_details", "parent_details", "admission", "student_fee");
 
@@ -241,6 +245,12 @@ public class BulkAdmissionService {
                 outcome.errors.add(t + " is not applicable for program " + programName);
             }
         }
+        boolean firstYear = "First Year B.Tech".equals(programName);
+        for (String t : HSC_MARK_TABLES) {
+            if (present.contains(t) && !firstYear) {
+                outcome.errors.add(t + " is not applicable for program " + programName);
+            }
+        }
 
         for (Row row : rows) {
             validateRow(row, outcome);
@@ -279,6 +289,19 @@ public class BulkAdmissionService {
                         String c = row.values.get("certificate_id");
                         if (c == null || !certs.add(c.toUpperCase())) {
                             outcome.errors.add(outcome.applicationNo + ": duplicate student_certificate rows for the same certificate.");
+                            break;
+                        }
+                    }
+                } else if (HSC_MARK_TABLES.contains(e.getKey())) {
+                    Set<String> subjects = new HashSet<>();
+                    for (Row row : outcome.rows) {
+                        if (!e.getKey().equals(row.table)) {
+                            continue;
+                        }
+                        String s = row.values.get("subject_name");
+                        if (s == null || !subjects.add(s.toUpperCase())) {
+                            outcome.errors.add(outcome.applicationNo + ": duplicate " + e.getKey()
+                                    + " rows for the same subject.");
                             break;
                         }
                     }
@@ -588,17 +611,41 @@ public class BulkAdmissionService {
         }
 
         Row qeRow = firstRow(outcome.rows, "qualifying_examination");
-        if (qeRow != null) {
+        List<Row> academicMarksRows = rowsOf(outcome.rows, "hsc_academic_marks");
+        List<Row> vocationalMarksRows = rowsOf(outcome.rows, "hsc_vocational_marks");
+        if (qeRow != null || !academicMarksRows.isEmpty() || !vocationalMarksRows.isEmpty()) {
             QualifyingExam qe = new QualifyingExam();
             qe.setStudent(student);
-            qe.setInstitutionName(str(qeRow, "institution_name"));
-            qe.setInstitutionPlace(str(qeRow, "institution_place"));
-            qe.setExamPassed(str(qeRow, "exam_passed"));
-            qe.setMonthYearOfPassing(str(qeRow, "month_year_of_passing"));
-            qe.setSslcRegistrationNo(str(qeRow, "sslc_registration_no"));
-            qe.setSslcPercentage(decimal(qeRow, "sslc_percentage"));
-            qe.setHscRegistrationNo(str(qeRow, "hsc_registration_no"));
-            qe.setHscPercentage(decimal(qeRow, "hsc_percentage"));
+            if (qeRow != null) {
+                qe.setInstitutionName(str(qeRow, "institution_name"));
+                qe.setInstitutionPlace(str(qeRow, "institution_place"));
+                qe.setExamPassed(str(qeRow, "exam_passed"));
+                qe.setMonthYearOfPassing(str(qeRow, "month_year_of_passing"));
+                qe.setSslcRegistrationNo(str(qeRow, "sslc_registration_no"));
+                qe.setSslcPercentage(decimal(qeRow, "sslc_percentage"));
+                qe.setHscRegistrationNo(str(qeRow, "hsc_registration_no"));
+                qe.setHscPercentage(decimal(qeRow, "hsc_percentage"));
+            }
+            for (Row mRow : academicMarksRows) {
+                HSCAcademicMark mark = new HSCAcademicMark();
+                mark.setQualifyingExam(qe);
+                mark.setSubjectName(str(mRow, "subject_name"));
+                mark.setMonthYear(str(mRow, "month_year"));
+                mark.setMaximumMarks(decimal(mRow, "maximum_marks"));
+                mark.setMarksObtained(decimal(mRow, "marks_obtained"));
+                mark.setPercentage(decimal(mRow, "percentage"));
+                qe.getAcademicMarks().add(mark);
+            }
+            for (Row mRow : vocationalMarksRows) {
+                HSCVocationalMark mark = new HSCVocationalMark();
+                mark.setQualifyingExam(qe);
+                mark.setSubjectName(str(mRow, "subject_name"));
+                mark.setMonthYear(str(mRow, "month_year"));
+                mark.setMaximumMarks(decimal(mRow, "maximum_marks"));
+                mark.setMarksObtained(decimal(mRow, "marks_obtained"));
+                mark.setPercentage(decimal(mRow, "percentage"));
+                qe.getVocationalMarks().add(mark);
+            }
             student.setQualifyingExam(qe);
         }
 
@@ -752,6 +799,10 @@ public class BulkAdmissionService {
 
     private Row firstRow(List<Row> rows, String table) {
         return rows.stream().filter(r -> table.equals(r.table)).findFirst().orElse(null);
+    }
+
+    private List<Row> rowsOf(List<Row> rows, String table) {
+        return rows.stream().filter(r -> table.equals(r.table)).toList();
     }
 
     private Row addressRow(RecordOutcome outcome, String type) {
