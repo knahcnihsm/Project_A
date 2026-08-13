@@ -25,6 +25,13 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ title, items }) => {
         borderRadius: '12px',
         padding: '20px',
         marginTop: '20px',
+        transition: 'all 250ms ease-in-out',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: isDark
+            ? '0 10px 30px rgba(0, 0, 0, 0.45)'
+            : '0 10px 30px rgba(11, 61, 145, 0.12)',
+        },
       }}
     >
       <Typography

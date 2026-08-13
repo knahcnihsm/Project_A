@@ -32,6 +32,7 @@ import { formatDateDisplay } from '../../utils/dateUtils';
 import { toUpper } from '../../utils/caseUtils';
 import { ARCHIVE_REASONS } from '../../utils/constants';
 import { useThemeContext } from '../../context/ThemeContext';
+import { StudentCards } from '../../components/student/StudentCards';
 
 export const ArchivedStudents: React.FC = () => {
   const navigate = useNavigate();
@@ -323,15 +324,15 @@ export const ArchivedStudents: React.FC = () => {
             variant="outlined"
             sx={{
               height: '48px',
-              minWidth: '200px',
+              minWidth: { xs: '48px', sm: '200px' },
               borderRadius: '10px',
               backgroundColor: isDark ? '#0D1117' : '#FFFFFF',
               color: isDark ? '#38BDF8' : '#0B3D91',
               border: `1px solid ${isDark ? '#334155' : '#D6E4F0'}`,
               display: 'flex',
-              justifyContent: 'space-between',
+              justifyContent: { xs: 'center', sm: 'space-between' },
               alignItems: 'center',
-              padding: '0 18px',
+              padding: { xs: 0, sm: '0 18px' },
               fontSize: '14px',
               fontWeight: 600,
               letterSpacing: '0.04em',
@@ -344,11 +345,16 @@ export const ArchivedStudents: React.FC = () => {
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Filter size={18} color={isDark ? '#38BDF8' : '#0B3D91'} />
-              <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '14px', letterSpacing: '0.05em' }}>
+              <Typography
+                variant="body1"
+                sx={{ display: { xs: 'none', sm: 'block' }, fontWeight: 700, fontSize: '14px', letterSpacing: '0.05em' }}
+              >
                 FILTER
               </Typography>
             </Box>
-            <ChevronDown size={18} color={isDark ? '#38BDF8' : '#0B3D91'} />
+            <Box sx={{ display: { xs: 'none', sm: 'flex' } }}>
+              <ChevronDown size={18} color={isDark ? '#38BDF8' : '#0B3D91'} />
+            </Box>
           </Button>
 
           {/* Popover Filter Controls */}
@@ -368,7 +374,7 @@ export const ArchivedStudents: React.FC = () => {
             PaperProps={{
               sx: {
                 borderRadius: '18px',
-                width: '400px',
+                width: { xs: 'calc(100vw - 24px)', sm: '400px' },
                 padding: '24px',
                 backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
                 color: isDark ? '#FFFFFF' : '#1E293B',
@@ -604,7 +610,58 @@ export const ArchivedStudents: React.FC = () => {
         </Box>
 
         {/* Data Grid Table */}
-        <Box sx={{ overflowX: 'auto', border: `1px solid ${isDark ? '#334155' : '#E2EBF6'}`, borderRadius: '10px' }}>
+        {/* Mobile Card View */}
+        <Box sx={{ display: { xs: 'block', md: 'none' }, marginBottom: '16px' }}>
+          <StudentCards
+            students={paginatedArchived}
+            selectedIds={selectedIds}
+            onToggleSelect={handleSelectOne}
+            renderActions={(student) => (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                <Tooltip title="View Profile (Read Only)">
+                  <IconButton
+                    size="small"
+                    onClick={() => startViewStudent(student)}
+                    sx={{
+                      color: isDark ? '#38BDF8' : '#0D47A1',
+                      width: 32,
+                      height: 32,
+                      transition: 'all 180ms ease-in-out',
+                      '&:hover': {
+                        backgroundColor: isDark ? 'rgba(56, 189, 248, 0.12)' : 'rgba(13, 71, 161, 0.08)',
+                        transform: 'scale(1.1)',
+                      },
+                    }}
+                  >
+                    <Eye size={18} />
+                  </IconButton>
+                </Tooltip>
+
+                <Tooltip title="Restore Student">
+                  <IconButton
+                    size="small"
+                    onClick={() => handleSingleRestore(student.id, student.personal.studentName)}
+                    sx={{
+                      color: '#16A34A',
+                      width: 32,
+                      height: 32,
+                      transition: 'all 180ms ease-in-out',
+                      '&:hover': {
+                        backgroundColor: 'rgba(22, 163, 74, 0.12)',
+                        transform: 'scale(1.1)',
+                      },
+                    }}
+                  >
+                    <RotateCcw size={18} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            )}
+          />
+        </Box>
+
+        {/* Table */}
+        <Box sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto', border: `1px solid ${isDark ? '#334155' : '#E2EBF6'}`, borderRadius: '10px' }}>
           <Table sx={{ minWidth: '900px', tableLayout: 'fixed' }}>
             <TableHead>
               <TableRow

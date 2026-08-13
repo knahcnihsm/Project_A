@@ -26,7 +26,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [mode]);
 
   const toggleTheme = () => {
-    setMode((prev) => (prev === 'light' ? 'dark' : 'light'));
+    const apply = () => setMode((prev) => (prev === 'light' ? 'dark' : 'light'));
+
+    if (document.startViewTransition) {
+      document.startViewTransition(apply);
+    } else {
+      const root = document.documentElement;
+      root.classList.add('theme-switching');
+      window.setTimeout(() => root.classList.remove('theme-switching'), 500);
+      apply();
+    }
   };
 
   const currentTheme = mode === 'light' ? lightTheme : darkTheme;

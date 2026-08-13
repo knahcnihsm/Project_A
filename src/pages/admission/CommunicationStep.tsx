@@ -186,6 +186,7 @@ export const CommunicationStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
               render={({ field }) => (
                 <TextField
                   {...field}
+                  label="Email ID"
                   value={field.value || ''}
                   onChange={(e) => field.onChange(e.target.value.trim())}
                   onBlur={(e) => field.onChange(e.target.value.trim())}
@@ -313,6 +314,7 @@ export const CommunicationStep: React.FC<{ onNext: () => void }> = ({ onNext }) 
               render={({ field }) => (
                 <TextField
                   {...field}
+                  label="Email ID"
                   value={field.value || ''}
                   onChange={(e) => field.onChange(e.target.value.trim())}
                   onBlur={(e) => field.onChange(e.target.value.trim())}

@@ -86,6 +86,9 @@ interface AdmissionContextType {
   masterData: MasterData;
   masterDataLoading: boolean;
 
+  // Initial app bootstrap loading state
+  appLoading: boolean;
+
   // Active step & Draft form state
   activeStep: number;
   setActiveStep: (step: number) => void;
@@ -695,6 +698,7 @@ export const AdmissionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       );
       clearCurrentDraft();
       startAddAdmission();
+      startViewStudent(record);
       return true;
     } catch (e) {
       showSnackbar(messageFromError(e), 'error');
@@ -756,6 +760,7 @@ export const AdmissionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setSelectedStudentIds,
         masterData,
         masterDataLoading,
+        appLoading: initialLoading || masterDataLoading,
         activeStep,
         setActiveStep: setActiveStepSafe,
         draftStudent,

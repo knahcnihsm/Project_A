@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -42,11 +42,19 @@ import {
   isCertificatesComplete,
 } from '../../utils/sectionValidation';
 
-export const Sidebar: React.FC = () => {
+export const Sidebar: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { mode } = useThemeContext();
   const isDark = mode === 'dark';
+
+  const prevPathRef = useRef(location.pathname);
+  useEffect(() => {
+    if (prevPathRef.current !== location.pathname) {
+      prevPathRef.current = location.pathname;
+      onNavigate?.();
+    }
+  }, [location.pathname]);
 
   const {
     activeStep,

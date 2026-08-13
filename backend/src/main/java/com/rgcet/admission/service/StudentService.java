@@ -563,17 +563,21 @@ public class StudentService {
 
     private void applyPersonal(Student student, PersonalStepRequest req) {
         student.setApplicationNo(req.applicationNumber());
-        student.setRegisterNo(req.registerNumber());
+        student.setRegisterNo(blankToNull(req.registerNumber()));
         student.setStudentName(req.studentName());
         student.setDateOfBirth(req.dateOfBirth());
         student.setAge(computeAge(req.dateOfBirth()));
         student.setAadhaarNo(req.aadhaarNumber());
-        student.setMobileNumber(req.mobileNumber());
-        student.setEmailId(req.emailId() != null ? req.emailId().trim() : null);
+        student.setMobileNumber(blankToNull(req.mobileNumber()));
+        student.setEmailId(blankToNull(req.emailId()));
         student.setGender(req.gender());
         student.setDistrict(req.district());
         student.setNationality(req.nationality());
         student.setCaste(req.caste());
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     Integer computeAge(java.time.LocalDate dateOfBirth) {

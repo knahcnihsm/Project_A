@@ -23,6 +23,7 @@ import {
   Radio,
   Select,
 } from '@mui/material';
+import { motion } from 'motion/react';
 import {
   Search,
   Filter,
@@ -41,9 +42,11 @@ import { generateStudentPdf } from '../../utils/exportPdf';
 import { formatDateDisplay } from '../../utils/dateUtils';
 import { getNoAutofillInputProps } from '../../utils/autofillHelper';
 import { toUpper } from '../../utils/caseUtils';
+import { getDeptCode } from '../../utils/departmentUtils';
 import { StudentRecord } from '../../types';
 import { useThemeContext } from '../../context/ThemeContext';
 import { ArchiveStudentModal } from '../../components/student/ArchiveStudentModal';
+import { StudentCards } from '../../components/student/StudentCards';
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -262,65 +265,6 @@ export const Dashboard: React.FC = () => {
     );
   };
 
-  // Requirement 14: Short Programme Name Mapping
-  const getProgramDisplayName = (programName?: string): string => {
-    if (!programName) return '—';
-    const p = programName.toUpperCase();
-    if (
-      p.includes('MASTER OF COMPUTER APPLICATIONS') ||
-      p.includes('PG – MASTER OF COMPUTER APPLICATIONS') ||
-      p === 'MCA'
-    ) {
-      return 'MCA';
-    }
-    if (
-      p.includes('M.TECH COMPUTER SCIENCE & ENGINEERING') ||
-      p.includes('M.TECH COMPUTER SCIENCE') ||
-      p.includes('M.TECH CSE') ||
-      p.includes('MTECH CSE')
-    ) {
-      return 'MTech CSE';
-    }
-    return programName;
-  };
-
-  // Helper to get short department code
-  const getDeptCode = (department?: string, program?: string): string => {
-    if (!department) return '—';
-    const dept = department.toUpperCase();
-    const prog = (program || '').toUpperCase();
-
-    if (
-      dept.includes('MASTER OF COMPUTER APPLICATIONS') ||
-      dept.includes('COMPUTER APPLICATIONS') ||
-      dept === 'MCA'
-    ) {
-      return 'MCA';
-    }
-
-    if (
-      dept.includes('M.TECH COMPUTER SCIENCE') ||
-      dept.includes('MTECH COMPUTER SCIENCE') ||
-      dept.includes('M.TECH CSE') ||
-      dept.includes('MTECH CSE') ||
-      (prog === 'PG' && (dept.includes('COMPUTER SCIENCE') || dept.includes('CSE'))) ||
-      (prog.includes('M.TECH') && (dept.includes('COMPUTER SCIENCE') || dept.includes('CSE')))
-    ) {
-      return 'MTech CSE';
-    }
-
-    if (dept.includes('COMPUTER SCIENCE')) return 'CSE';
-    if (dept.includes('ELECTRONICS') && dept.includes('COMM')) return 'ECE';
-    if (dept.includes('ELECTRICAL')) return 'EEE';
-    if (dept.includes('MECHANICAL')) return 'MECH';
-    if (dept.includes('INFORMATION TECHNOLOGY')) return 'IT';
-    if (dept.includes('CIVIL')) return 'CIVIL';
-    if (dept.includes('ARTIFICIAL INTELLIGENCE') && dept.includes('DATA')) return 'AI&DS';
-    if (dept.includes('ARTIFICIAL INTELLIGENCE') && dept.includes('ML')) return 'AI&ML';
-    if (dept.includes('MBA') || dept.includes('BUSINESS')) return 'MBA';
-    if (dept.includes('BIOMEDICAL') || dept.includes('BIO')) return 'BME';
-    return department;
-  };
 
   const thStyle = {
     fontWeight: 700,
@@ -409,8 +353,9 @@ export const Dashboard: React.FC = () => {
             color="error"
             sx={{
               height: '48px',
+              minWidth: { xs: '48px', sm: 'auto' },
               borderRadius: '10px',
-              padding: '0 16px',
+              padding: { xs: 0, sm: '0 16px' },
               fontSize: '13px',
               fontWeight: 700,
               letterSpacing: '0.04em',
@@ -418,6 +363,7 @@ export const Dashboard: React.FC = () => {
               color: isDark ? '#FCA5A5' : '#DC2626',
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'center',
               gap: '6px',
               transition: 'all 180ms ease-in-out',
               '&:hover': {
@@ -426,7 +372,10 @@ export const Dashboard: React.FC = () => {
               },
             }}
           >
-            <X size={16} /> RESET FILTERS
+            <X size={16} />
+            <Typography component="span" sx={{ display: { xs: 'none', sm: 'inline' }, fontWeight: 700, fontSize: '13px', letterSpacing: '0.04em' }}>
+              RESET FILTERS
+            </Typography>
           </Button>
         )}
 
@@ -436,7 +385,7 @@ export const Dashboard: React.FC = () => {
           variant="outlined"
           sx={{
             height: '48px',
-            minWidth: '200px',
+            minWidth: { xs: '48px', sm: '200px' },
             borderRadius: '10px',
             backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
             color: isDark ? '#38BDF8' : '#0B3D91',
@@ -445,9 +394,9 @@ export const Dashboard: React.FC = () => {
               ? '0 2px 10px rgba(0, 0, 0, 0.2)'
               : '0 2px 10px rgba(11, 61, 145, 0.04)',
             display: 'flex',
-            justifyContent: 'space-between',
+            justifyContent: { xs: 'center', sm: 'space-between' },
             alignItems: 'center',
-            padding: '0 18px',
+            padding: { xs: 0, sm: '0 18px' },
             fontSize: '14px',
             fontWeight: 600,
             letterSpacing: '0.04em',
@@ -460,11 +409,16 @@ export const Dashboard: React.FC = () => {
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Filter size={18} color={isDark ? '#38BDF8' : '#0B3D91'} />
-            <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '14px', letterSpacing: '0.05em' }}>
+            <Typography
+              variant="body1"
+              sx={{ display: { xs: 'none', sm: 'block' }, fontWeight: 700, fontSize: '14px', letterSpacing: '0.05em' }}
+            >
               FILTER
             </Typography>
           </Box>
-          <ChevronDown size={18} color={isDark ? '#38BDF8' : '#0B3D91'} />
+          <Box sx={{ display: { xs: 'none', sm: 'flex' } }}>
+            <ChevronDown size={18} color={isDark ? '#38BDF8' : '#0B3D91'} />
+          </Box>
         </Button>
 
         {/* Filter Dropdown Menu (Modal Popup) */}
@@ -485,7 +439,7 @@ export const Dashboard: React.FC = () => {
           PaperProps={{
             sx: {
               borderRadius: '18px',
-              width: '400px',
+              width: { xs: 'calc(100vw - 24px)', sm: '400px' },
               padding: '24px',
               backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
               color: isDark ? '#FFFFFF' : '#1E293B',
@@ -526,15 +480,17 @@ export const Dashboard: React.FC = () => {
                   },
                 }}
               >
-                <MenuItem value="All">All Departments</MenuItem>
-                <MenuItem value="Computer Science & Engineering (CSE)">Computer Science & Engineering (CSE)</MenuItem>
+                <MenuItem value="All">All</MenuItem>
+                <MenuItem value="Computer Science & Engineering (CSE)">CSE</MenuItem>
+                <MenuItem value="Information Technology (IT)">IT</MenuItem>
+                <MenuItem value="Electronics & Communication Engineering (ECE)">ECE</MenuItem>
+                <MenuItem value="Biomedical Engineering (BME)">BME</MenuItem>
+                <MenuItem value="Artificial Intelligence & Data Science (AI & DS)">AI & DS</MenuItem>
+                <MenuItem value="Artificial Intelligence & Machine Learning (AI & ML)">AI & ML</MenuItem>
                 <MenuItem value="MTech CSE">MTech CSE</MenuItem>
+                <MenuItem value="M.Tech Wireless Communication">MTech WC</MenuItem>
+                <MenuItem value="Master of Business Administration">MBA</MenuItem>
                 <MenuItem value="MCA">MCA</MenuItem>
-                <MenuItem value="Artificial Intelligence & Data Science (AI & DS)">Artificial Intelligence & Data Science (AI & DS)</MenuItem>
-                <MenuItem value="Artificial Intelligence & Machine Learning (AI & ML)">Artificial Intelligence & Machine Learning (AI & ML)</MenuItem>
-                <MenuItem value="Electronics & Communication Engineering (ECE)">Electronics & Communication Engineering (ECE)</MenuItem>
-                <MenuItem value="Information Technology (IT)">Information Technology (IT)</MenuItem>
-                <MenuItem value="Biomedical Engineering (BME)">Biomedical Engineering (BME)</MenuItem>
               </Select>
             </FormControl>
 
@@ -767,8 +723,80 @@ export const Dashboard: React.FC = () => {
           </Typography>
         </Box>
 
+        {/* Mobile Card View */}
+        <Box sx={{ display: { xs: 'block', md: 'none' }, marginBottom: '16px' }}>
+          <StudentCards
+            students={paginatedStudents}
+            selectedIds={selectedStudentIds}
+            onToggleSelect={handleSelectOne}
+            renderActions={(student) => (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                <Tooltip title="View Student Profile">
+                  <IconButton
+                    size="small"
+                    onClick={() => startViewStudent(student)}
+                    sx={{
+                      color: '#1E5EFF',
+                      width: 32,
+                      height: 32,
+                      transition: 'all 180ms ease-in-out',
+                      '&:hover': {
+                        backgroundColor: 'rgba(30, 94, 255, 0.1)',
+                        transform: 'scale(1.1)',
+                      },
+                    }}
+                  >
+                    <Eye size={18} />
+                  </IconButton>
+                </Tooltip>
+
+                <Tooltip title="Edit Student Details">
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      startEditStudent(student);
+                      navigate('/EditStudent');
+                    }}
+                    sx={{
+                      color: '#1E5EFF',
+                      width: 32,
+                      height: 32,
+                      transition: 'all 180ms ease-in-out',
+                      '&:hover': {
+                        backgroundColor: 'rgba(30, 94, 255, 0.1)',
+                        transform: 'scale(1.1)',
+                      },
+                    }}
+                  >
+                    <Pencil size={18} />
+                  </IconButton>
+                </Tooltip>
+
+                <Tooltip title="More Actions">
+                  <IconButton
+                    size="small"
+                    onClick={(e) => handleMoreClick(e, student)}
+                    sx={{
+                      color: '#1E5EFF',
+                      width: 32,
+                      height: 32,
+                      transition: 'all 180ms ease-in-out',
+                      '&:hover': {
+                        backgroundColor: 'rgba(30, 94, 255, 0.1)',
+                        transform: 'scale(1.1)',
+                      },
+                    }}
+                  >
+                    <MoreVertical size={18} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            )}
+          />
+        </Box>
+
         {/* Table */}
-        <Box sx={{ overflowX: 'auto', border: `1px solid ${isDark ? '#334155' : '#E2EBF6'}`, borderRadius: '10px' }}>
+        <Box sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto', border: `1px solid ${isDark ? '#334155' : '#E2EBF6'}`, borderRadius: '10px' }}>
           <Table sx={{ minWidth: '900px', tableLayout: 'fixed' }}>
             <TableHead>
               <TableRow
@@ -811,22 +839,23 @@ export const Dashboard: React.FC = () => {
                 paginatedStudents.map((student, idx) => {
                   const isSelected = selectedStudentIds.includes(student.id);
                   const isEven = idx % 2 === 0;
-                  const rowBg = isDark
-                    ? isEven ? '#1E293B' : '#182232'
-                    : isEven ? '#FFFFFF' : '#FAFCFF';
+                  const rowBg = isSelected
+                    ? isDark ? 'rgba(56, 189, 248, 0.22)' : '#E8F2FF'
+                    : isDark
+                      ? isEven ? '#1E293B' : '#182232'
+                      : isEven ? '#FFFFFF' : '#FAFCFF';
 
                   return (
-                    <TableRow
+                    <motion.tr
                       key={student.id}
-                      hover
-                      selected={isSelected}
-                      sx={{
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: idx * 0.035, ease: 'easeOut' }}
+                      whileHover={{ backgroundColor: isDark ? '#334155' : '#EEF5FF' }}
+                      style={{
                         height: '64px',
                         backgroundColor: rowBg,
                         transition: 'background-color 150ms ease-in-out',
-                        '&:hover': {
-                          backgroundColor: isDark ? '#334155' : '#EEF5FF !important',
-                        },
                       }}
                     >
                       <TableCell padding="checkbox" sx={{ paddingLeft: '18px', verticalAlign: 'middle' }}>
@@ -922,7 +951,7 @@ export const Dashboard: React.FC = () => {
                           </Tooltip>
                         </Box>
                       </TableCell>
-                    </TableRow>
+                    </motion.tr>
                   );
                 })
               )}

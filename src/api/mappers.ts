@@ -280,7 +280,7 @@ export function toStudentRecord(dto: StudentResponseDto): StudentRecord {
 export function toPersonalStepRequest(p: StudentPersonalDetails): PersonalStepRequest {
   return {
     applicationNumber: p.applicationNumber,
-    registerNumber: p.registerNumber,
+    registerNumber: p.registerNumber || undefined,
     studentName: p.studentName,
     dateOfBirth: p.dateOfBirth,
     aadhaarNumber: p.aadhaarNumber || undefined,

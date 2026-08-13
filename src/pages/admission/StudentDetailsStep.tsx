@@ -305,6 +305,7 @@ export const StudentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext })
               render={({ field }) => (
                 <TextField
                   {...field}
+                  label="Email ID"
                   value={field.value || ''}
                   onChange={(e) => field.onChange(e.target.value.trim())}
                   onBlur={(e) => field.onChange(e.target.value.trim())}
@@ -431,7 +432,6 @@ export const StudentDetailsStep: React.FC<{ onNext: () => void }> = ({ onNext })
                     <MenuItem value="SC">SC</MenuItem>
                     <MenuItem value="ST">ST</MenuItem>
                     <MenuItem value="OBC">OBC</MenuItem>
-                    <MenuItem value="OTHERS">OTHERS</MenuItem>
                     <MenuItem value="Other">Other</MenuItem>
                   </TextField>
                 )

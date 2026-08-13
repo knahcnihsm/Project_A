@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Typography, Button, CircularProgress } from '@mui/material';
+import { motion } from 'motion/react';
 import { ArrowLeft, ArrowRight, Save, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmission } from '../../context/AdmissionContext';
@@ -26,14 +27,18 @@ export const AddAdmission: React.FC = () => {
   const { mode } = useThemeContext();
   const isDark = mode === 'dark';
 
+  const [direction, setDirection] = useState<1 | -1>(1);
+
   const handleNext = () => {
     if (activeStep < 6) {
+      setDirection(1);
       setActiveStep(activeStep + 1);
     }
   };
 
   const handlePrevious = () => {
     if (activeStep > 0) {
+      setDirection(-1);
       setActiveStep(activeStep - 1);
     }
   };
@@ -74,7 +79,7 @@ export const AddAdmission: React.FC = () => {
     <Box sx={{ maxWidth: '100%', width: '100%', margin: '0 auto' }}>
       {/* Page Header */}
       <Box sx={{ marginBottom: '20px' }}>
-        <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', fontSize: '28px', lineHeight: '36px' }}>
+        <Typography sx={{ fontWeight: 700, color: isDark ? '#FFFFFF' : '#0D47A1', fontSize: { xs: '22px', sm: '28px' }, lineHeight: { xs: '30px', sm: '36px' } }}>
           {getPageTitle()}
         </Typography>
         <Typography sx={{ color: isDark ? '#CBD5E1' : '#667085', fontSize: '14px', fontWeight: 500, marginTop: '4px' }}>
@@ -83,15 +88,22 @@ export const AddAdmission: React.FC = () => {
       </Box>
 
       {/* Step Form Body */}
-      <Box sx={{ marginBottom: '32px' }}>
-        {activeStep === 0 && <StudentDetailsStep onNext={handleNext} />}
-        {activeStep === 1 && <ParentDetailsStep onNext={handleNext} />}
-        {activeStep === 2 && <CommunicationStep onNext={handleNext} />}
-        {activeStep === 3 && <AcademicDetailsStep onNext={handleNext} />}
-        {activeStep === 4 && <QualifyingExamStep onNext={handleNext} />}
-        {activeStep === 5 && <FeeStructureStep onNext={handleNext} />}
-        {activeStep === 6 && <CertificatesUploadStep onSave={handleFinalSave} />}
-      </Box>
+      <motion.div
+        key={activeStep}
+        initial={{ opacity: 0, x: direction * 28 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+      >
+        <Box sx={{ marginBottom: '32px' }}>
+          {activeStep === 0 && <StudentDetailsStep onNext={handleNext} />}
+          {activeStep === 1 && <ParentDetailsStep onNext={handleNext} />}
+          {activeStep === 2 && <CommunicationStep onNext={handleNext} />}
+          {activeStep === 3 && <AcademicDetailsStep onNext={handleNext} />}
+          {activeStep === 4 && <QualifyingExamStep onNext={handleNext} />}
+          {activeStep === 5 && <FeeStructureStep onNext={handleNext} />}
+          {activeStep === 6 && <CertificatesUploadStep onSave={handleFinalSave} />}
+        </Box>
+      </motion.div>
 
       {/* Bottom Sticky Action Bar */}
       <Box

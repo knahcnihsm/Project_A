@@ -6,7 +6,6 @@ import {
   DialogActions,
   Button,
   TextField,
-  MenuItem,
   Typography,
   Box,
   IconButton,
@@ -22,14 +21,6 @@ interface ArchiveStudentModalProps {
   onClose: () => void;
   onConfirmArchive: (reason: string, description: string) => Promise<void>;
 }
-
-const REASON_OPTIONS = [
-  'Student Request',
-  'Admission Cancelled',
-  'Duplicate Record',
-  'Course Change',
-  'Other',
-];
 
 export const ArchiveStudentModal: React.FC<ArchiveStudentModalProps> = ({
   open,
@@ -144,7 +135,7 @@ export const ArchiveStudentModal: React.FC<ArchiveStudentModalProps> = ({
         </Typography>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Archive Reason Dropdown */}
+          {/* Archive Reason Text Field */}
           <Box>
             <Typography
               variant="body2"
@@ -158,41 +149,22 @@ export const ArchiveStudentModal: React.FC<ArchiveStudentModalProps> = ({
               Archive Reason <span style={{ color: '#EF4444' }}>*</span>
             </Typography>
             <TextField
-              select
               fullWidth
               size="small"
+              placeholder="Enter archive reason (e.g., Transfer Certificate (TC))"
               value={reason}
               onChange={(e) => {
                 setReason(e.target.value);
                 if (errors.reason) setErrors((prev) => ({ ...prev, reason: undefined }));
               }}
               error={Boolean(errors.reason)}
-              SelectProps={{
-                displayEmpty: true,
-                renderValue: (selected) => {
-                  if (!selected) {
-                    return (
-                      <Typography sx={{ color: isDark ? '#64748B' : '#94A3B8', fontSize: '14px' }}>
-                        Select Archive Reason
-                      </Typography>
-                    );
-                  }
-                  return selected as string;
-                },
-              }}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '10px',
                   backgroundColor: isDark ? '#0F172A' : '#F9FAFB',
                 },
               }}
-            >
-              {REASON_OPTIONS.map((option) => (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem>
-              ))}
-            </TextField>
+            />
             {errors.reason && (
               <FormHelperText error sx={{ ml: 0.5, mt: 0.5 }}>
                 {errors.reason}

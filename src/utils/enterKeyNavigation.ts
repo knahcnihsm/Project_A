@@ -1,10 +1,17 @@
 import React from 'react';
 
 /**
- * Global Enter-Key Navigation Handler for Admission Form Steps.
- * - Navigates strictly in spatial visual order: Left to Right across each row, then Down to the next row.
- * - De-duplicates MUI form controls to prevent jumping or skipping fields.
- * - On the final field of the section, pressing Enter triggers `onFinalSubmit` to advance to the next step.
+ * Global Enter-Key Navigation Handler for ALL Admission Form Steps.
+ *
+ * Behavior:
+ * - Navigates focusable fields in native DOM document order (top-to-bottom, left-to-right as rendered).
+ * - Skips disabled, hidden, and zero-size elements.
+ * - Skips utility buttons, icon buttons, adornments, and dummy autofill inputs.
+ * - If a dropdown/select is expanded (aria-expanded="true"), allows Enter to select the option normally.
+ * - On the final focusable field, triggers `onFinalSubmit` (runs validation and advances to the next step).
+ *
+ * Usage:
+ *   <Box component="form" onKeyDown={(e) => handleFormEnterKeyDown(e, handleSubmit(onSubmit))}>
  */
 export const handleFormEnterKeyDown = (
   e: React.KeyboardEvent<HTMLElement>,
@@ -14,81 +21,101 @@ export const handleFormEnterKeyDown = (
 
   const target = e.target as HTMLElement;
 
-  // Allow normal Enter key behavior for multiline textareas or explicit buttons
+  // 1. Allow default Enter behavior inside multiline textareas
+  if (target.tagName === 'TEXTAREA') return;
+
+  // 2. Allow default Enter behavior on standalone buttons (e.g. submit, reset, action buttons)
   if (
-    target.tagName === 'TEXTAREA' ||
     target.tagName === 'BUTTON' ||
     (target.getAttribute('role') === 'button' && !target.classList.contains('MuiSelect-select'))
   ) {
     return;
   }
 
-  // Prevent default form submission on enter key
+  // 3. If a MUI select / combobox dropdown is currently open (aria-expanded="true"),
+  //    let Enter select the highlighted option — do NOT navigate to the next field yet.
+  const ariaExpanded = target.getAttribute('aria-expanded');
+  if (ariaExpanded === 'true') return;
+
+  // Also check closest combobox parent for autocomplete wrappers
+  const comboboxParent = target.closest('[role="combobox"]');
+  if (comboboxParent && comboboxParent.getAttribute('aria-expanded') === 'true') return;
+
+  // 4. Prevent native form submission on Enter
   e.preventDefault();
 
   const form = e.currentTarget;
 
-  // Query potential interactive input elements
+  // 5. Collect all potentially interactive form controls in DOM order
   const rawElements = Array.from(
     form.querySelectorAll<HTMLElement>(
-      'input:not([type=hidden]):not([disabled]):not([readonly]), select:not([disabled]), [role="combobox"]:not([aria-disabled=true]), [tabindex="0"]:not([disabled])'
+      [
+        'input:not([type="hidden"])',
+        'select',
+        'textarea',
+        '[role="combobox"]',
+        '.MuiSelect-select',
+      ].join(', ')
     )
   );
 
-  // Filter out hidden, non-visible, or dummy autofill elements
-  const visibleElements = rawElements.filter((el) => {
-    if (el.id?.startsWith('prevent_autofill_') || el.getAttribute('name')?.startsWith('prevent_autofill_')) {
-      return false;
-    }
+  // 6. Filter to only visible, enabled, primary controls
+  const focusableFields = rawElements.filter((el) => {
+    // Skip invisible elements
     const rect = el.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return false;
+
     const style = getComputedStyle(el);
-    return style.visibility !== 'hidden' && style.display !== 'none';
+    if (style.visibility === 'hidden' || style.display === 'none') return false;
+
+    // Skip disabled elements (MUI renders disabled inputs as such).
+    // NOTE: genuinely read-only fields (auto-calculated Age, Batch, fee
+    // summaries) are all also disabled, so they are covered above. Do NOT skip
+    // readonly inputs in general: getNoAutofillInputProps() sets readOnly=true
+    // on editable fields as an autofill-prevention trick.
+    if ((el as HTMLInputElement).disabled) return false;
+
+    // Skip aria-disabled elements
+    if (el.getAttribute('aria-disabled') === 'true') return false;
+
+    // Skip BUTTON elements themselves (we only want inputs/selects)
+    if (el.tagName === 'BUTTON') return false;
+
+    // Skip elements that are inside icon buttons or utility button wrappers
+    //   but allow .MuiSelect-select even if it's inside a MuiButtonBase-root
+    if (!el.classList.contains('MuiSelect-select')) {
+      if (el.closest('.MuiIconButton-root')) return false;
+      if (el.closest('.MuiButtonBase-root')) return false;
+    }
+
+    // Skip the hidden anti-autofill dummy inputs by id/name convention
+    const id = el.id || '';
+    const name = el.getAttribute('name') || '';
+    if (id.startsWith('prevent_autofill_') || name.startsWith('prevent_autofill_')) return false;
+
+    return true;
   });
 
-  // Group elements by parent MuiFormControl container so each field only has ONE focus target
-  const uniqueFocusables: HTMLElement[] = [];
-  const visitedContainers = new Set<Element>();
-
-  for (const el of visibleElements) {
-    const container = el.closest('.MuiFormControl-root') || el.closest('.MuiOutlinedInput-root') || el;
-    if (!visitedContainers.has(container)) {
-      visitedContainers.add(container);
-      uniqueFocusables.push(el);
-    }
-  }
-
-  // Sort focusables spatially: Row by Row (Top to Bottom), Left to Right within each Row
-  uniqueFocusables.sort((a, b) => {
-    const rectA = a.getBoundingClientRect();
-    const rectB = b.getBoundingClientRect();
-    const topDiff = rectA.top - rectB.top;
-
-    // If elements are on the same visual line (within 20px threshold), sort Left-to-Right
-    if (Math.abs(topDiff) < 20) {
-      return rectA.left - rectB.left;
-    }
-    // Otherwise sort Top-to-Bottom
-    return topDiff;
-  });
-
-  // Find index of current target (or its parent container element)
-  const currentContainer = target.closest('.MuiFormControl-root') || target.closest('.MuiOutlinedInput-root') || target;
-  let currentIndex = uniqueFocusables.findIndex(
-    (el) => el === target || el.closest('.MuiFormControl-root') === currentContainer || el.closest('.MuiOutlinedInput-root') === currentContainer
-  );
-
+  // 7. Locate the current element in the filtered, DOM-ordered list
+  let currentIndex = focusableFields.indexOf(target);
   if (currentIndex < 0) {
-    currentIndex = uniqueFocusables.indexOf(target);
+    // Fallback: target may be a child of a tracked element (e.g. inner input of MUI wrapper)
+    currentIndex = focusableFields.findIndex(
+      (el) => el.contains(target) || target.contains(el)
+    );
   }
 
-  if (currentIndex >= 0 && currentIndex < uniqueFocusables.length - 1) {
-    const nextEl = uniqueFocusables[currentIndex + 1];
+  // 8. Navigate
+  if (currentIndex >= 0 && currentIndex < focusableFields.length - 1) {
+    // Focus the next field
+    const nextEl = focusableFields[currentIndex + 1];
     nextEl.focus();
+    // Select text content for quick overwrite (skip date inputs – browser handles those)
     if (nextEl instanceof HTMLInputElement && nextEl.type !== 'date') {
       nextEl.select();
     }
-  } else if (currentIndex === uniqueFocusables.length - 1 || currentIndex === -1) {
+  } else if (currentIndex === focusableFields.length - 1 && focusableFields.length > 0) {
+    // Last field — trigger step submission / advance to next page
     if (onFinalSubmit) {
       onFinalSubmit();
     }

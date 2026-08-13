@@ -134,7 +134,7 @@ export const CertificatesUploadStep: React.FC<{ onSave: () => void }> = ({ onSav
       id="wizard-step-form"
       onSubmit={handleSubmit}
       autoComplete="off"
-      onKeyDown={(e) => handleFormEnterKeyDown(e, () => handleSubmit(e))}
+      onKeyDown={(e) => handleFormEnterKeyDown(e, async () => { updateDraftSection('certificates', certificates); await onSave(); })}
     >
       {/* Hidden dummy inputs to trap Chrome profile autofill */}
       <input type="text" name="prevent_autofill_user" id="prevent_autofill_user" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />

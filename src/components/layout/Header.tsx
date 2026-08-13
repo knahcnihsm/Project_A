@@ -16,13 +16,14 @@ import {
   User,
   LogOut,
   ChevronDown,
+  Menu as MenuIcon,
 } from 'lucide-react';
 import { useThemeContext } from '../../context/ThemeContext';
 import { useAdmission } from '../../context/AdmissionContext';
 import { useNavigate } from 'react-router-dom';
 import { profileApi } from '../../api/client';
 
-export const Header: React.FC = () => {
+export const Header: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
   const { mode, toggleTheme } = useThemeContext();
   const { requestNavigation } = useAdmission();
   const navigate = useNavigate();
@@ -114,18 +115,38 @@ export const Header: React.FC = () => {
         transition: 'all 200ms ease-in-out',
       }}
     >
+      {/* Mobile menu button */}
+      <IconButton
+        onClick={onMenuClick}
+        aria-label="Open navigation menu"
+        sx={{
+          display: { xs: 'flex', md: 'none' },
+          marginLeft: '8px',
+          flexShrink: 0,
+          color: isDark ? '#38BDF8' : '#0B3D91',
+          '&:hover': {
+            backgroundColor: isDark ? 'rgba(56, 189, 248, 0.12)' : 'rgba(11, 61, 145, 0.08)',
+          },
+        }}
+      >
+        <MenuIcon size={22} />
+      </IconButton>
+
       {/* Left Branding - Logo section with fixed width matching sidebar */}
       <Box
         onClick={() => requestNavigation(() => navigate('/'))}
         sx={{
-          width: '240px',
-          minWidth: '240px',
+          width: { xs: 'auto', md: '240px' },
+          minWidth: { xs: 0, md: '240px' },
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
           padding: '0 16px',
           height: '100%',
-          borderRight: `1px solid ${isDark ? '#334155' : '#D6E4F0'}`,
+          borderRight: {
+            xs: 'none',
+            md: `1px solid ${isDark ? '#334155' : '#D6E4F0'}`,
+          },
           cursor: 'pointer',
         }}
       >
@@ -134,13 +155,13 @@ export const Header: React.FC = () => {
           src="/images/college-logo.png"
           alt="Rajiv Gandhi College Logo"
           sx={{
-            height: '46px',
+            height: { xs: 34, sm: 46 },
             width: 'auto',
             objectFit: 'contain',
             flexShrink: 0,
           }}
         />
-        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <Box sx={{ display: { xs: 'none', sm: 'flex' }, flexDirection: 'column', justifyContent: 'center' }}>
           <Typography
             sx={{
               fontWeight: 800,
@@ -184,7 +205,7 @@ export const Header: React.FC = () => {
       <Box
         sx={{
           flexGrow: 1,
-          display: 'flex',
+          display: { xs: 'none', md: 'flex' },
           flexDirection: 'column',
           justifyContent: 'center',
           paddingLeft: '28px',
@@ -217,7 +238,7 @@ export const Header: React.FC = () => {
       </Box>
 
       {/* Right Actions & Admin User Profile */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', paddingRight: '24px' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: '6px', sm: '10px' }, paddingRight: { xs: '10px', sm: '24px' } }}>
         {/* Sun/Moon Toggle */}
         <Box
           sx={{

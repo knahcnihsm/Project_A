@@ -21,6 +21,12 @@ export const AppCard: React.FC<AppCardProps> = ({ children, sx, ...props }) => {
           ? '0 8px 30px rgba(0, 0, 0, 0.4)'
           : '0 8px 30px rgba(0, 0, 0, 0.06)',
         transition: 'all 250ms ease-in-out',
+        '&:hover': {
+          transform: 'translateY(-3px)',
+          boxShadow: isDark
+            ? '0 12px 40px rgba(0, 0, 0, 0.5)'
+            : '0 14px 40px rgba(11, 61, 145, 0.14)',
+        },
         display: 'flex',
         flexDirection: 'column',
         ...sx,

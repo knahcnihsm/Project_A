@@ -11,7 +11,7 @@ import java.time.LocalDate;
 
 public record PersonalStepRequest(
         @NotBlank(message = "Application number is required") String applicationNumber,
-        @NotBlank(message = "Register number is required") String registerNumber,
+        String registerNumber,
         @NotBlank(message = "Student name is required") String studentName,
         @NotNull(message = "Date of birth is required") LocalDate dateOfBirth,
         @Pattern(regexp = "\\d{12}", message = "Aadhaar number must be 12 digits") String aadhaarNumber,

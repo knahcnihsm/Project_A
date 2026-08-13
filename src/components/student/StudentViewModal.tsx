@@ -247,14 +247,16 @@ export const StudentViewModal: React.FC = () => {
         open={Boolean(viewModalStudent)}
         onClose={closeViewModal}
         maxWidth={false}
+        fullScreen
+        sx={{ '& .MuiDialog-paper': { margin: 0 } }}
         scroll="paper"
         PaperProps={{
           sx: {
-            width: '90vw',
-            maxWidth: '1400px',
-            height: '90vh',
-            maxHeight: '90vh',
-            borderRadius: '18px',
+            width: { xs: '100%', md: '90vw' },
+            maxWidth: { xs: '100%', md: '1400px' },
+            height: { xs: '100%', md: '90vh' },
+            maxHeight: { xs: '100%', md: '90vh' },
+            borderRadius: { xs: 0, md: '18px' },
             backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
             color: isDark ? '#FFFFFF' : '#1E293B',
             boxShadow: isDark
